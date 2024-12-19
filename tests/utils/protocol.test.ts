@@ -30,7 +30,7 @@ describe('protocol', () => {
       data: string | NodeJS.ArrayBufferView,
     ) => {
       writeFileSyncCalled = true;
-      expect(path).toBe(`${process.cwd()}/models/.protocols/${fileName}.ts`);
+      expect(path).toBe(`${process.cwd()}/schema/.protocols/${fileName}.ts`);
       expect(data).toContain(queries[0]);
     };
 
@@ -63,7 +63,7 @@ describe('protocol', () => {
 
     fs.writeFileSync = (path: PathOrFileDescriptor, data: string | ArrayBufferView) => {
       writeFileSyncCalled = true;
-      expect(path).toBe(`${process.cwd()}/models/.protocols/${fileName}.sql`);
+      expect(path).toBe(`${process.cwd()}/schema/.protocols/${fileName}.sql`);
       expect(data).toBe('CREATE SCHEMA my_schema;');
     };
 
