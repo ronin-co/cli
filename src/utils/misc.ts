@@ -33,13 +33,13 @@ export const BASE_FLAGS = {
 export type BaseFlags = Record<keyof typeof BASE_FLAGS, boolean | undefined>;
 
 /** Directory containing RONIN model definitions */
-export const MODELS_IN_CODE_DIR = 'models';
+export const MODELS_IN_CODE_DIR = 'schema';
 
 /** Path to the RONIN schema definitions file */
 export const MODEL_IN_CODE_PATH = path.resolve(
   process.cwd(),
   MODELS_IN_CODE_DIR,
-  'models.ts',
+  'index.ts',
 );
 
 /** Suffix used for temporary RONIN schemas */
@@ -170,7 +170,7 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
  */
 export const getModelDefinitions = async (): Promise<Array<Model>> => {
   if (!fs.existsSync(MODEL_IN_CODE_PATH)) {
-    console.error('Could not find a model definition file models/models.ts');
+    console.error('Could not find a model definition file schema/index.ts');
     process.exit(1);
   }
 

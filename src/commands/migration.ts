@@ -7,7 +7,7 @@ import type { parseArgs } from 'node:util';
 import { readConfig, saveConfig } from '@/src/utils/config';
 import { initializeDatabase } from '@/src/utils/database';
 import { diffModels } from '@/src/utils/migration';
-import { type BaseFlags, getModelDefinitions, logTableDiff } from '@/src/utils/misc';
+import { type BaseFlags, MODELS_IN_CODE_DIR, getModelDefinitions, logTableDiff } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getSpaces } from '@/src/utils/space';
@@ -134,7 +134,7 @@ const create = async (
     status = 'syncing';
     spinner.text = 'Writing migration protocol file';
 
-    const migrationsDir = path.join(process.cwd(), 'models/.protocols');
+    const migrationsDir = path.join(process.cwd(), MODELS_IN_CODE_DIR, '.protocols');
     const nextNum = (() => {
       if (!fs.existsSync(migrationsDir)) return 1;
       const files = fs.readdirSync(migrationsDir);
@@ -158,11 +158,11 @@ const create = async (
 
     if (flags.apply) {
       const statements = protocol.getSQLStatements(existingModels);
-      const migrationsPath = path.join(process.cwd(), 'models/migrations');
+      const migrationsPath = path.join(process.cwd(), MODELS_IN_CODE_DIR, 'migrations');
       fs.mkdirSync(migrationsPath, { recursive: true });
 
       fs.copyFileSync(
-        path.join(process.cwd(), 'models/.protocols', `migration-${paddedNum}.ts`),
+        path.join(process.cwd(), MODELS_IN_CODE_DIR, '.protocols', `migration-${paddedNum}.ts`),
         path.join(migrationsPath, `migration-${paddedNum}.ts`),
       );
 
@@ -197,13 +197,13 @@ const apply = async (
     const protocol = await new Protocol().load(migrationFilePath);
     const statements = protocol.getSQLStatements(existingModels);
 
-    const files = fs.readdirSync(path.join(process.cwd(), 'models/.protocols'));
+    const files = fs.readdirSync(path.join(process.cwd(), MODELS_IN_CODE_DIR, '.protocols'));
     const latestProtocolFile = files.sort().pop() || 'migration';
 
-    const migrationsPath = path.join(process.cwd(), 'models/migrations');
+    const migrationsPath = path.join(process.cwd(), MODELS_IN_CODE_DIR, 'migrations');
     fs.copyFileSync(
       migrationFilePath ||
-        path.join(process.cwd(), 'models/.protocols', path.basename(latestProtocolFile)),
+        path.join(process.cwd(), MODELS_IN_CODE_DIR, '.protocols', path.basename(latestProtocolFile)),
       path.join(migrationsPath, path.basename(latestProtocolFile)),
     );
 

@@ -11,7 +11,7 @@ import { getBatchProxy } from 'ronin/utils';
 export class Protocol {
   private _queries: Array<Query> = [];
   private _roninQueries: Array<string>;
-  private _protocolDir = `${process.cwd()}/models/.protocols/`;
+  private _protocolDir = `${process.cwd()}/schema/.protocols/`;
 
   /**
    * Creates a new Protocol instance.
