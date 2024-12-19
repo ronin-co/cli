@@ -5,13 +5,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { parseArgs } from 'node:util';
 import { readConfig, saveConfig } from '@/src/utils/config';
-import { db } from '@/src/utils/database';
+import { initializeDatabase } from '@/src/utils/database';
 import { diffModels } from '@/src/utils/migration';
 import { type BaseFlags, getModelDefinitions, logTableDiff } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getSpaces } from '@/src/utils/space';
 import type { Model } from '@ronin/compiler';
+import type { Database } from '@ronin/engine';
 
 export const MIGRATION_FLAGS = {
   reset: { type: 'boolean', short: 'r', default: false },
@@ -64,6 +65,7 @@ export default async function main(
 const applyMigrationStatements = async (
   appToken: string | undefined,
   flags: Flags,
+  db: Database,
   statements: Array<{ statement: string }>,
   slug: string,
 ): Promise<void> => {
@@ -103,6 +105,8 @@ const create = async (
 ): Promise<void> => {
   let status: Status = 'readingConfig';
   const spinner = ora('Reading configuration').start();
+
+  const db = await initializeDatabase();
 
   try {
     const { slug } = await getOrSelectSpaceId(sessionToken, spinner);
@@ -162,7 +166,7 @@ const create = async (
         path.join(migrationsPath, `migration-${paddedNum}.ts`),
       );
 
-      await applyMigrationStatements(appToken, flags, statements, slug);
+      await applyMigrationStatements(appToken, flags, db, statements, slug);
     }
 
     process.exit(0);
@@ -185,6 +189,8 @@ const apply = async (
   const spinner = ora('Applying migration').start();
   const migrationFilePath = positionals[positionals.indexOf('migration') + 2];
 
+  const db = await initializeDatabase();
+
   try {
     const { slug } = await getOrSelectSpaceId(sessionToken, spinner);
     const existingModels = await getModels(db, appToken, slug, flags.prod);
@@ -201,7 +207,7 @@ const apply = async (
       path.join(migrationsPath, path.basename(latestProtocolFile)),
     );
 
-    await applyMigrationStatements(appToken, flags, statements, slug);
+    await applyMigrationStatements(appToken, flags, db, statements, slug);
 
     spinner.succeed('Successfully applied migration');
     process.exit(0);
