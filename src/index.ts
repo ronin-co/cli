@@ -4,32 +4,18 @@ import { parseArgs } from 'node:util';
 
 import initializeProject from '@/src/commands/init';
 import logIn from '@/src/commands/login';
+import migrate from '@/src/commands/migration';
 import { printHelp, printVersion } from '@/src/utils/info';
+import { BASE_FLAGS, type BaseFlags } from '@/src/utils/misc';
 import { getSession } from '@/src/utils/session';
 
-let values: Record<string, unknown>;
+let flags: BaseFlags;
 let positionals: Array<string>;
 
 try {
-  ({ values, positionals } = parseArgs({
+  ({ values: flags, positionals } = parseArgs({
     args: process.argv,
-    options: {
-      help: {
-        type: 'boolean',
-        short: 'h',
-        default: false,
-      },
-      version: {
-        type: 'boolean',
-        short: 'v',
-        default: false,
-      },
-      debug: {
-        type: 'boolean',
-        short: 'd',
-        default: false,
-      },
-    },
+    options: BASE_FLAGS,
     strict: true,
     allowPositionals: true,
   }));
@@ -45,8 +31,8 @@ try {
 
 const run = async (): Promise<void> => {
   // Flags for printing useful information about the CLI.
-  if (values.help) return printHelp();
-  if (values.version) return printVersion();
+  if (flags.help) return printHelp();
+  if (flags.version) return printVersion();
 
   // This ensures that people can accidentally type uppercase letters and still get the
   // command they are looking for.
@@ -78,6 +64,11 @@ const run = async (): Promise<void> => {
 
   // `init` sub command
   if (normalizedPositionals.includes('init')) return initializeProject(positionals);
+
+  // Handle 'migration' command
+  if (normalizedPositionals.includes('migration')) {
+    return migrate(appToken, session?.token, flags, positionals);
+  }
 
   // If no matching flags or commands were found, render the help, since we don't want to
   // use the main `ronin` command for anything yet.
