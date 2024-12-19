@@ -89,14 +89,14 @@ describe('misc', () => {
     });
   });
 
-  describe('get schemas in code definitions', () => {
+  describe('get models in code definitions', () => {
     afterEach(() => {
       // Clear the module cache after each test to ensure fresh imports
       delete require.cache[MODEL_IN_CODE_PATH];
 
       mock.restore();
     });
-    test('should return schemas in code definitions - empty', async () => {
+    test('should return models in code definitions - empty', async () => {
       mock.module(MODEL_IN_CODE_PATH, () => {
         return {};
       });
@@ -105,12 +105,12 @@ describe('misc', () => {
       existsSync.mockReturnValue(true);
       existsSync.mockClear();
 
-      const schemas = await getModelDefinitions();
-      expect(schemas).toHaveLength(0);
-      expect(schemas).toStrictEqual([]);
+      const models = await getModelDefinitions();
+      expect(models).toHaveLength(0);
+      expect(models).toStrictEqual([]);
     });
 
-    test('schema file does not exist', async () => {
+    test('model file does not exist', async () => {
       const existSpy = spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('process.exit called');
       });
@@ -133,13 +133,13 @@ describe('misc', () => {
       expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('should return schemas in code definitions - one schema', async () => {
+    test('should return models in code definitions - one model', async () => {
       mock.module('@/src/utils/misc', () => {
         return { getModelDefinitions: () => [Account] };
       });
 
-      const schemas = await getModelDefinitions();
-      expect(schemas).toEqual([
+      const models = await getModelDefinitions();
+      expect(models).toEqual([
         {
           slug: 'account',
           pluralSlug: 'accounts',
@@ -153,7 +153,7 @@ describe('misc', () => {
           ],
         },
       ]);
-      expect(schemas).toHaveLength(1);
+      expect(models).toHaveLength(1);
 
       mock.restore();
     });

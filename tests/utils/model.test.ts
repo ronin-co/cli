@@ -6,10 +6,10 @@ import { clearMocks, mock } from 'bun-bagel';
 describe('models', () => {
   describe('local', () => {
     test('get models from local but there are no models', async () => {
-      const schemas = await getModels(db);
+      const models = await getModels(db);
 
-      expect(schemas).toHaveLength(0);
-      expect(schemas).toStrictEqual([]);
+      expect(models).toHaveLength(0);
+      expect(models).toStrictEqual([]);
     });
 
     test('get models from local with model', async () => {

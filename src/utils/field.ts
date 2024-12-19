@@ -161,7 +161,7 @@ export const fieldsToAdjust = (
  * Creates a temporary table to handle field adjustments in SQLite. Since SQLite doesn't
  * support direct column alterations (except for renaming), the function:
  *
- * 1. Creates a temporary table with the new schema
+ * 1. Creates a temporary table with the new model
  * 2. Copies data from original table
  * 3. Drops the original table
  * 4. Renames temporary table to original name

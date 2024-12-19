@@ -32,13 +32,13 @@ export const BASE_FLAGS = {
 /** Infers an object type from the list of base flags. */
 export type BaseFlags = Record<keyof typeof BASE_FLAGS, boolean | undefined>;
 
-/** Directory containing RONIN schema definitions */
-export const SCHEMAS_IN_CODE_DIR = 'models';
+/** Directory containing RONIN model definitions */
+export const MODELS_IN_CODE_DIR = 'models';
 
 /** Path to the RONIN schema definitions file */
 export const MODEL_IN_CODE_PATH = path.resolve(
   process.cwd(),
-  SCHEMAS_IN_CODE_DIR,
+  MODELS_IN_CODE_DIR,
   'models.ts',
 );
 
@@ -170,7 +170,7 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
  */
 export const getModelDefinitions = async (): Promise<Array<Model>> => {
   if (!fs.existsSync(MODEL_IN_CODE_PATH)) {
-    console.error('Could not find a schema definition file models/models.ts');
+    console.error('Could not find a model definition file models/models.ts');
     process.exit(1);
   }
 

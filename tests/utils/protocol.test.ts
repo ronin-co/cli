@@ -45,7 +45,7 @@ describe('protocol', () => {
     const queries = ["create.model({slug: 'my_model', pluralSlug: 'my_models'})"];
     const protocol = new Protocol(queries);
     const fileName = 'migration_sql_test';
-    const schemas: Array<Model> = [];
+    const models: Array<Model> = [];
 
     // Mock getSQLStatements
     const originalGetSQLStatements = protocol.getSQLStatements;
@@ -67,7 +67,7 @@ describe('protocol', () => {
       expect(data).toBe('CREATE SCHEMA my_schema;');
     };
 
-    await protocol.saveSQL(fileName, schemas);
+    await protocol.saveSQL(fileName, models);
     expect(writeFileSyncCalled).toBe(true);
 
     // Restore mocks

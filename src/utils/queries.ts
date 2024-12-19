@@ -145,20 +145,20 @@ export const createTempModelQuery = (
 
   const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`;
 
-  // Create a copy of the schema
+  // Create a copy of the model
   queries.push(createModelQuery(tempModelSlug, { fields }));
 
-  // Move all the data to the copied schema
+  // Move all the data to the copied model
   queries.push(`add.${tempModelSlug}.to(() => get.${modelSlug}())`);
 
   if (customQueries) {
     queries.push(...customQueries);
   }
 
-  // Delete the original schema
+  // Delete the original model
   queries.push(dropModelQuery(modelSlug));
 
-  // Rename the copied schema to the original schema
+  // Rename the copied model to the original model
   queries.push(`alter.model("${tempModelSlug}").to({slug: "${modelSlug}"})`);
 
   for (const index of indexes) {

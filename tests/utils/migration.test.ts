@@ -22,28 +22,28 @@ import {
 import type { Model } from '@ronin/compiler';
 
 describe('migration', () => {
-  describe('diff schemas', () => {
-    test('returns empty array when schemas are in sync', async () => {
-      const schemaDiff = await diffModels([], [TestB]);
+  describe('diff models', () => {
+    test('returns empty array when models are in sync', async () => {
+      const modelDiff = await diffModels([], [TestB]);
 
-      expect(schemaDiff).toHaveLength(1);
-      expect(schemaDiff).toStrictEqual(['drop.model("test")']);
+      expect(modelDiff).toHaveLength(1);
+      expect(modelDiff).toStrictEqual(['drop.model("test")']);
     });
 
-    test('returns empty array when both code and db have same account schema', async () => {
-      // it is not recognized as a schema.
-      const schemaDiff = await diffModels([Account], [Account]);
+    test('returns empty array when both code and db have same account model', async () => {
+      // It is not recognized as a model.
+      const modelDiff = await diffModels([Account], [Account]);
 
-      expect(schemaDiff).toHaveLength(0);
-      expect(schemaDiff).toStrictEqual([]);
+      expect(modelDiff).toHaveLength(0);
+      expect(modelDiff).toStrictEqual([]);
     });
 
     test('generates migration steps when renaming model slug', async () => {
-      // it is not recognized as a schema.
-      const schemaDiff = await diffModels([Account], [Account2], true);
+      // It is not recognized as a model.
+      const modelDiff = await diffModels([Account], [Account2], true);
 
-      expect(schemaDiff).toHaveLength(4);
-      expect(schemaDiff).toStrictEqual([
+      expect(modelDiff).toHaveLength(4);
+      expect(modelDiff).toStrictEqual([
         "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', unique:false, required:false, type:'string'}]})",
         'add.RONIN_TEMP_account.to(() => get.account())',
         'drop.model("account")',
@@ -51,29 +51,29 @@ describe('migration', () => {
       ]);
     });
 
-    test('creates new model when code has additional schema', async () => {
-      // it is not recognized as a schema.
-      const schemaDiff = await diffModels([Account, Profile], [Account]);
-      expect(schemaDiff).toHaveLength(1);
-      expect(schemaDiff).toStrictEqual([
+    test('creates new model when code has additional model', async () => {
+      // It is not recognized as a model.
+      const modelDiff = await diffModels([Account, Profile], [Account]);
+      expect(modelDiff).toHaveLength(1);
+      expect(modelDiff).toStrictEqual([
         "create.model({slug:'profile',fields:[{slug:'username', unique:false, required:false, type:'string'}]})",
       ]);
     });
 
-    test('drops model when db has additional schema', async () => {
-      // it is not recognized as a schema.
-      const schemaDiff = await diffModels([Account], [Account, Profile]);
+    test('drops model when db has additional model', async () => {
+      // It is not recognized as a model.
+      const modelDiff = await diffModels([Account], [Account, Profile]);
 
-      expect(schemaDiff).toHaveLength(1);
-      expect(schemaDiff).toStrictEqual(['drop.model("profile")']);
+      expect(modelDiff).toHaveLength(1);
+      expect(modelDiff).toStrictEqual(['drop.model("profile")']);
     });
 
     test('generates migration steps when field properties change', async () => {
-      // it is not recognized as a schema.
-      const schemaDiff = await diffModels([Account2], [Account]);
+      // It is not recognized as a model.
+      const modelDiff = await diffModels([Account2], [Account]);
 
-      expect(schemaDiff).toHaveLength(4);
-      expect(schemaDiff).toStrictEqual([
+      expect(modelDiff).toHaveLength(4);
+      expect(modelDiff).toStrictEqual([
         "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', unique:true, required:true, type:'string'}]})",
         'add.RONIN_TEMP_account.to(() => get.account())',
         'drop.model("account")',
@@ -82,21 +82,21 @@ describe('migration', () => {
     });
 
     test('generates migration steps when meta model properties change', async () => {
-      // it is not recognized as a schema.
-      const schemaDiff = await diffModels([TestC], [TestA]);
+      // It is not recognized as a model.
+      const modelDiff = await diffModels([TestC], [TestA]);
 
-      expect(schemaDiff).toHaveLength(1);
-      expect(schemaDiff).toStrictEqual([
+      expect(modelDiff).toHaveLength(1);
+      expect(modelDiff).toStrictEqual([
         'alter.model("test").to({name: "ThisIsACoolModel", idPrefix: "TICM"})',
       ]);
     });
 
     test('generates migration steps when field definitions differ', async () => {
-      // it is not recognized as a schema.
-      const schemaDiff = await diffModels([Account], [Account2]);
+      // It is not recognized as a model.
+      const modelDiff = await diffModels([Account], [Account2]);
 
-      expect(schemaDiff).toHaveLength(4);
-      expect(schemaDiff).toStrictEqual([
+      expect(modelDiff).toHaveLength(4);
+      expect(modelDiff).toStrictEqual([
         "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', unique:false, required:false, type:'string'}]})",
         'add.RONIN_TEMP_account.to(() => get.account())',
         'drop.model("account")',
@@ -104,54 +104,50 @@ describe('migration', () => {
       ]);
     });
 
-    test('renames model when schema is renamed', async () => {
-      const schemaDiff = await diffModels(
-        [AccountNew, Profile],
-        [Account, Profile],
-        true,
-      );
+    test('renames model when model is renamed', async () => {
+      const modelDiff = await diffModels([AccountNew, Profile], [Account, Profile], true);
 
-      expect(schemaDiff).toHaveLength(1);
-      expect(schemaDiff).toStrictEqual([
+      expect(modelDiff).toHaveLength(1);
+      expect(modelDiff).toStrictEqual([
         'alter.model("account").to({slug: "account_new"})',
       ]);
     });
 
     describe('indexes', () => {
       test('handles index changes', async () => {
-        const schemaDiff = await diffModels([TestB], [TestA]);
+        const modelDiff = await diffModels([TestB], [TestA]);
 
-        expect(schemaDiff).toBeDefined();
-        expect(schemaDiff).toHaveLength(10);
+        expect(modelDiff).toBeDefined();
+        expect(modelDiff).toHaveLength(10);
       });
     });
 
     describe('triggers', () => {
       test('create model and trigger', async () => {
-        const schemaDiff = await diffModels([TestD], []);
+        const modelDiff = await diffModels([TestD], []);
 
-        expect(schemaDiff).toBeDefined();
-        expect(schemaDiff).toHaveLength(2);
+        expect(modelDiff).toBeDefined();
+        expect(modelDiff).toHaveLength(2);
 
-        expect(schemaDiff).toStrictEqual([
+        expect(modelDiff).toStrictEqual([
           "create.model({slug:'comment',fields:[{slug:'name', unique:false, required:false, type:'string'}]})",
           'alter.model("comment").create.trigger({"action":"INSERT","when":"BEFORE","effects":[{"get":{"test":{}}}]})',
         ]);
       });
 
       test('drop model and trigger', async () => {
-        const schemaDiff = await diffModels([], [TestD]);
+        const modelDiff = await diffModels([], [TestD]);
 
         // Only drops the model because triggers are dropped by default
-        expect(schemaDiff).toHaveLength(1);
-        expect(schemaDiff).toStrictEqual(['drop.model("comment")']);
+        expect(modelDiff).toHaveLength(1);
+        expect(modelDiff).toStrictEqual(['drop.model("comment")']);
       });
 
       test('adjust trigger', async () => {
-        const schemaDiff = await diffModels([TestE], [TestD]);
+        const modelDiff = await diffModels([TestE], [TestD]);
 
-        expect(schemaDiff).toHaveLength(2);
-        expect(schemaDiff).toStrictEqual([
+        expect(modelDiff).toHaveLength(2);
+        expect(modelDiff).toStrictEqual([
           'alter.model("comment").drop.trigger("no slug")',
           'alter.model("comment").create.trigger({"action":"DELETE","when":"AFTER","effects":[{"get":{"test":{}}}]})',
         ]);
@@ -160,8 +156,8 @@ describe('migration', () => {
   });
 
   describe('drop models', () => {
-    test('generates drop queries for multiple schemas', () => {
-      const schemas = [
+    test('generates drop queries for multiple models', () => {
+      const models = [
         {
           slug: 'test1',
           fields: [],
@@ -172,13 +168,13 @@ describe('migration', () => {
         },
       ];
 
-      const queries = dropModels(schemas);
+      const queries = dropModels(models);
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual(['drop.model("test1")', 'drop.model("test2")']);
     });
 
-    test('returns empty array for empty schema list', () => {
+    test('returns empty array for empty model list', () => {
       const queries = dropModels([]);
 
       expect(queries).toHaveLength(0);
@@ -187,8 +183,8 @@ describe('migration', () => {
   });
 
   describe('create models', () => {
-    test('generates create queries for multiple schemas with fields', () => {
-      const schemas: Array<Model> = [
+    test('generates create queries for multiple models with fields', () => {
+      const models: Array<Model> = [
         {
           slug: 'test1',
           fields: [
@@ -211,7 +207,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = createModels(schemas);
+      const queries = createModels(models);
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual([
@@ -220,20 +216,20 @@ describe('migration', () => {
       ]);
     });
 
-    test('handles schema with no fields', () => {
-      const schemas = [
+    test('handles model with no fields', () => {
+      const models = [
         {
           slug: 'test1',
         },
       ];
 
-      const queries = createModels(schemas);
+      const queries = createModels(models);
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual(["create.model({slug:'test1',fields:[]})"]);
     });
 
-    test('returns empty array for empty schema list', () => {
+    test('returns empty array for empty model list', () => {
       const queries = createModels([]);
 
       expect(queries).toHaveLength(0);

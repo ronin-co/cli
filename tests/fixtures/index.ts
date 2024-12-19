@@ -191,7 +191,7 @@ export const TestD = model({
     {
       action: 'INSERT',
       when: 'BEFORE',
-      // @ts-expect-error Fix in schemas
+      // @ts-expect-error Fix in models
       effects: () => [get.test()],
     },
   ],
@@ -206,7 +206,7 @@ export const TestE = model({
     {
       action: 'DELETE',
       when: 'AFTER',
-      // @ts-expect-error Fix in schemas
+      // @ts-expect-error Fix in models
       effects: () => [get.test()],
     },
   ],
