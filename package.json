@@ -30,7 +30,7 @@
   "license": "Apache-2.0",
   "tsup": {
     "banner": {
-      "js": "#!/usr/bin/env node"
+      "js": "#!/usr/bin/env bun"
     }
   },
   "dependencies": {
