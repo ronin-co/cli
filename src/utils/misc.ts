@@ -182,6 +182,7 @@ export const getModelDefinitions = async (): Promise<Array<Model>> => {
  * after their dependencies.
  *
  * @param models - Array of Model objects to sort.
+ *
  * @returns Sorted array of Model objects with dependencies ordered correctly.
  *
  * @example

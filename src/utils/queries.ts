@@ -202,7 +202,7 @@ const serialize = (value: unknown): string => {
  * @param modelSlug - The current model identifier.
  * @param newModelSlug - The new model identifier.
  *
- * @returns A string representing the RONIN rename model query.
+ * @returns A string representing the query.
  *
  * @example
  * ```typescript
@@ -220,7 +220,7 @@ export const renameModelQuery = (modelSlug: string, newModelSlug: string): strin
  * @param from - The current field identifier.
  * @param to - The new field identifier.
  *
- * @returns A string representing the RONIN rename field query.
+ * @returns A string representing the query.
  *
  * @example
  * ```typescript
@@ -238,7 +238,7 @@ export const renameFieldQuery = (modelSlug: string, from: string, to: string): s
  * @param modelSlug - The singular identifier for the model.
  * @param trigger - The name of the trigger to add.
  *
- * @returns A string representing the RONIN add trigger query.
+ * @returns A string representing the query.
  */
 export const createTriggerQuery = (modelSlug: string, trigger: ModelTrigger): string => {
   return `alter.model("${modelSlug}").create.trigger(${JSON.stringify(trigger)})`;
@@ -250,7 +250,7 @@ export const createTriggerQuery = (modelSlug: string, trigger: ModelTrigger): st
  * @param modelSlug - The singular identifier for the model.
  * @param triggerName - The name of the trigger to remove.
  *
- * @returns A string representing the RONIN drop trigger query.
+ * @returns A string representing the query.
  */
 export const dropTriggerQuery = (modelSlug: string, triggerName: string): string => {
   return `alter.model("${modelSlug}").drop.trigger("${triggerName}")`;
@@ -262,19 +262,19 @@ export const dropTriggerQuery = (modelSlug: string, triggerName: string): string
  * @param modelSlug - The singular identifier for the model.
  * @param indexSlug - The slug of the index to remove.
  *
- * @returns A string representing the RONIN drop index query.
+ * @returns A string representing the query.
  */
 export const dropIndexQuery = (modelSlug: string, indexSlug: string): string => {
   return `alter.model("${modelSlug}").drop.index("${indexSlug}")`;
 };
 
 /**
- * Generates a RONIN query to create an index to a model.
+ * Generates a RONIN query to add an index to a model.
  *
  * @param modelSlug - The singular identifier for the model.
- * @param index - The index to create.
+ * @param index - The index to add.
  *
- * @returns A string representing the RONIN create index query.
+ * @returns A string representing the query.
  */
 export const createIndexQuery = (modelSlug: string, index: ModelIndex): string => {
   return `alter.model("${modelSlug}").create.index(${JSON.stringify(index)})`;

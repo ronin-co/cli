@@ -164,7 +164,7 @@ export const fieldsToAdjust = (
  * 1. Creates a temporary table with the new model
  * 2. Copies data from original table
  * 3. Drops the original table
- * 4. Renames temporary table to original name
+ * 4. Renames the temporary table to the original name
  * 5. Recreates indexes
  *
  * @param modelSlug - Slug of the model being adjusted.

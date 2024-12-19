@@ -205,7 +205,7 @@ export const modelsToRename = (
   const modelsToRename: Array<{ to: Model; from: Model }> = [];
 
   for (const model of modelsToBeAdded) {
-    // check if the model.fields has the same fields as the current model
+    // Check if `model.fields` has the same fields as the current model
     const currentModel = modelsToBeDropped.find((s) => {
       return areArraysEqual(
         model.fields?.map((f) => f.slug) || [],

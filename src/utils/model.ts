@@ -45,14 +45,14 @@ const formatRecord = (record: Record): Model => ({
 /**
  * Fetches and formats schema models from either production API or local database.
  *
- * @param db - The database instance to query from
- * @param token - Optional authentication token for production API requests
- * @param spaceId - Optional space ID for production API requests
- * @param isProduction - Optional flag to determine if production API should be used
+ * @param db - The database instance to query from.
+ * @param token - Optional authentication token for production API requests.
+ * @param spaceId - Optional space ID for production API requests.
+ * @param isProduction - Optional flag to determine if production API should be used.
  *
- * @returns Promise resolving to an array of formatted Model objects
+ * @returns Promise resolving to an array of formatted Model objects.
  *
- * @throws Error if production API request fails
+ * @throws Error if production API request fails.
  */
 export const getModels = async (
   db: Database,

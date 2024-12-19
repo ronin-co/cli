@@ -21,7 +21,7 @@ describe('protocol', () => {
     const protocol = new Protocol(queries);
     const fileName = 'migration_test';
 
-    // Mock fs.writeFileSync
+    // Mock `fs.writeFileSync`
     const originalWriteFileSync = fs.writeFileSync;
     let writeFileSyncCalled = false;
 
@@ -37,7 +37,7 @@ describe('protocol', () => {
     protocol.save(fileName);
     expect(writeFileSyncCalled).toBe(true);
 
-    // Restore fs.writeFileSync
+    // Restore `fs.writeFileSync`
     fs.writeFileSync = originalWriteFileSync;
   });
 
@@ -47,7 +47,7 @@ describe('protocol', () => {
     const fileName = 'migration_sql_test';
     const models: Array<Model> = [];
 
-    // Mock getSQLStatements
+    // Mock `getSQLStatements`
     const originalGetSQLStatements = protocol.getSQLStatements;
     protocol.getSQLStatements = () =>
       [
@@ -57,7 +57,7 @@ describe('protocol', () => {
         },
       ] as Array<Statement>;
 
-    // Mock fs.writeFileSync
+    // Mock `fs.writeFileSync`
     const originalWriteFileSync = fs.writeFileSync;
     let writeFileSyncCalled = false;
 
@@ -100,7 +100,7 @@ describe('protocol', () => {
   });
 
   test('load specific migration file', async () => {
-    // path to this file is ./tests/fixtures/protocol.ts
+    // Path to this file is `./tests/fixtures/protocol.ts`
     const fileName = `${process.cwd()}/tests/fixtures/protocol.ts`;
 
     const protocol = new Protocol();
