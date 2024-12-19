@@ -30,6 +30,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@iarna/toml": "2.2.5",
+    "@ronin/engine": "0.0.16",
+    "@ronin/compiler": "0.12.4",
     "chalk-template": "1.1.0",
     "get-port": "7.1.0",
     "ini": "5.0.0",
@@ -38,6 +40,8 @@
     "ora": "8.1.0"
   },
   "devDependencies": {
+    "bun-bagel": "1.1.0",
+    "@ronin/schema": "0.1.2",
     "@biomejs/biome": "1.9.4",
     "@types/bun": "1.1.12",
     "@types/ini": "4.1.1",
