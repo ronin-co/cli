@@ -30,8 +30,9 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@iarna/toml": "2.2.5",
-    "@ronin/engine": "0.0.16",
+    "@inquirer/prompts": "7.2.0",
     "@ronin/compiler": "0.12.4",
+    "@ronin/engine": "0.0.16",
     "chalk-template": "1.1.0",
     "get-port": "7.1.0",
     "ini": "5.0.0",

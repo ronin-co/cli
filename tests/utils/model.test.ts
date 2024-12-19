@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, test } from 'bun:test';
-import { db } from '@/src/utils/database';
+import { initializeDatabase } from '@/src/utils/database';
 import { getModels } from '@/src/utils/model';
 import { clearMocks, mock } from 'bun-bagel';
+
+const db = await initializeDatabase('./tests/fixtures/minimal.db');
 
 describe('models', () => {
   describe('local', () => {
