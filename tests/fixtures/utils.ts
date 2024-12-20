@@ -38,7 +38,10 @@ export const queryEphemeralDatabase = async (models: Array<Model>): Promise<Data
  * @param databaseName - The name of the database to prefill.
  * @param models - The models that should be inserted into the database.
  */
-export const prefillDatabase = async (db: Database, models: Array<Model>): Promise<void> => {
+export const prefillDatabase = async (
+  db: Database,
+  models: Array<Model>,
+): Promise<void> => {
   const queries = models.map((model) => {
     return {
       create: {
