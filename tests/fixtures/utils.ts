@@ -17,7 +17,7 @@ const engine = new Engine({
  *
  * @returns A list of rows resulting from the executed statements.
  */
-export const prefilledDatabase = async (models: Array<Model>): Promise<Database> => {
+export const queryEphemeralDatabase = async (models: Array<Model>): Promise<Database> => {
   const databaseName = Math.random().toString(36).substring(7);
   const db = await engine.createDatabase({ id: databaseName });
 
@@ -38,7 +38,7 @@ export const prefilledDatabase = async (models: Array<Model>): Promise<Database>
  * @param databaseName - The name of the database to prefill.
  * @param models - The models that should be inserted into the database.
  */
-export const prefillDatabase = async (db: Database, models: Array<Model>) => {
+export const prefillDatabase = async (db: Database, models: Array<Model>): Promise<void> => {
   const queries = models.map((model) => {
     return {
       create: {
