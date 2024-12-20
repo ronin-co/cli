@@ -1,7 +1,7 @@
 import { Account, AccountNew, TestA, TestB, TestF } from '@/fixtures/index';
 
 import { describe, expect, test } from 'bun:test';
-import { prefilledDatabase } from '@/fixtures/utils';
+import { queryEphemeralDatabase } from '@/fixtures/utils';
 import { diffModels } from '@/src/utils/migration';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
@@ -16,10 +16,10 @@ describe('apply', () => {
     const protocol = new Protocol(modelDiff);
     await protocol.convertToQueryObjects();
 
-    const statements = await protocol.getSQLStatements(existingModels);
+    const statements = protocol.getSQLStatements(existingModels);
     expect(statements).toHaveLength(4);
 
-    const db = await prefilledDatabase(existingModels);
+    const db = await queryEphemeralDatabase(existingModels);
     await db.query(statements);
 
     expect(db).toBeDefined();
@@ -41,7 +41,7 @@ describe('apply', () => {
     const statements = protocol.getSQLStatements(existingModels);
     expect(statements).toHaveLength(2);
 
-    const db = await prefilledDatabase(existingModels);
+    const db = await queryEphemeralDatabase(existingModels);
     await db.query(statements);
 
     expect(db).toBeDefined();
@@ -62,7 +62,7 @@ describe('apply', () => {
     const statements = protocol.getSQLStatements(existingModels);
     expect(statements).toHaveLength(4);
 
-    const db = await prefilledDatabase(existingModels);
+    const db = await queryEphemeralDatabase(existingModels);
     await db.query(statements);
 
     expect(db).toBeDefined();
@@ -84,7 +84,7 @@ describe('apply', () => {
     const statements = protocol.getSQLStatements(existingModels);
     expect(statements).toHaveLength(2);
 
-    const db = await prefilledDatabase(existingModels);
+    const db = await queryEphemeralDatabase(existingModels);
     await db.query(statements);
 
     expect(db).toBeDefined();
@@ -106,7 +106,7 @@ describe('apply', () => {
 
     expect(statements).toHaveLength(9);
 
-    const db = await prefilledDatabase(existingModels);
+    const db = await queryEphemeralDatabase(existingModels);
 
     expect(db).toBeDefined();
 
@@ -130,7 +130,7 @@ describe('apply', () => {
 
     expect(statements).toHaveLength(2);
 
-    const db = await prefilledDatabase(existingModels);
+    const db = await queryEphemeralDatabase(existingModels);
 
     expect(db).toBeDefined();
 
