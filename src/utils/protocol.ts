@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { formatCode } from '@/src/utils/format';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
 import { add, alter, create, drop, get, set } from 'ronin';
 import { getBatchProxy } from 'ronin/utils';
@@ -138,12 +139,15 @@ export default () => [
    *
    * @returns The Protocol instance for chaining
    */
-  save = (fileName: string): Protocol => {
+  save = async (fileName: string): Promise<Protocol> => {
     const migrationContent = this.createMigrationProtocol();
     const directoryPath = path.resolve(this._protocolDir);
 
     fs.mkdirSync(directoryPath, { recursive: true });
-    fs.writeFileSync(path.join(directoryPath, `${fileName}.ts`), migrationContent);
+    fs.writeFileSync(
+      path.join(directoryPath, `${fileName}.ts`),
+      await formatCode(migrationContent),
+    );
     return this;
   };
 

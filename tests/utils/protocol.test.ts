@@ -16,7 +16,7 @@ describe('protocol', () => {
     expect(protocol.roninQueries).toEqual(queries);
   });
 
-  test('save method should write migration file to disk', () => {
+  test('save method should write migration file to disk', async () => {
     const queries = ["create.model.to({slug: 'my_model', pluralSlug: 'my_models'})"];
     const protocol = new Protocol(queries);
     const fileName = 'migration_test';
@@ -31,10 +31,10 @@ describe('protocol', () => {
     ) => {
       writeFileSyncCalled = true;
       expect(path).toBe(`${process.cwd()}/schema/.protocols/${fileName}.ts`);
-      expect(data).toContain(queries[0]);
+      expect(data).toContain('create.model.to({ slug: \"my_model\", pluralSlug: \"my_models\" })');
     };
 
-    protocol.save(fileName);
+    await protocol.save(fileName);
     expect(writeFileSyncCalled).toBe(true);
 
     // Restore `fs.writeFileSync`
