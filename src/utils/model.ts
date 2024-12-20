@@ -55,8 +55,8 @@ export const getModels = async (
     rawResults = (await db.query(transaction.statements)).map((r) => r.rows);
   }
 
-  const results = transaction.formatResults(rawResults, false);
-  const models = (results[0] as unknown as { records: Array<Model> }).records;
+  const results = transaction.formatResults<Model>(rawResults, false);
+  const models = 'records' in results[0] ? results[0].records : [];
 
   return models.map((model) => ({
     ...model,
