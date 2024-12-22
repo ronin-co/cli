@@ -1,46 +1,9 @@
 import { IGNORED_FIELDS } from '@/src/utils/migration';
+import { type QueryResponse, getResponseBody } from '@/src/utils/misc';
 import type { Model } from '@ronin/compiler';
 import { Transaction } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
-
-interface Record {
-  // biome-ignore lint/suspicious/noExplicitAny: These will be inferred shortly.
-  indexes?: { [key: string]: any };
-  // biome-ignore lint/suspicious/noExplicitAny: These will be inferred shortly.
-  triggers?: { [key: string]: any };
-  // biome-ignore lint/suspicious/noExplicitAny: These will be inferred shortly.
-  fields?: { [key: string]: any };
-  // biome-ignore lint/suspicious/noExplicitAny: These will be inferred shortly.
-  presets?: { [key: string]: any };
-  // biome-ignore lint/suspicious/noExplicitAny: These will be inferred shortly.
-  [key: string]: any;
-}
-
-/**
- * Formats a database record into a Model by transforming nested objects into arrays with slugs
- */
-const formatRecord = (record: Record): Model => ({
-  ...record,
-  slug: record.slug,
-  indexes: Object.entries(record.indexes || {}).map(([slug, value]) => ({
-    slug,
-    ...JSON.parse(JSON.stringify(value)),
-  })),
-  presets: Object.entries(record.presets || {}).map(([slug, preset]) => ({
-    ...preset,
-    slug,
-  })),
-  triggers: Object.entries(record.triggers || {}).map(([slug, value]) => ({
-    slug,
-    ...JSON.parse(value),
-  })),
-  fields: Object.entries(record.fields || {})
-    .filter(([slug]) => !IGNORED_FIELDS.includes(slug))
-    .map(([slug, value]) => ({
-      ...(typeof value === 'string' ? JSON.parse(value) : value),
-      slug,
-    })),
-});
+import type { Row } from '@ronin/engine/types';
 
 /**
  * Fetches and formats schema models from either production API or local database.
@@ -61,39 +24,42 @@ export const getModels = async (
   isProduction?: boolean,
 ): Promise<Array<Model>> => {
   const transaction = new Transaction([{ get: { models: null } }]);
-  const statements = transaction.statements.map((s) => s.statement);
 
-  if (!isProduction) {
-    const rawResult = await db.query(statements);
-    const result = transaction.formatResults(
-      rawResult.map((r) => r.rows),
-      false,
-    );
-    // biome-ignore lint/suspicious/noExplicitAny: These will be inferred shortly.
-    const records = (result[0] as any).records as Array<Record>;
-    const formatted = records.map(formatRecord);
+  let rawResults: Array<Array<Row>>;
 
-    return formatted;
+  if (isProduction) {
+    try {
+      const nativeQueries = transaction.statements.map((statement) => ({
+        query: statement.statement,
+        values: statement.params,
+      }));
+
+      const response = await fetch(`https://data.ronin.co/?data-selector=${spaceId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ nativeQueries }),
+      });
+
+      const responseResults = await getResponseBody<QueryResponse<Model>>(response);
+
+      rawResults = responseResults.results.map((result) => {
+        return 'records' in result ? result.records : [];
+      });
+    } catch (error) {
+      throw new Error(`Failed to fetch remote models: ${(error as Error).message}`);
+    }
+  } else {
+    rawResults = (await db.query(transaction.statements)).map((r) => r.rows);
   }
 
-  try {
-    const response = await fetch(`https://data.ronin.co/?data-selector=${spaceId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        nativeQueries: statements.map((query) => ({ query })),
-      }),
-    });
+  const results = transaction.formatResults<Model>(rawResults, false);
+  const models = 'records' in results[0] ? results[0].records : [];
 
-    const { results } = (await response.json()) as {
-      results: Array<{ records: Array<Record> }>;
-    };
-
-    return results[0].records.map(formatRecord);
-  } catch (error) {
-    throw new Error(`Failed to fetch remote models: ${(error as Error).message}`);
-  }
+  return models.map((model) => ({
+    ...model,
+    fields: model.fields?.filter((field) => !IGNORED_FIELDS.includes(field.slug)),
+  }));
 };

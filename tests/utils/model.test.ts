@@ -83,7 +83,7 @@ describe('models', () => {
       expect(models).toHaveLength(0);
     });
 
-    test('Get models fails', async () => {
+    test('get models fails', async () => {
       mock('https://ronin.co/api', {
         response: {
           status: 500,
