@@ -81,7 +81,7 @@ export class Protocol {
     return `import { add, alter, create, drop, get, set } from 'ronin';
 export default () => [
   ${this._roninQueries.map((query) => ` ${query}`).join(',\n')}
-  ];`;
+];`;
   };
 
   /**
