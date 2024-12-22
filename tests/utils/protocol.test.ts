@@ -32,7 +32,7 @@ describe('protocol', () => {
       writeFileSyncCalled = true;
       expect(path).toBe(`${process.cwd()}/schema/.protocols/${fileName}.ts`);
       expect(data).toContain(
-        'create.model.to({ slug: "my_model", pluralSlug: "my_models" })',
+        "create.model.to({ slug: 'my_model', pluralSlug: 'my_models' })",
       );
     };
 

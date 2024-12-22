@@ -21,13 +21,77 @@ describe('format', () => {
     fs.existsSync = originalExistsSync;
   });
 
-  test('detectFormatConfig should parse prettier config', () => {
-    // Mock fs and path functions
+  test('detectFormatConfig should parse biome config', () => {
     const originalExistsSync = fs.existsSync;
     const originalReadFileSync = fs.readFileSync;
 
     fs.existsSync = (filePath: fs.PathLike): boolean =>
-      filePath.toString().endsWith('.prettierrc');
+      filePath.toString().endsWith('biome.json');
+    // @ts-expect-error Override type
+    fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
+      JSON.stringify({
+        formatter: {
+          indentStyle: 'tab',
+          indentWidth: 3,
+        },
+        javascript: {
+          formatter: {
+            quoteStyle: 'single',
+            semicolons: 'always',
+          },
+        },
+      });
+
+    const config = detectFormatConfig();
+    expect(config).toEqual({
+      useTabs: true,
+      tabWidth: 3,
+      singleQuote: true,
+      semi: true,
+      configSource: 'biome.json',
+    });
+
+    // Restore originals
+    fs.existsSync = originalExistsSync;
+    fs.readFileSync = originalReadFileSync;
+  });
+
+  test('detectFormatConfig should parse eslint config', () => {
+    const originalExistsSync = fs.existsSync;
+    const originalReadFileSync = fs.readFileSync;
+
+    fs.existsSync = (filePath: fs.PathLike): boolean =>
+      filePath.toString().endsWith('.eslintrc.json');
+    // @ts-expect-error Override type
+    fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
+      JSON.stringify({
+        rules: {
+          indent: ['error', 'tab'],
+          quotes: ['error', 'single'],
+          semi: ['error'],
+        },
+      });
+
+    const config = detectFormatConfig();
+    expect(config).toEqual({
+      useTabs: true,
+      tabWidth: 2,
+      singleQuote: true,
+      semi: true,
+      configSource: '.eslintrc.json',
+    });
+
+    // Restore originals
+    fs.existsSync = originalExistsSync;
+    fs.readFileSync = originalReadFileSync;
+  });
+
+  test('detectFormatConfig should parse prettier config', () => {
+    const originalExistsSync = fs.existsSync;
+    const originalReadFileSync = fs.readFileSync;
+
+    fs.existsSync = (filePath: fs.PathLike): boolean =>
+      filePath.toString().endsWith('.prettierrc.json');
     // @ts-expect-error Override type
     fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
       JSON.stringify({
@@ -43,40 +107,7 @@ describe('format', () => {
       tabWidth: 4,
       singleQuote: false,
       semi: false,
-      configSource: '.prettierrc',
-    });
-
-    // Restore originals
-    fs.existsSync = originalExistsSync;
-    fs.readFileSync = originalReadFileSync;
-  });
-
-  test('detectFormatConfig should parse biome config', () => {
-    const originalExistsSync = fs.existsSync;
-    const originalReadFileSync = fs.readFileSync;
-
-    fs.existsSync = (filePath: fs.PathLike): boolean =>
-      filePath.toString().endsWith('biome.json');
-    // @ts-expect-error Override type
-    fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
-      JSON.stringify({
-        indent: {
-          style: 'tab',
-          size: 3,
-        },
-        style: {
-          quotes: 'single',
-          semicolons: false,
-        },
-      });
-
-    const config = detectFormatConfig();
-    expect(config).toEqual({
-      useTabs: true,
-      tabWidth: 3,
-      singleQuote: true,
-      semi: false,
-      configSource: 'biome.json',
+      configSource: '.prettierrc.json',
     });
 
     // Restore originals
@@ -103,7 +134,7 @@ describe('format', () => {
     };
 
     fs.existsSync = (filePath: fs.PathLike): boolean =>
-      filePath.toString().endsWith('.prettierrc');
+      filePath.toString().endsWith('.prettierrc.json');
     // @ts-expect-error Override type
     fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
       '{ this is not valid JSON }';
@@ -120,7 +151,7 @@ describe('format', () => {
     });
 
     // Should log error about broken config
-    expect(loggedMessage).toContain('Error parsing .prettierrc:');
+    expect(loggedMessage).toContain('Error parsing .prettierrc.json:');
 
     // Restore originals
     fs.existsSync = originalExistsSync;
