@@ -32,7 +32,10 @@
       "recommended": true,
 
       "a11y": { "all": true },
-      "complexity": { "all": true, "noExcessiveCognitiveComplexity": "off" },
+      "complexity": {
+        "all": true,
+        "noExcessiveCognitiveComplexity": "off"
+      },
       "correctness": {
         "noUnusedImports": "warn",
         "noUnusedVariables": "warn"

@@ -28,10 +28,12 @@ describe('protocol', () => {
     fs.writeFileSync = (
       path: PathOrFileDescriptor,
       data: string | NodeJS.ArrayBufferView,
-    ) => {
+    ): void => {
       writeFileSyncCalled = true;
       expect(path).toBe(`${process.cwd()}/schema/.protocols/${fileName}.ts`);
-      expect(data).toContain('create.model.to({ slug: \"my_model\", pluralSlug: \"my_models\" })');
+      expect(data).toContain(
+        'create.model.to({ slug: "my_model", pluralSlug: "my_models" })',
+      );
     };
 
     await protocol.save(fileName);
@@ -49,19 +51,21 @@ describe('protocol', () => {
 
     // Mock `getSQLStatements`
     const originalGetSQLStatements = protocol.getSQLStatements;
-    protocol.getSQLStatements = () =>
-      [
-        {
-          statement: 'CREATE SCHEMA my_schema;',
-          params: [],
-        },
-      ] as Array<Statement>;
+    protocol.getSQLStatements = (): Array<Statement> => [
+      {
+        statement: 'CREATE SCHEMA my_schema;',
+        params: [],
+      },
+    ];
 
     // Mock `fs.writeFileSync`
     const originalWriteFileSync = fs.writeFileSync;
     let writeFileSyncCalled = false;
 
-    fs.writeFileSync = (path: PathOrFileDescriptor, data: string | ArrayBufferView) => {
+    fs.writeFileSync = (
+      path: PathOrFileDescriptor,
+      data: string | ArrayBufferView,
+    ): void => {
       writeFileSyncCalled = true;
       expect(path).toBe(`${process.cwd()}/schema/.protocols/${fileName}.sql`);
       expect(data).toBe('CREATE SCHEMA my_schema;');

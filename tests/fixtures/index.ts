@@ -192,7 +192,7 @@ export const TestD = model({
       action: 'INSERT',
       when: 'BEFORE',
       // @ts-expect-error Fix in models
-      effects: () => [get.test()],
+      effects: (): Array<Effect> => [get.test()],
     },
   ],
 }) as unknown as Model;
@@ -207,7 +207,7 @@ export const TestE = model({
       action: 'DELETE',
       when: 'AFTER',
       // @ts-expect-error Fix in models
-      effects: () => [get.test()],
+      effects: (): Array<Effect> => [get.test()],
     },
   ],
 }) as unknown as Model;

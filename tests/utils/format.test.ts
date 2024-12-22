@@ -6,7 +6,7 @@ describe('format', () => {
   test('detectFormatConfig should return defaults when no config files exist', () => {
     // Mock fs.existsSync to return false for all config files
     const originalExistsSync = fs.existsSync;
-    fs.existsSync = () => false;
+    fs.existsSync = (): boolean => false;
 
     const config = detectFormatConfig();
     expect(config).toEqual({
@@ -14,7 +14,7 @@ describe('format', () => {
       tabWidth: 2,
       singleQuote: true,
       semi: true,
-      configSource: 'default'
+      configSource: 'default',
     });
 
     // Restore original
@@ -25,14 +25,17 @@ describe('format', () => {
     // Mock fs and path functions
     const originalExistsSync = fs.existsSync;
     const originalReadFileSync = fs.readFileSync;
-    
-    fs.existsSync = (filePath: string) => filePath.endsWith('.prettierrc');
-    fs.readFileSync = () => JSON.stringify({
-      useTabs: true,
-      tabWidth: 4,
-      singleQuote: false,
-      semi: false
-    });
+
+    fs.existsSync = (filePath: fs.PathLike): boolean =>
+      filePath.toString().endsWith('.prettierrc');
+    // @ts-expect-error Override type
+    fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
+      JSON.stringify({
+        useTabs: true,
+        tabWidth: 4,
+        singleQuote: false,
+        semi: false,
+      });
 
     const config = detectFormatConfig();
     expect(config).toEqual({
@@ -40,7 +43,7 @@ describe('format', () => {
       tabWidth: 4,
       singleQuote: false,
       semi: false,
-      configSource: '.prettierrc'
+      configSource: '.prettierrc',
     });
 
     // Restore originals
@@ -51,18 +54,21 @@ describe('format', () => {
   test('detectFormatConfig should parse biome config', () => {
     const originalExistsSync = fs.existsSync;
     const originalReadFileSync = fs.readFileSync;
-    
-    fs.existsSync = (filePath: fs.PathLike) => filePath.toString().endsWith('biome.json');
-    fs.readFileSync = (path: fs.PathOrFileDescriptor) => JSON.stringify({
-      indent: {
-        style: 'tab',
-        size: 3
-      },
-      style: {
-        quotes: 'single',
-        semicolons: false
-      }
-    });
+
+    fs.existsSync = (filePath: fs.PathLike): boolean =>
+      filePath.toString().endsWith('biome.json');
+    // @ts-expect-error Override type
+    fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
+      JSON.stringify({
+        indent: {
+          style: 'tab',
+          size: 3,
+        },
+        style: {
+          quotes: 'single',
+          semicolons: false,
+        },
+      });
 
     const config = detectFormatConfig();
     expect(config).toEqual({
@@ -70,7 +76,7 @@ describe('format', () => {
       tabWidth: 3,
       singleQuote: true,
       semi: false,
-      configSource: 'biome.json'
+      configSource: 'biome.json',
     });
 
     // Restore originals
@@ -90,29 +96,32 @@ describe('format', () => {
     const originalExistsSync = fs.existsSync;
     const originalReadFileSync = fs.readFileSync;
     const originalConsoleLog = console.log;
-  
+
     let loggedMessage = '';
-    console.log = (msg: string) => {
+    console.log = (msg: string): void => {
       loggedMessage = msg;
     };
-  
-    fs.existsSync = (filePath: string) => filePath.endsWith('.prettierrc');
-    fs.readFileSync = () => '{ this is not valid JSON }';
-  
+
+    fs.existsSync = (filePath: fs.PathLike): boolean =>
+      filePath.toString().endsWith('.prettierrc');
+    // @ts-expect-error Override type
+    fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
+      '{ this is not valid JSON }';
+
     const config = detectFormatConfig();
-    
+
     // Should fall back to defaults when config is broken
     expect(config).toEqual({
       useTabs: false,
       tabWidth: 2,
       singleQuote: true,
       semi: true,
-      configSource: 'default'
+      configSource: 'default',
     });
-  
+
     // Should log error about broken config
     expect(loggedMessage).toContain('Error parsing .prettierrc:');
-  
+
     // Restore originals
     fs.existsSync = originalExistsSync;
     fs.readFileSync = originalReadFileSync;
