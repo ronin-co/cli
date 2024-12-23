@@ -3,9 +3,9 @@ import path from 'node:path';
 import { format } from 'prettier';
 
 /**
- * Detects code formatting configuration from common config files
+ * Detects code formatting configuration from common config files.
  *
- * @returns Object containing detected formatting preferences
+ * @returns Object containing detected formatting preferences.
  */
 export const detectFormatConfig = (): {
   useTabs: boolean;
@@ -73,7 +73,7 @@ export const detectFormatConfig = (): {
 export const formatCode = async (code: string): Promise<string> => {
   const config = detectFormatConfig();
 
-  return await format(code, {
+  return format(code, {
     parser: 'typescript',
     useTabs: config.useTabs,
     tabWidth: config.tabWidth,

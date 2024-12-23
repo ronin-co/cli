@@ -4,7 +4,7 @@ import { detectFormatConfig, formatCode } from '@/src/utils/format';
 
 describe('format', () => {
   test('detectFormatConfig should return defaults when no config files exist', () => {
-    // Mock fs.existsSync to return false for all config files
+    // Mock `fs.existsSync` to return `false` for all config files
     const originalExistsSync = fs.existsSync;
     fs.existsSync = (): boolean => false;
 
