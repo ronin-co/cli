@@ -27,7 +27,7 @@ export const initializeDatabase = async (
   try {
     await db.query(transaction.statements.map((statement) => statement.statement));
   } catch (_error) {
-    console.log('ronin_schema already exists');
+    // RONIN_SCHEMA already exists
   }
 
   return db;

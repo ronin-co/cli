@@ -137,7 +137,7 @@ describe('misc', () => {
 
     test('should return models in code definitions - one model', async () => {
       mock.module('@/src/utils/misc', () => {
-        return { getModelDefinitions: () => [Account] };
+        return { getModelDefinitions: (): Array<Model> => [Account] };
       });
 
       const models = await getModelDefinitions();

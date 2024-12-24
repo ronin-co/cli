@@ -152,7 +152,7 @@ const create = async (
     const paddedNum = String(nextNum).padStart(4, '0');
     const protocol = new Protocol(modelDiff);
     await protocol.convertToQueryObjects();
-    protocol.save(`migration-${paddedNum}`);
+    await protocol.save(`migration-${paddedNum}`);
 
     if (flags.sql) {
       const allModels = [...existingModels, ...definedModels];

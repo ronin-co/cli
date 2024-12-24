@@ -16,7 +16,7 @@ describe('protocol', () => {
     expect(protocol.roninQueries).toEqual(queries);
   });
 
-  test('save method should write migration file to disk', () => {
+  test('save method should write migration file to disk', async () => {
     const queries = ["create.model.to({slug: 'my_model', pluralSlug: 'my_models'})"];
     const protocol = new Protocol(queries);
     const fileName = 'migration_test';
@@ -28,13 +28,15 @@ describe('protocol', () => {
     fs.writeFileSync = (
       path: PathOrFileDescriptor,
       data: string | NodeJS.ArrayBufferView,
-    ) => {
+    ): void => {
       writeFileSyncCalled = true;
       expect(path).toBe(`${process.cwd()}/schema/.protocols/${fileName}.ts`);
-      expect(data).toContain(queries[0]);
+      expect(data).toContain(
+        "create.model.to({ slug: 'my_model', pluralSlug: 'my_models' })",
+      );
     };
 
-    protocol.save(fileName);
+    await protocol.save(fileName);
     expect(writeFileSyncCalled).toBe(true);
 
     // Restore `fs.writeFileSync`
@@ -49,19 +51,21 @@ describe('protocol', () => {
 
     // Mock `getSQLStatements`
     const originalGetSQLStatements = protocol.getSQLStatements;
-    protocol.getSQLStatements = () =>
-      [
-        {
-          statement: 'CREATE SCHEMA my_schema;',
-          params: [],
-        },
-      ] as Array<Statement>;
+    protocol.getSQLStatements = (): Array<Statement> => [
+      {
+        statement: 'CREATE SCHEMA my_schema;',
+        params: [],
+      },
+    ];
 
     // Mock `fs.writeFileSync`
     const originalWriteFileSync = fs.writeFileSync;
     let writeFileSyncCalled = false;
 
-    fs.writeFileSync = (path: PathOrFileDescriptor, data: string | ArrayBufferView) => {
+    fs.writeFileSync = (
+      path: PathOrFileDescriptor,
+      data: string | ArrayBufferView,
+    ): void => {
       writeFileSyncCalled = true;
       expect(path).toBe(`${process.cwd()}/schema/.protocols/${fileName}.sql`);
       expect(data).toBe('CREATE SCHEMA my_schema;');
