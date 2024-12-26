@@ -35,22 +35,22 @@
   },
   "dependencies": {
     "@iarna/toml": "2.2.5",
-    "@inquirer/prompts": "7.2.0",
+    "@inquirer/prompts": "7.2.1",
     "@ronin/compiler": "0.12.6",
-    "@ronin/engine": "0.0.16",
+    "@ronin/engine": "0.0.27",
     "chalk-template": "1.1.0",
     "get-port": "7.1.0",
     "ini": "5.0.0",
     "json5": "2.2.3",
     "open": "10.1.0",
-    "ora": "8.1.0",
+    "ora": "8.1.1",
     "prettier": "3.4.2"
   },
   "devDependencies": {
     "bun-bagel": "1.1.0",
     "@ronin/schema": "0.1.2",
     "@biomejs/biome": "1.9.4",
-    "@types/bun": "1.1.12",
+    "@types/bun": "1.1.14",
     "@types/ini": "4.1.1",
     "tsup": "8.3.5",
     "typescript": "5.7.2"
