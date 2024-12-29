@@ -111,7 +111,7 @@ describe('queries', () => {
       },
     ];
     const customQueries: Array<string> = ['get.model("user")'];
-    const result = createTempModelQuery('user', fields, [], customQueries);
+    const result = createTempModelQuery('user', fields, [], [], customQueries);
     expect(result).toEqual([
       "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
       'add.RONIN_TEMP_user.to(() => get.user())',

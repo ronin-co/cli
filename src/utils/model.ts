@@ -58,9 +58,6 @@ export const getModels = async (
   const results = transaction.formatResults<Model>(rawResults, false);
   const models = 'records' in results[0] ? results[0].records : [];
 
-  console.log(rawResults);
-  console.log(models.map((model) => model.triggers));
-
   return models.map((model) => ({
     ...model,
     fields: model.fields?.filter((field) => !IGNORED_FIELDS.includes(field.slug)),

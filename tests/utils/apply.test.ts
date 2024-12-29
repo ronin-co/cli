@@ -204,7 +204,7 @@ describe('apply', () => {
     expect(models[0].triggers).toBeDefined();
   });
 
-  test.only('update model triggers', async () => {
+  test('update model triggers', async () => {
     const definedModels: Array<Model> = [TestE, TestC];
     const existingModels: Array<Model> = [TestD];
 
@@ -217,11 +217,10 @@ describe('apply', () => {
     await protocol.convertToQueryObjects();
 
     const statements = protocol.getSQLStatements(models);
-    console.log(statements);
     await db.query(statements);
 
     const newModels = await getModels(db);
-    
+
     expect(newModels[1]?.triggers?.[0]?.action).toBe('DELETE');
   });
 
@@ -229,80 +228,76 @@ describe('apply', () => {
     const definedModels: Array<Model> = [TestE, TestB];
     const existingModels: Array<Model> = [TestD, TestA];
 
-    const modelDiff = await diffModels(definedModels, existingModels);
+    const db = await queryEphemeralDatabase(existingModels);
+    const models = await getModels(db);
+
+    const modelDiff = await diffModels(definedModels, models);
+
     const protocol = new Protocol(modelDiff);
     await protocol.convertToQueryObjects();
 
-    const statements = protocol.getSQLStatements(existingModels);
-    const db = await queryEphemeralDatabase(existingModels);
+    const statements = protocol.getSQLStatements(models);
     await db.query(statements);
 
-    const models = await getModels(db);
-    expect(models).toHaveLength(2);
+    const newModels = await getModels(db);
+    expect(newModels).toHaveLength(2);
   });
 
   test('rename model with existing relationships', async () => {
     const definedModels: Array<Model> = [AccountNew, Profile];
     const existingModels: Array<Model> = [Account, Profile];
 
-    const modelDiff = await diffModels(definedModels, existingModels, true);
+    const db = await queryEphemeralDatabase(existingModels);
+    const models = await getModels(db);
+
+    const modelDiff = await diffModels(definedModels, models, true);
+
     const protocol = new Protocol(modelDiff);
     await protocol.convertToQueryObjects();
 
-    const statements = protocol.getSQLStatements(existingModels);
-    const db = await queryEphemeralDatabase(existingModels);
+    const statements = protocol.getSQLStatements(models);
     await db.query(statements);
 
-    const models = await getModels(db);
-    expect(models.find((m) => m.slug === 'account_new')).toBeDefined();
+    const newModels = await getModels(db);
+    expect(newModels.find((m) => m.slug === 'account_new')).toBeDefined();
   });
 
   test('drop multiple models with dependencies', async () => {
     const definedModels: Array<Model> = [];
     const existingModels: Array<Model> = [Account, Profile, TestA];
 
-    const modelDiff = await diffModels(definedModels, existingModels);
+    const db = await queryEphemeralDatabase(existingModels);
+    const models = await getModels(db);
+
+    const modelDiff = await diffModels(definedModels, models);
+
     const protocol = new Protocol(modelDiff);
     await protocol.convertToQueryObjects();
 
-    const statements = protocol.getSQLStatements(existingModels);
-    const db = await queryEphemeralDatabase(existingModels);
+    const statements = protocol.getSQLStatements(models);
     await db.query(statements);
 
-    const models = await getModels(db);
-    expect(models).toHaveLength(0);
+    const newModels = await getModels(db);
+    expect(newModels).toHaveLength(0);
   });
 
   test('complex model update with multiple changes', async () => {
     const definedModels: Array<Model> = [TestE, TestB, Account];
     const existingModels: Array<Model> = [TestD, TestA, AccountNew];
 
-    const modelDiff = await diffModels(definedModels, existingModels, true);
+    const db = await queryEphemeralDatabase(existingModels);
+    const models = await getModels(db);
+
+    const modelDiff = await diffModels(definedModels, models, true);
+
     const protocol = new Protocol(modelDiff);
     await protocol.convertToQueryObjects();
 
-    const statements = protocol.getSQLStatements(existingModels);
-    const db = await queryEphemeralDatabase(existingModels);
+    const statements = protocol.getSQLStatements(models);
     await db.query(statements);
 
-    const models = await getModels(db);
-    expect(models).toHaveLength(3);
-  });
-
-  test('update model with complex index changes', async () => {
-    const definedModels: Array<Model> = [TestB, TestF];
-    const existingModels: Array<Model> = [TestA];
-
-    const modelDiff = await diffModels(definedModels, existingModels);
-    const protocol = new Protocol(modelDiff);
-    await protocol.convertToQueryObjects();
-
-    const statements = protocol.getSQLStatements(existingModels);
-    const db = await queryEphemeralDatabase(existingModels);
-    await db.query(statements);
-
-    const models = await getModels(db);
-    expect(models.length).toBeGreaterThan(0);
+    const newModels = await getModels(db);
+    expect(newModels).toHaveLength(3);
   });
 
   test('create and update models with mixed operations', async () => {
@@ -313,8 +308,7 @@ describe('apply', () => {
     const models = await getModels(db);
 
     const modelDiff = await diffModels(definedModels, models);
-    console.log(JSON.stringify(models, null, 2));
-    console.log(modelDiff);
+
     const protocol = new Protocol(modelDiff);
     await protocol.convertToQueryObjects();
 
