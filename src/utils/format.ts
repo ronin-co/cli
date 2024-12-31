@@ -70,7 +70,7 @@ export const detectFormatConfig = (): {
   };
 };
 
-export const formatCode = async (code: string): Promise<string> => {
+export const formatCode = (code: string): Promise<string> => {
   const config = detectFormatConfig();
 
   return format(code, {
