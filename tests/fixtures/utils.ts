@@ -1,6 +1,5 @@
-import { Transaction } from '@ronin/compiler';
+import { ROOT_MODEL, Transaction } from '@ronin/compiler';
 
-import fs from 'node:fs';
 import type { Model } from '@ronin/compiler';
 import { type Database, Engine } from '@ronin/engine';
 import { MemoryResolver } from '@ronin/engine/resolvers/memory';
@@ -18,18 +17,12 @@ const engine = new Engine({
  * @returns A list of rows resulting from the executed statements.
  */
 export const queryEphemeralDatabase = async (models: Array<Model>): Promise<Database> => {
-  const databaseName = Math.random().toString(36).substring(7);
-  const db = await engine.createDatabase({ id: databaseName });
+  const databaseId = Math.random().toString(36).substring(7);
+  const database = await engine.createDatabase({ id: databaseId });
 
-  const DB_LOCATION = './tests/fixtures/minimal.db';
+  await prefillDatabase(database, models);
 
-  const file = fs.readFileSync(DB_LOCATION);
-  const buffer = new Uint8Array(file);
-  await db.replaceContents(buffer);
-
-  await prefillDatabase(db, models);
-
-  return db;
+  return database;
 };
 
 /**
@@ -42,14 +35,11 @@ export const prefillDatabase = async (
   db: Database,
   models: Array<Model>,
 ): Promise<void> => {
-  const queries = models.map((model) => {
-    return {
-      create: {
-        model: model,
-      },
-    };
-  });
+  const rootModelTransaction = new Transaction([{ create: { model: ROOT_MODEL } }]);
 
-  const transaction = new Transaction(queries);
-  await db.query(transaction.statements);
+  const modelTransaction = new Transaction(
+    models.map((model) => ({ create: { model } })),
+  );
+
+  await db.query([...rootModelTransaction.statements, ...modelTransaction.statements]);
 };
