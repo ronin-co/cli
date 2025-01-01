@@ -1,5 +1,9 @@
 # RONIN CLI
 
+[![tests](https://img.shields.io/github/actions/workflow/status/ronin-co/cli/validate.yml?label=tests)](https://github.com/ronin-co/cli/actions/workflows/validate.yml)
+[![code coverage](https://img.shields.io/codecov/c/github/ronin-co/cli)](https://codecov.io/github/ronin-co/cli)
+[![install size](https://packagephobia.com/badge?p=@ronin/cli)](https://packagephobia.com/result?p=@ronin/cli)
+
 This package exposes the `ronin` command, which you can run from your terminal to interact with [RONIN](https://ronin.co).
 
 ## Setup
