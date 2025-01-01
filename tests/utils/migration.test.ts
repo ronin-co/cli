@@ -131,7 +131,7 @@ describe('migration', () => {
 
         expect(modelDiff).toStrictEqual([
           "create.model({slug:'comment',fields:[{slug:'name', unique:false, required:false, type:'string'}]})",
-          'alter.model("comment").create.trigger({"action":"INSERT","when":"BEFORE","effects":[{"get":{"test":{}}}]})',
+          'alter.model("comment").create.trigger({"action":"INSERT","when":"BEFORE","effects":[{"add":{"comment":{"to":{"name":"Test"}}}}]})',
         ]);
       });
 
@@ -149,7 +149,7 @@ describe('migration', () => {
         expect(modelDiff).toHaveLength(2);
         expect(modelDiff).toStrictEqual([
           'alter.model("comment").drop.trigger("no slug")',
-          'alter.model("comment").create.trigger({"action":"DELETE","when":"AFTER","effects":[{"get":{"test":{}}}]})',
+          'alter.model("comment").create.trigger({"action":"DELETE","when":"AFTER","effects":[{"add":{"comment":{"to":{"name":"Test"}}}}]})',
         ]);
       });
     });

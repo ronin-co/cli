@@ -197,6 +197,7 @@ describe('apply', () => {
     const statements = protocol.getSQLStatements(existingModels);
 
     const db = await queryEphemeralDatabase(existingModels);
+    console.log('STATEMENTS', statements)
     await db.query(statements);
 
     const models = await getModels(db);
@@ -294,7 +295,6 @@ describe('apply', () => {
     await protocol.convertToQueryObjects();
 
     const statements = protocol.getSQLStatements(models);
-    console.log('STATEMENTS', statements);
     await db.query(statements);
 
     const newModels = await getModels(db);
