@@ -197,7 +197,7 @@ describe('apply', () => {
     const statements = protocol.getSQLStatements(existingModels);
 
     const db = await queryEphemeralDatabase(existingModels);
-    console.log('STATEMENTS', statements)
+    console.log('STATEMENTS', statements);
     await db.query(statements);
 
     const models = await getModels(db);
@@ -296,6 +296,23 @@ describe('apply', () => {
 
     const statements = protocol.getSQLStatements(models);
     await db.query(statements);
+
+    /*
+    for (const statement of statements) {
+      const newStatement = {...statement};
+
+      if (newStatement.statement.includes("json('")) {
+        newStatement.statement = newStatement.statement.replace("strftime('%Y-%m-%dT%H:%M:%f', 'now') || 'Z'", "strftime(''%Y-%m-%dT%H:%M:%f'', ''now'') || ''Z''");
+      }
+      try {
+        await db.query([newStatement]);
+      } catch (err) {
+        console.log('_________')
+        console.error('STATEMENT FAILED', newStatement);
+        console.error(err);
+        console.log('_________');
+      }
+    }*/
 
     const newModels = await getModels(db);
     expect(newModels).toHaveLength(3);
