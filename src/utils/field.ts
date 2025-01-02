@@ -7,7 +7,7 @@ import {
   setFieldQuery,
 } from '@/src/utils/queries';
 import { confirm } from '@inquirer/prompts';
-import type { ModelField, ModelIndex } from '@ronin/compiler';
+import type { ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
 
 /**
  * Generates the difference (migration steps) between local and remote fields of a model.
@@ -23,6 +23,7 @@ export const diffFields = async (
   existingFields: Array<ModelField>,
   modelSlug: string,
   indexes: Array<ModelIndex>,
+  triggers: Array<ModelTrigger>,
   rename?: boolean,
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
@@ -55,6 +56,7 @@ export const diffFields = async (
                 ...definedFields.filter((local) => local.slug !== field.to.slug),
               ],
               indexes,
+              triggers,
               [
                 renameFieldQuery(
                   `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`,
@@ -74,7 +76,8 @@ export const diffFields = async (
   diff.push(...createFields(fieldsToAdd, modelSlug));
   diff.push(...deleteFields(fieldsToDelete, modelSlug));
 
-  if (queriesForAdjustment) diff.push(...adjustFields(modelSlug, definedFields, indexes));
+  if (queriesForAdjustment)
+    diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
 
   return diff;
 };
@@ -177,8 +180,9 @@ const adjustFields = (
   modelSlug: string,
   fields: Array<ModelField>,
   indexes: Array<ModelIndex>,
+  triggers: Array<ModelTrigger>,
 ): Array<string> => {
-  return createTempModelQuery(modelSlug, fields, indexes);
+  return createTempModelQuery(modelSlug, fields, indexes, triggers);
 };
 
 /**

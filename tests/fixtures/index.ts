@@ -1,6 +1,6 @@
 import type { Model } from '@ronin/compiler';
 import { blob, boolean, date, link, model, number, string } from '@ronin/schema';
-import { get } from 'ronin';
+import { add } from 'ronin';
 
 const TestAccount = model({
   slug: 'account',
@@ -192,7 +192,7 @@ export const TestD = model({
       action: 'INSERT',
       when: 'BEFORE',
       // @ts-expect-error Fix in models
-      effects: (): Array<Effect> => [get.test()],
+      effects: (): Array<Effect> => [add.comment.to({ name: 'Test' })],
     },
   ],
 }) as unknown as Model;
@@ -207,7 +207,7 @@ export const TestE = model({
       action: 'DELETE',
       when: 'AFTER',
       // @ts-expect-error Fix in models
-      effects: (): Array<Effect> => [get.test()],
+      effects: (): Array<Effect> => [add.comment.to({ name: 'Test' })],
     },
   ],
 }) as unknown as Model;

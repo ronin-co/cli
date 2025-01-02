@@ -139,6 +139,7 @@ export const createTempModelQuery = (
   modelSlug: string,
   fields: Array<ModelField>,
   indexes: Array<ModelIndex>,
+  triggers: Array<ModelTrigger>,
   customQueries?: Array<string>,
 ): Array<string> => {
   const queries: Array<string> = [];
@@ -163,6 +164,10 @@ export const createTempModelQuery = (
 
   for (const index of indexes) {
     queries.push(createIndexQuery(modelSlug, index));
+  }
+
+  for (const trigger of triggers) {
+    queries.push(createTriggerQuery(modelSlug, trigger));
   }
 
   return queries;

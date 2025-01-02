@@ -124,7 +124,7 @@ describe('fields', () => {
           slug: 'id',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', []);
+      const diff = await diffFields(localFields, remoteFields, 'account', [], []);
       expect(diff).toHaveLength(1);
       expect(diff).toStrictEqual([
         'alter.model(\'account\').create.field({"type":"string","slug":"name","model":{"slug":"account"}})',
@@ -148,7 +148,7 @@ describe('fields', () => {
           slug: 'name',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', []);
+      const diff = await diffFields(localFields, remoteFields, 'account', [], []);
       expect(diff).toHaveLength(1);
       expect(diff).toStrictEqual(['alter.model("account").drop.field("name")']);
     });
@@ -168,7 +168,7 @@ describe('fields', () => {
           unique: false,
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', []);
+      const diff = await diffFields(localFields, remoteFields, 'account', [], []);
       expect(diff).toHaveLength(4);
       expect(diff).toStrictEqual([
         "create.model({slug:'RONIN_TEMP_account',fields:[{type:'number', slug:'id', unique:true}]})",
@@ -193,7 +193,7 @@ describe('fields', () => {
           target: 'profile',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], true);
+      const diff = await diffFields(localFields, remoteFields, 'account', [], [], true);
       expect(diff).toHaveLength(5);
       expect(diff).toStrictEqual([
         "create.model({slug:'RONIN_TEMP_account',fields:[{type:'link', slug:'profile', target:'profile'}]})",
@@ -217,7 +217,7 @@ describe('fields', () => {
           slug: 'profile',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], true);
+      const diff = await diffFields(localFields, remoteFields, 'account', [], [], true);
 
       expect(diff).toHaveLength(1);
       expect(diff).toStrictEqual([

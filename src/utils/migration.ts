@@ -105,6 +105,7 @@ const adjustModels = async (
           remoteModel.fields || [],
           localModel.slug,
           localModel.indexes || [],
+          localModel.triggers || [],
           rename,
         )),
       );
