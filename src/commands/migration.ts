@@ -68,7 +68,7 @@ export default async function main(
  * Applies migration statements to the database.
  */
 const applyMigrationStatements = async (
-  appToken: string | undefined,
+  appTokenOrSessionToken: string | undefined,
   flags: Flags,
   db: Database,
   statements: Array<{ statement: string }>,
@@ -81,7 +81,7 @@ const applyMigrationStatements = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${appToken}`,
+        Authorization: `Bearer ${appTokenOrSessionToken}`,
       },
       body: JSON.stringify({
         nativeQueries: statements.map((query) => ({
@@ -176,7 +176,13 @@ const create = async (
         path.join(migrationsPath, `migration-${paddedNum}.ts`),
       );
 
-      await applyMigrationStatements(appToken, flags, db, statements, slug);
+      await applyMigrationStatements(
+        appToken ?? sessionToken,
+        flags,
+        db,
+        statements,
+        slug,
+      );
     }
 
     process.exit(0);
@@ -223,8 +229,9 @@ const apply = async (
         ),
       path.join(migrationsPath, path.basename(latestProtocolFile)),
     );
+    console.log('Session token', sessionToken);
 
-    await applyMigrationStatements(appToken, flags, db, statements, slug);
+    await applyMigrationStatements(appToken ?? sessionToken, flags, db, statements, slug);
 
     spinner.succeed('Successfully applied migration');
     process.exit(0);
