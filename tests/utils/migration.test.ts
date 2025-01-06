@@ -12,9 +12,10 @@ import {
 } from '@/fixtures/index';
 import {
   adjustModelMeta,
+  createIndexes,
   createModels,
   diffModels,
-  dropAndAddIndexes,
+  dropIndexes,
   dropModels,
   indexesToRecreate,
   triggersToRecreate,
@@ -118,7 +119,7 @@ describe('migration', () => {
         const modelDiff = await diffModels([TestB], [TestA]);
 
         expect(modelDiff).toBeDefined();
-        expect(modelDiff).toHaveLength(10);
+        expect(modelDiff).toHaveLength(8);
       });
     });
 
@@ -260,7 +261,10 @@ describe('migration', () => {
         ],
       };
 
-      const queries = dropAndAddIndexes(definedModel, existingModel);
+      const queries = [
+        ...dropIndexes(definedModel, existingModel),
+        ...createIndexes(definedModel, existingModel),
+      ];
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual([
@@ -278,7 +282,10 @@ describe('migration', () => {
         slug: 'test',
       };
 
-      const queries = dropAndAddIndexes(definedModel, existingModel);
+      const queries = [
+        ...dropIndexes(definedModel, existingModel),
+        ...createIndexes(definedModel, existingModel),
+      ];
 
       expect(queries).toHaveLength(0);
       expect(queries).toStrictEqual([]);
@@ -306,7 +313,10 @@ describe('migration', () => {
         ],
       };
 
-      const queries = dropAndAddIndexes(definedModel, existingModel);
+      const queries = [
+        ...dropIndexes(definedModel, existingModel),
+        ...createIndexes(definedModel, existingModel),
+      ];
 
       expect(queries).toHaveLength(0);
       expect(queries).toStrictEqual([]);

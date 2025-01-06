@@ -138,7 +138,7 @@ export const dropFieldQuery = (modelSlug: string, fieldSlug: string): string => 
 export const createTempModelQuery = (
   modelSlug: string,
   fields: Array<ModelField>,
-  indexes: Array<ModelIndex>,
+  _indexes: Array<ModelIndex>,
   triggers: Array<ModelTrigger>,
   customQueries?: Array<string>,
 ): Array<string> => {
@@ -161,10 +161,6 @@ export const createTempModelQuery = (
 
   // Rename the copied model to the original model
   queries.push(`alter.model("${tempModelSlug}").to({slug: "${modelSlug}"})`);
-
-  for (const index of indexes) {
-    queries.push(createIndexQuery(modelSlug, index));
-  }
 
   for (const trigger of triggers) {
     queries.push(createTriggerQuery(modelSlug, trigger));

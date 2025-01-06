@@ -8,6 +8,7 @@ import {
   TestD,
   TestE,
   TestF,
+  TestG,
 } from '@/fixtures/index';
 
 import { describe, expect, test } from 'bun:test';
@@ -114,7 +115,7 @@ describe('apply', () => {
 
     const statements = protocol.getSQLStatements(existingModels);
 
-    expect(statements).toHaveLength(9);
+    expect(statements).toHaveLength(7);
 
     const db = await queryEphemeralDatabase(existingModels);
 
@@ -197,7 +198,7 @@ describe('apply', () => {
     const statements = protocol.getSQLStatements(existingModels);
 
     const db = await queryEphemeralDatabase(existingModels);
-    console.log('STATEMENTS', statements);
+
     await db.query(statements);
 
     const models = await getModels(db);
@@ -318,5 +319,24 @@ describe('apply', () => {
 
     const newModels = await getModels(db);
     expect(newModels.length).toBeGreaterThan(1);
+  });
+
+  test('add field and change field property', async () => {
+    const definedModels: Array<Model> = [TestG];
+    const existingModels: Array<Model> = [TestF];
+
+    const db = await queryEphemeralDatabase(existingModels);
+    const models = await getModels(db);
+
+    const modelDiff = await diffModels(definedModels, models);
+
+    const protocol = new Protocol(modelDiff);
+    await protocol.convertToQueryObjects();
+
+    const statements = protocol.getSQLStatements(models);
+    await db.query(statements);
+
+    const newModels = await getModels(db);
+    expect(newModels).toHaveLength(1);
   });
 });

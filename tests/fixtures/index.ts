@@ -220,3 +220,11 @@ export const TestF = model({
   },
   indexes: [{ fields: [{ slug: 'age' }], unique: true }],
 }) as unknown as Model;
+
+export const TestG = model({
+  slug: 'test',
+  fields: {
+    age: string({ required: true, unique: true }),
+    name: string(),
+  },
+}) as unknown as Model;
