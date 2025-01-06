@@ -174,7 +174,9 @@ export const getModelDefinitions = async (): Promise<Array<Model>> => {
     process.exit(1);
   }
 
-  const sortedModels = sortModels(Object.values(await import(MODEL_IN_CODE_PATH)) as Array<Model>);
+  const sortedModels = sortModels(
+    Object.values(await import(MODEL_IN_CODE_PATH)) as Array<Model>,
+  );
 
   // Check for duplicate model slugs
   const slugCounts = new Map<string, number>();
@@ -182,8 +184,10 @@ export const getModelDefinitions = async (): Promise<Array<Model>> => {
     const count = slugCounts.get(model.slug) ?? 0;
     slugCounts.set(model.slug, count + 1);
     if (count > 0) {
-      console.error(`Duplicate model slug found: "${model.slug}". You cannot have two models with the same slug.`);
-      process.exit(1); 
+      console.error(
+        `Duplicate model slug found: "${model.slug}". You cannot have two models with the same slug.`,
+      );
+      process.exit(1);
     }
   }
 
