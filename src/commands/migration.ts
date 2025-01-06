@@ -119,7 +119,7 @@ const create = async (
     spinner.text = 'Comparing models';
 
     const [existingModels, definedModels] = await Promise.all([
-      getModels(db, appToken!, slug, flags.prod),
+      getModels(db, appToken ?? sessionToken, slug, flags.prod),
       getModelDefinitions(),
     ]);
 
