@@ -339,4 +339,37 @@ describe('apply', () => {
     const newModels = await getModels(db);
     expect(newModels).toHaveLength(1);
   });
+
+  test('the mega test', async () => {
+    const allModels = [TestA, TestB, TestC, TestD, TestE, TestF, TestG, Account, AccountNew, Profile];
+
+    // Generate all possible combinations of models for both defined and existing
+    for (let definedSize = 1; definedSize <= allModels.length; definedSize++) {
+      for (let existingSize = 1; existingSize <= allModels.length; existingSize++) {
+        // Generate all possible combinations of defined models of size definedSize
+        for (let i = 0; i <= allModels.length - definedSize; i++) {
+          const definedModels = allModels.slice(i, i + definedSize);
+          
+          // Generate all possible combinations of existing models of size existingSize
+          for (let j = 0; j <= allModels.length - existingSize; j++) {
+            const existingModels = allModels.slice(j, j + existingSize);
+
+            const db = await queryEphemeralDatabase(existingModels);
+            const models = await getModels(db);
+
+            const modelDiff = await diffModels(definedModels, models);
+
+            const protocol = new Protocol(modelDiff);
+            await protocol.convertToQueryObjects();
+
+            const statements = protocol.getSQLStatements(models);
+            await db.query(statements);
+
+            const newModels = await getModels(db);
+            expect(newModels.length).toBeLessThanOrEqual(Math.max(definedSize, existingSize));
+          }
+        }
+      }
+    }
+  });
 });
