@@ -373,7 +373,7 @@ export const createIndexes = (
   const definedIndexes = definedModel.indexes || [];
   const existingIndexes = existingModel.indexes || [];
 
-  // Find every index that is defined but not in existing
+  // Find every index that is defined but not in `existingIndexes`
   const indexesToAdd = definedIndexes.filter(
     (i) =>
       !existingIndexes.some(
