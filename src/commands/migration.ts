@@ -229,7 +229,6 @@ const apply = async (
         ),
       path.join(migrationsPath, path.basename(latestProtocolFile)),
     );
-    console.log('Session token', sessionToken);
 
     await applyMigrationStatements(appToken ?? sessionToken, flags, db, statements, slug);
 
