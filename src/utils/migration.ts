@@ -1,4 +1,4 @@
-import { diffFields } from '@/src/utils/field';
+import { diffFields, fieldsToAdjust } from '@/src/utils/field';
 import { areArraysEqual } from '@/src/utils/misc';
 import {
   createIndexQuery,
@@ -302,6 +302,18 @@ const dropAndAddTriggers = (definedModel: Model, existingModel: Model): Array<st
   return diff;
 };
 
+export const modelWillBeRecreated = (
+  definedModel: Model,
+  existingModel: Model,
+  slug: string,
+): boolean => {
+  if (!existingModel) return false;
+  return (
+    (fieldsToAdjust(definedModel.fields || [], existingModel.fields || [], slug) ?? [])
+      .length > 0
+  );
+};
+
 export const indexesToRecreate = (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
@@ -310,31 +322,25 @@ export const indexesToRecreate = (
 
   for (const definedModel of definedModels) {
     const existingModel = existingModels.find((m) => m.slug === definedModel.slug);
-    diff.push(...dropAndAddIndexes(definedModel, existingModel || ({} as Model)));
+    const modelRecreated = modelWillBeRecreated(
+      definedModel,
+      existingModel || ({} as Model),
+      definedModel.slug,
+    );
+
+    diff.push(
+      ...(modelRecreated
+        ? []
+        : dropIndexes(definedModel, existingModel || ({} as Model))),
+      ...createIndexes(definedModel, existingModel || ({} as Model)),
+    );
   }
   return diff;
 };
 
-export const dropAndAddIndexes = (
-  definedModel: Model,
-  existingModel: Model,
-): Array<string> => {
+export const dropIndexes = (definedModel: Model, existingModel: Model): Array<string> => {
   const diff: Array<string> = [];
   const definedIndexes = definedModel.indexes || [];
-  const existingIndexes = existingModel.indexes || [];
-
-  // Find every index that is defined but not in existing
-  const indexesToAdd = definedIndexes.filter(
-    (i) =>
-      !existingIndexes.some(
-        (e) =>
-          e.fields &&
-          i.fields &&
-          e.fields.length === i.fields.length &&
-          e.unique === i.unique &&
-          e.fields.every((f, idx) => JSON.stringify(f) === JSON.stringify(i.fields[idx])),
-      ),
-  );
 
   // Find every index that exists but not in defined
   const indexesToDrop =
@@ -355,6 +361,30 @@ export const dropAndAddIndexes = (
   for (const index of indexesToDrop) {
     diff.push(dropIndexQuery(definedModel.slug, index.slug || 'no slug'));
   }
+
+  return diff;
+};
+
+export const createIndexes = (
+  definedModel: Model,
+  existingModel: Model,
+): Array<string> => {
+  const diff: Array<string> = [];
+  const definedIndexes = definedModel.indexes || [];
+  const existingIndexes = existingModel.indexes || [];
+
+  // Find every index that is defined but not in `existingIndexes`
+  const indexesToAdd = definedIndexes.filter(
+    (i) =>
+      !existingIndexes.some(
+        (e) =>
+          e.fields &&
+          i.fields &&
+          e.fields.length === i.fields.length &&
+          e.unique === i.unique &&
+          e.fields.every((f, idx) => JSON.stringify(f) === JSON.stringify(i.fields[idx])),
+      ),
+  );
 
   for (const index of indexesToAdd) {
     diff.push(createIndexQuery(definedModel.slug, index));
