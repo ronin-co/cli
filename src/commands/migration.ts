@@ -164,7 +164,10 @@ const create = async (
     if (flags.apply) {
       const statements = protocol.getSQLStatements(existingModels);
       const migrationsPath = path.join(process.cwd(), MODELS_IN_CODE_DIR, 'migrations');
-      fs.mkdirSync(migrationsPath, { recursive: true });
+
+      if (!fs.existsSync(migrationsPath)) {
+        fs.mkdirSync(migrationsPath, { recursive: true });
+      }
 
       fs.copyFileSync(
         path.join(
@@ -224,6 +227,11 @@ const apply = async (
     const latestProtocolFile = files.sort().pop() || 'migration';
 
     const migrationsPath = path.join(process.cwd(), MODELS_IN_CODE_DIR, 'migrations');
+
+    if (!fs.existsSync(migrationsPath)) {
+      fs.mkdirSync(migrationsPath, { recursive: true });
+    }
+
     fs.copyFileSync(
       migrationFilePath ||
         path.join(
