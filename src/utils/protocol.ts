@@ -3,10 +3,9 @@ import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
 
-const ronin = await import(path.join(process.cwd(), 'node_modules', 'ronin'));
-const roninUtils = await import(
-  path.join(process.cwd(), 'node_modules', 'ronin/dist/utils')
-);
+const localRoninPath = path.join(process.cwd(), 'node_modules', 'ronin');
+const ronin = await import(localRoninPath);
+const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
 
 const { add, alter, create, drop, get, set } = ronin;
 const { getBatchProxy } = roninUtils;
