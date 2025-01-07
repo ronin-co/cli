@@ -4,11 +4,12 @@ import { formatCode } from '@/src/utils/format';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
 
 const ronin = await import(path.join(process.cwd(), 'node_modules', 'ronin'));
-const roninUtils = await import(path.join(process.cwd(), 'node_modules', 'ronin/dist/utils'));
+const roninUtils = await import(
+  path.join(process.cwd(), 'node_modules', 'ronin/dist/utils')
+);
 
 const { add, alter, create, drop, get, set } = ronin;
 const { getBatchProxy } = roninUtils;
-
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.

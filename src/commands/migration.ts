@@ -209,7 +209,12 @@ const apply = async (
 
   try {
     const { slug } = await getOrSelectSpaceId(sessionToken, spinner);
-    const existingModels = await getModels(db, appToken, slug, flags.prod);
+    const existingModels = await getModels(
+      db,
+      appToken ?? sessionToken,
+      slug,
+      flags.prod,
+    );
     const protocol = await new Protocol().load(migrationFilePath);
     const statements = protocol.getSQLStatements(existingModels);
 
