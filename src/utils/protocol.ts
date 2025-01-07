@@ -2,8 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
-import { add, alter, create, drop, get, set } from 'ronin';
-import { getBatchProxy } from 'ronin/utils';
+
+const localRoninPath = path.join(process.cwd(), 'node_modules', 'ronin');
+const ronin = await import(localRoninPath);
+const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
+
+const { add, alter, create, drop, get, set } = ronin;
+const { getBatchProxy } = roninUtils;
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.
@@ -45,7 +50,7 @@ export class Protocol {
     const queryObjects = await getBatchProxy(
       () => queries.map((query) => this.queryToObject(query).query),
       { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
-      (queries) => queries,
+      (queries: Array<Query>) => queries,
     );
     return queryObjects;
   };
@@ -118,14 +123,13 @@ export default () => [
     if (!fs.existsSync(filePath)) {
       throw new Error(`Migration protocol file ${filePath} does not exist`);
     }
-
     const queries = await import(filePath);
     const queryObjects = getBatchProxy(
       () => {
         return queries.default();
       },
       { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
-      async (r) => r,
+      async (r: Array<Query>) => r,
     );
 
     this._queries = (await queryObjects).map((query: { query: Query }) => query.query);
