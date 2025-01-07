@@ -235,6 +235,7 @@ const apply = async (
     spinner.succeed('Successfully applied migration');
     process.exit(0);
   } catch (error) {
+    console.log(error);
     spinner.fail('Failed to apply migration');
     throw error;
   }
