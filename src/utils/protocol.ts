@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
+import type * as Package from 'ronin';
 
 const localRoninPath = path.join(process.cwd(), 'node_modules', 'ronin');
 
@@ -42,11 +43,13 @@ export class Protocol {
    * @private
    */
   private getQueryObjects = async (queries: Array<string>): Promise<Array<Query>> => {
+    const ronin = await import(localRoninPath);
     const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
+
     const { getBatchProxy } = roninUtils;
 
     const queryObjects = await getBatchProxy(
-      () => queries.map(async (query) => (await this.queryToObject(query)).query),
+      () => queries.map((query) => this.queryToObject(query, ronin).query),
       { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
       (queries: Array<Query>) => queries,
     );
@@ -61,11 +64,10 @@ export class Protocol {
    * @returns Object containing the Query and options.
    * @private
    */
-  private queryToObject = async (
+  private queryToObject = (
     query: string,
-  ): Promise<{ query: Query; options: unknown }> => {
-    const ronin = await import(localRoninPath);
-
+    ronin: typeof Package,
+  ): { query: Query; options: unknown } => {
     const { add, alter, create, drop, get, set } = ronin;
 
     const func = new Function(
@@ -77,6 +79,7 @@ export class Protocol {
       'add',
       `"use strict"; return ${query}`,
     );
+
     return func(create, drop, get, set, alter, add);
   };
 
