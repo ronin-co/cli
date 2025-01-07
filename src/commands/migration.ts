@@ -75,7 +75,7 @@ const applyMigrationStatements = async (
   slug: string,
 ): Promise<void> => {
   if (flags.prod) {
-    console.log('Applying migration to production database');
+    console.log('\nApplying migration to production database');
 
     await fetch(`https://data.ronin.co/?data-selector=${slug}`, {
       method: 'POST',
@@ -94,7 +94,7 @@ const applyMigrationStatements = async (
     return;
   }
 
-  console.log('Applying migration to local database');
+  console.log('\nApplying migration to local database');
 
   await db.query(statements.map(({ statement }) => statement));
   fs.writeFileSync('.ronin/db.sqlite', await db.getContents());
