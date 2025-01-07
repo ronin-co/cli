@@ -2,13 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
+import type * as Package from 'ronin';
 
 const localRoninPath = path.join(process.cwd(), 'node_modules', 'ronin');
-const ronin = await import(localRoninPath);
-const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
-
-const { add, alter, create, drop, get, set } = ronin;
-const { getBatchProxy } = roninUtils;
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.
@@ -47,8 +43,13 @@ export class Protocol {
    * @private
    */
   private getQueryObjects = async (queries: Array<string>): Promise<Array<Query>> => {
+    const ronin = await import(localRoninPath);
+    const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
+
+    const { getBatchProxy } = roninUtils;
+
     const queryObjects = await getBatchProxy(
-      () => queries.map((query) => this.queryToObject(query).query),
+      () => queries.map((query) => this.queryToObject(query, ronin).query),
       { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
       (queries: Array<Query>) => queries,
     );
@@ -63,7 +64,12 @@ export class Protocol {
    * @returns Object containing the Query and options.
    * @private
    */
-  private queryToObject = (query: string): { query: Query; options: unknown } => {
+  private queryToObject = (
+    query: string,
+    ronin: typeof Package,
+  ): { query: Query; options: unknown } => {
+    const { add, alter, create, drop, get, set } = ronin;
+
     const func = new Function(
       'create',
       'drop',
@@ -73,6 +79,7 @@ export class Protocol {
       'add',
       `"use strict"; return ${query}`,
     );
+
     return func(create, drop, get, set, alter, add);
   };
 
@@ -124,6 +131,10 @@ export default () => [
       throw new Error(`Migration protocol file ${filePath} does not exist`);
     }
     const queries = await import(filePath);
+
+    const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
+    const { getBatchProxy } = roninUtils;
+
     const queryObjects = getBatchProxy(
       () => {
         return queries.default();
