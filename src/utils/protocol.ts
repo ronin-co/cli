@@ -4,11 +4,6 @@ import { formatCode } from '@/src/utils/format';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
 
 const localRoninPath = path.join(process.cwd(), 'node_modules', 'ronin');
-const ronin = await import(localRoninPath);
-const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
-
-const { add, alter, create, drop, get, set } = ronin;
-const { getBatchProxy } = roninUtils;
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.
@@ -47,8 +42,11 @@ export class Protocol {
    * @private
    */
   private getQueryObjects = async (queries: Array<string>): Promise<Array<Query>> => {
+    const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
+    const { getBatchProxy } = roninUtils;
+
     const queryObjects = await getBatchProxy(
-      () => queries.map((query) => this.queryToObject(query).query),
+      () => queries.map(async (query) => (await this.queryToObject(query)).query),
       { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
       (queries: Array<Query>) => queries,
     );
@@ -63,7 +61,13 @@ export class Protocol {
    * @returns Object containing the Query and options.
    * @private
    */
-  private queryToObject = (query: string): { query: Query; options: unknown } => {
+  private queryToObject = async (
+    query: string,
+  ): Promise<{ query: Query; options: unknown }> => {
+    const ronin = await import(localRoninPath);
+
+    const { add, alter, create, drop, get, set } = ronin;
+
     const func = new Function(
       'create',
       'drop',
@@ -124,6 +128,10 @@ export default () => [
       throw new Error(`Migration protocol file ${filePath} does not exist`);
     }
     const queries = await import(filePath);
+
+    const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
+    const { getBatchProxy } = roninUtils;
+
     const queryObjects = getBatchProxy(
       () => {
         return queries.default();
