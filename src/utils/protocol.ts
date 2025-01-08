@@ -49,7 +49,7 @@ export class Protocol {
     const { getBatchProxy } = roninUtils;
 
     const queryObjects = await getBatchProxy(
-      () => queries.map((query) => this.queryToObject(query, ronin).query),
+      () => queries.map((query) => this.queryToObject(query, ronin).structure),
       { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
       (queries: Array<Query>) => queries,
     );
@@ -67,7 +67,7 @@ export class Protocol {
   private queryToObject = (
     query: string,
     ronin: typeof Package,
-  ): { query: Query; options: unknown } => {
+  ): { structure: Query; options: unknown } => {
     const { add, alter, create, drop, get, set } = ronin;
 
     const func = new Function(
@@ -130,6 +130,7 @@ export default () => [
     if (!fs.existsSync(filePath)) {
       throw new Error(`Migration protocol file ${filePath} does not exist`);
     }
+
     const queries = await import(filePath);
 
     const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
@@ -143,7 +144,10 @@ export default () => [
       async (r: Array<Query>) => r,
     );
 
-    this._queries = (await queryObjects).map((query: { query: Query }) => query.query);
+    this._queries = (await queryObjects).map(
+      (query: { structure: Query }) => query.structure,
+    );
+
     return this;
   };
 

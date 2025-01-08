@@ -151,7 +151,7 @@ export const fieldsToAdjust = (
       name: local.name,
       unique: local.unique,
       required: local.required,
-      increment: local.increment,
+      ...(local.type === 'number' && { increment: local.increment }),
     };
 
     diff.push(setFieldQuery(tempTableSlug, local.slug, adjustedFieldValue));
@@ -281,6 +281,8 @@ export const fieldsAreDifferent = (local: ModelField, remote: ModelField): boole
     local.unique !== remote.unique ||
     local.required !== remote.required ||
     local.defaultValue !== remote.defaultValue ||
-    local.increment !== remote.increment
+    (local.type === 'number' &&
+      remote.type === 'number' &&
+      local.increment !== remote.increment)
   );
 };

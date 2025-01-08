@@ -1,6 +1,6 @@
 import type { Model } from '@ronin/compiler';
-import { blob, boolean, date, link, model, number, string } from '@ronin/schema';
 import { add } from 'ronin';
+import { blob, boolean, date, link, model, number, string } from 'ronin/schema';
 
 const TestAccount = model({
   slug: 'account',
@@ -50,9 +50,9 @@ const TestProfile2 = model({
     usernameNew: string({ required: true, unique: true }),
     avatar: string(),
     account: link({
-      model: TestAccount2,
+      target: 'accountNew',
       required: true,
-      actions: { onDelete: 'cascade' },
+      actions: { onDelete: 'CASCADE' },
     }),
   },
 }) as unknown as Model;
@@ -63,9 +63,9 @@ const TestProfile = model({
     username: string({ required: true, unique: true }),
     avatar: string(),
     account: link({
-      model: TestAccount,
+      target: 'account',
       required: true,
-      actions: { onDelete: 'cascade' },
+      actions: { onDelete: 'CASCADE' },
     }),
   },
 }) as unknown as Model;
@@ -74,7 +74,7 @@ const TestBlog = model({
   slug: 'blog',
   fields: {
     name: string(),
-    author: link({ model: TestProfile, required: true }),
+    author: link({ target: 'profile', required: true }),
     published: boolean({ defaultValue: false }),
     hero: blob(),
   },
@@ -91,7 +91,7 @@ const TestBlog2 = model({
   slug: 'blog',
   fields: {
     name: string(),
-    authorNew: link({ model: TestProfile2, required: true }),
+    authorNew: link({ target: 'profileNew', required: true }),
     published: boolean({ defaultValue: false }),
     hero: blob(),
   },
