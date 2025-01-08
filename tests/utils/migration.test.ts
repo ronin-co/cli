@@ -45,7 +45,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', unique:false, required:false, type:'string'}]})",
+        "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', type:'string'}]})",
         'add.RONIN_TEMP_account.to(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -57,7 +57,7 @@ describe('migration', () => {
       const modelDiff = await diffModels([Account, Profile], [Account]);
       expect(modelDiff).toHaveLength(1);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'profile',fields:[{slug:'username', unique:false, required:false, type:'string'}]})",
+        "create.model({slug:'profile',fields:[{slug:'username', type:'string'}]})",
       ]);
     });
 
@@ -75,7 +75,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', unique:true, required:true, type:'string'}]})",
+        "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', required:true, unique:true, type:'string'}]})",
         'add.RONIN_TEMP_account.to(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -98,7 +98,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', unique:false, required:false, type:'string'}]})",
+        "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', type:'string'}]})",
         'add.RONIN_TEMP_account.to(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -131,7 +131,7 @@ describe('migration', () => {
         expect(modelDiff).toHaveLength(2);
 
         expect(modelDiff).toStrictEqual([
-          "create.model({slug:'comment',fields:[{slug:'name', unique:false, required:false, type:'string'}]})",
+          "create.model({slug:'comment',fields:[{slug:'name', type:'string'}]})",
           'alter.model("comment").create.trigger({"action":"INSERT","when":"BEFORE","effects":[{"add":{"comment":{"to":{"name":"Test"}}}}]})',
         ]);
       });

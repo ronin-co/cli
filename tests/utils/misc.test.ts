@@ -148,8 +148,6 @@ describe('misc', () => {
           fields: [
             {
               slug: 'name',
-              unique: false,
-              required: false,
               type: 'string',
             },
           ],

@@ -1,6 +1,6 @@
 import type { Model } from '@ronin/compiler';
-import { blob, boolean, date, link, model, number, string } from '@ronin/schema';
 import { add } from 'ronin';
+import { blob, boolean, date, link, model, number, string } from 'ronin/schema';
 
 const TestAccount = model({
   slug: 'account',
