@@ -130,6 +130,7 @@ export default () => [
     if (!fs.existsSync(filePath)) {
       throw new Error(`Migration protocol file ${filePath} does not exist`);
     }
+
     const queries = await import(filePath);
 
     const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
@@ -143,7 +144,9 @@ export default () => [
       async (r: Array<Query>) => r,
     );
 
-    this._queries = (await queryObjects).map((query: { query: Query }) => query.query);
+    this._queries = (await queryObjects).map(
+      (query: { structure: Query }) => query.structure,
+    );
     return this;
   };
 
