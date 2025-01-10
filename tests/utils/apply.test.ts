@@ -9,6 +9,8 @@ import {
   TestE,
   TestF,
   TestG,
+  TestH,
+  TestI,
 } from '@/fixtures/index';
 
 import { describe, expect, test } from 'bun:test';
@@ -354,5 +356,24 @@ describe('apply', () => {
 
     const newModels = await getModels(db);
     expect(newModels.length).toBe(allModels.length);
+  });
+
+  test('create model with field rename', async () => {
+    const definedModels: Array<Model> = [TestI];
+    const existingModels: Array<Model> = [TestH];
+
+    const db = await queryEphemeralDatabase(existingModels);
+    const models = await getModels(db);
+
+    const modelDiff = await diffModels(definedModels, models, true);
+
+    const protocol = new Protocol(modelDiff);
+    await protocol.convertToQueryObjects();
+
+    const statements = protocol.getSQLStatements(models);
+    await db.query(statements);
+
+    const newModels = await getModels(db);
+    expect(newModels).toHaveLength(1);
   });
 });
