@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { parseArgs } from 'node:util';
 import { fieldsToCreate, fieldsToDrop } from '@/src/utils/field';
+import { spinner } from '@/src/utils/spinner';
 import type { Model, Result } from '@ronin/compiler';
 import type * as SyntaxPackage from '@ronin/syntax/queries';
 import resolveFrom from 'resolve-from';
@@ -172,7 +173,7 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
  */
 export const getModelDefinitions = async (): Promise<Array<Model>> => {
   if (!fs.existsSync(MODEL_IN_CODE_PATH)) {
-    console.error('Could not find a model definition file schema/index.ts');
+    spinner.fail('Could not find a model definition file schema/index.ts');
     process.exit(1);
   }
 
@@ -186,7 +187,7 @@ export const getModelDefinitions = async (): Promise<Array<Model>> => {
     const count = slugCounts.get(model.slug) ?? 0;
     slugCounts.set(model.slug, count + 1);
     if (count > 0) {
-      console.error(
+      spinner.fail(
         `Duplicate model slug found: "${model.slug}". You cannot have two models with the same slug.`,
       );
       process.exit(1);
@@ -360,12 +361,9 @@ export const getSyntaxPackage = (): Promise<typeof SyntaxPackage> => {
   const roninSyntaxPath = resolveFrom.silent(process.cwd(), '@ronin/syntax/queries');
 
   if (!roninSyntaxPath) {
-    // The newline is needed because a spinner is running before this message is printed.
-    // TODO: Make the spinner accessible in `Protocol`.
-    console.error(
-      '\nThe "ronin" package must be installed in your project in order to create migrations.',
+    throw new Error(
+      'The "ronin" package must be installed in your project in order to create migrations.',
     );
-    process.exit(1);
   }
 
   return import(roninSyntaxPath);
