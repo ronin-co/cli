@@ -360,8 +360,10 @@ export const getSyntaxPackage = (): Promise<typeof SyntaxPackage> => {
   const roninSyntaxPath = resolveFrom.silent(process.cwd(), '@ronin/syntax/queries');
 
   if (!roninSyntaxPath) {
+    // The newline is needed because a spinner is running before this message is printed.
+    // TODO: Make the spinner accessible in `Protocol`.
     console.error(
-      'The "ronin" package must be installed in your project in order to create migrations.',
+      '\nThe "ronin" package must be installed in your project in order to create migrations.',
     );
     process.exit(1);
   }
