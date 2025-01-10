@@ -2,9 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
-import type * as Package from 'ronin';
+import type * as SyntaxPackage from '@ronin/syntax/queries';
 
-const localRoninPath = path.join(process.cwd(), 'node_modules', 'ronin');
+const roninSyntaxPath = require.resolve('@ronin/syntax/queries', {
+  paths: [process.cwd()],
+});
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.
@@ -43,13 +45,11 @@ export class Protocol {
    * @private
    */
   private getQueryObjects = async (queries: Array<string>): Promise<Array<Query>> => {
-    const ronin = await import(localRoninPath);
-    const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
-
-    const { getBatchProxy } = roninUtils;
+    const roninSyntax = await import(roninSyntaxPath);
+    const { getBatchProxy } = roninSyntax;
 
     const queryObjects = await getBatchProxy(
-      () => queries.map((query) => this.queryToObject(query, ronin).structure),
+      () => queries.map((query) => this.queryToObject(roninSyntax, query).structure),
       { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
       (queries: Array<Query>) => queries,
     );
@@ -59,16 +59,19 @@ export class Protocol {
   /**
    * Converts a query string into a Query object.
    *
-   * @param query - RONIN query string
+   * @param roninSyntax - The RONIN syntax package.
+   * @param query - RONIN query string.
    *
    * @returns Object containing the Query and options.
    * @private
    */
   private queryToObject = (
+    roninSyntax: typeof SyntaxPackage,
     query: string,
-    ronin: typeof Package,
   ): { structure: Query; options: unknown } => {
-    const { add, alter, create, drop, get, set } = ronin;
+    const { getSyntaxProxy } = roninSyntax;
+    const queryTypes = ['create', 'drop', 'get', 'set', 'alter', 'add'];
+    const queryProxies = queryTypes.map((type) => getSyntaxProxy({ rootProperty: type }));
 
     const func = new Function(
       'create',
@@ -80,7 +83,7 @@ export class Protocol {
       `"use strict"; return ${query}`,
     );
 
-    return func(create, drop, get, set, alter, add);
+    return func(...queryProxies);
   };
 
   /**
@@ -133,8 +136,8 @@ export default () => [
 
     const queries = await import(filePath);
 
-    const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
-    const { getBatchProxy } = roninUtils;
+    const roninSyntax = await import(roninSyntaxPath);
+    const { getBatchProxy } = roninSyntax;
 
     const queryObjects = getBatchProxy(
       () => {
