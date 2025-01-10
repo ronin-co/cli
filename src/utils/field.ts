@@ -95,7 +95,7 @@ export const fieldsToRename = (
   existingFields: Array<ModelField>,
 ): Array<{ from: ModelField; to: ModelField }> => {
   const fieldsToCreated = fieldsToCreate(definedFields, existingFields);
-  const fieldsToDropped = fieldsToDrop(definedFields, existingFields);
+  let fieldsToDropped = fieldsToDrop(definedFields, existingFields);
 
   const fieldsToRename: Array<{ from: ModelField; to: ModelField }> = [];
 
@@ -116,6 +116,7 @@ export const fieldsToRename = (
 
     if (currentField) {
       fieldsToRename.push({ from: currentField, to: field });
+      fieldsToDropped = fieldsToDropped.filter((s) => s.slug !== currentField.slug);
     }
   }
 
