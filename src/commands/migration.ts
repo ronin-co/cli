@@ -109,7 +109,7 @@ const create = async (
   flags: Flags,
 ): Promise<void> => {
   let status: Status = 'readingConfig';
-  spinner.start('Reading configuration');
+  spinner.text = 'Reading configuration';
 
   const db = await initializeDatabase();
 
@@ -127,9 +127,7 @@ const create = async (
       logModelDiffs(definedModels, existingModels);
     }
 
-    spinner.stopAndPersist();
     const modelDiff = await diffModels(definedModels, existingModels);
-    spinner.start();
 
     if (modelDiff.length === 0) {
       spinner.succeed('No changes detected');
