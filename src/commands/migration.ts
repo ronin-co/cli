@@ -16,6 +16,7 @@ import {
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getSpaces } from '@/src/utils/space';
+import { type Status, spinner } from '@/src/utils/spinner';
 import type { Model } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
 
@@ -27,9 +28,6 @@ export const MIGRATION_FLAGS = {
 } satisfies NonNullable<Parameters<typeof parseArgs>[0]>['options'];
 
 type Flags = BaseFlags & Partial<Record<keyof typeof MIGRATION_FLAGS, boolean>>;
-
-/** Current status of the migration creation process */
-type Status = 'readingConfig' | 'readingModels' | 'comparing' | 'syncing';
 
 /**
  * Handles migration commands for creating and applying database migrations.
@@ -51,15 +49,12 @@ export default async function main(
         await create(appToken, sessionToken, flags);
         break;
       default: {
-        console.error('Please specify a valid sub command.');
+        spinner.fail('Please specify a valid sub command.');
         process.exit(1);
       }
     }
   } catch (error) {
-    console.error(
-      'An unexpected error occurred:',
-      error instanceof Error ? error.message : error,
-    );
+    spinner.fail(`An unexpected error occurred: ${error instanceof Error ? error.message : error}`);
     process.exit(1);
   }
 }
@@ -75,7 +70,7 @@ const applyMigrationStatements = async (
   slug: string,
 ): Promise<void> => {
   if (flags.prod) {
-    console.log('\nApplying migration to production database');
+    spinner.info('Applying migration to production database');
 
     await fetch(`https://data.ronin.co/?data-selector=${slug}`, {
       method: 'POST',
@@ -94,7 +89,7 @@ const applyMigrationStatements = async (
     return;
   }
 
-  console.log('\nApplying migration to local database');
+  spinner.info('Applying migration to local database');
 
   await db.query(statements.map(({ statement }) => statement));
   fs.writeFileSync('.ronin/db.sqlite', await db.getContents());
@@ -109,8 +104,8 @@ const create = async (
   flags: Flags,
 ): Promise<void> => {
   let status: Status = 'readingConfig';
-  const spinner = ora('Reading configuration').start();
-
+  spinner.start('Reading configuration');
+  
   const db = await initializeDatabase();
 
   try {
@@ -190,8 +185,7 @@ const create = async (
 
     process.exit(0);
   } catch (err) {
-    spinner.fail(`Failed during ${status}:\n`);
-    console.error(err instanceof Error ? err.message : err);
+    spinner.fail(`Failed during ${status}:\n ${err instanceof Error ? err.message : err}`);
     throw err;
   }
 };

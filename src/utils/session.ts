@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { spinner } from '@/src/utils/spinner';
 import toml, { type JsonMap } from '@iarna/toml';
 import ini from 'ini';
 
@@ -59,7 +60,7 @@ const readConfigFile = async <T>(
     configContents = parser(contents);
   } catch (err) {
     if ((err as { code: string }).code !== 'ENOENT') {
-      console.error(`Failed to read ${name} config file at ${filePath}`, err);
+      spinner.fail(`Failed to read ${name} config file at ${filePath}`);
     }
     configContents = {} as T; // Return an empty object of type T
   }

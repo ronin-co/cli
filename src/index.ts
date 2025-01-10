@@ -6,6 +6,7 @@ import migrate, { MIGRATION_FLAGS } from '@/src/commands/migration';
 import { printHelp, printVersion } from '@/src/utils/info';
 import { BASE_FLAGS, type BaseFlags } from '@/src/utils/misc';
 import { getSession } from '@/src/utils/session';
+import { spinner } from '@/src/utils/spinner';
 
 let flags: BaseFlags;
 let positionals: Array<string>;
@@ -19,7 +20,7 @@ try {
   }));
 } catch (err) {
   if (err instanceof Error) {
-    console.error(err.message);
+    spinner.fail(err.message);
   } else {
     throw err;
   }
@@ -51,7 +52,7 @@ const run = async (): Promise<void> => {
     message +=
       'a `RONIN_TOKEN` environment variable containing an app token must be provided.';
 
-    console.error(message);
+    spinner.fail(message);
     process.exit(1);
   }
 
