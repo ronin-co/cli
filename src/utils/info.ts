@@ -22,7 +22,8 @@ export const printHelp = (): Promise<void> => {
 
       login                               Authenticate with RONIN (run by default for every command)
       init [space]                        Initialize the TypeScript types for a given space
-      migration create|apply              Create or apply a migration for a locally defined database schema
+      diff                                Compare the database schema with the local schema and create a patch
+      apply                               Apply the most recent patch to the database
 
   {bold OPTIONS}
 

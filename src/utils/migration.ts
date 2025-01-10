@@ -1,5 +1,6 @@
+import type { parseArgs } from 'node:util';
 import { diffFields, fieldsToAdjust } from '@/src/utils/field';
-import { areArraysEqual } from '@/src/utils/misc';
+import { type BaseFlags, areArraysEqual } from '@/src/utils/misc';
 import {
   createIndexQuery,
   createModelQuery,
@@ -392,3 +393,12 @@ export const createIndexes = (
 
   return diff;
 };
+
+export const MIGRATION_FLAGS = {
+  sql: { type: 'boolean', short: 's', default: false },
+  local: { type: 'boolean', short: 'l', default: false },
+  apply: { type: 'boolean', short: 'a', default: false },
+} satisfies NonNullable<Parameters<typeof parseArgs>[0]>['options'];
+
+export type MigrationFlags = BaseFlags &
+  Partial<Record<keyof typeof MIGRATION_FLAGS, boolean>>;
