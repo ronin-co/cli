@@ -17,7 +17,7 @@ import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getSpaces } from '@/src/utils/space';
 import { type Status, spinner } from '@/src/utils/spinner';
-import type { Model } from '@ronin/compiler';
+import { type Model, RoninError } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
 
 export const MIGRATION_FLAGS = {
@@ -54,9 +54,12 @@ export default async function main(
       }
     }
   } catch (error) {
-    spinner.fail(
-      `An unexpected error occurred: ${error instanceof Error ? error.message : error}`,
-    );
+    const message =
+      error instanceof RoninError
+        ? error.message
+        : `An unexpected error occurred: ${error instanceof Error ? error.message : error}`;
+    spinner.fail(message);
+
     process.exit(1);
   }
 }
