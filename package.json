@@ -47,7 +47,7 @@
     "prettier": "3.4.2"
   },
   "devDependencies": {
-    "ronin": "5.4.0",
+    "ronin": "6.0.5",
     "@biomejs/biome": "1.9.4",
     "@types/bun": "1.1.14",
     "@types/ini": "4.1.1",
