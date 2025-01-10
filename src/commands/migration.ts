@@ -24,7 +24,7 @@ export const MIGRATION_FLAGS = {
   reset: { type: 'boolean', short: 'r', default: false },
   sql: { type: 'boolean', short: 's', default: false },
   apply: { type: 'boolean', short: 'a', default: false },
-  prod: { type: 'boolean', short: 'p', default: false },
+  local: { type: 'boolean', short: 'l', default: false },
 } satisfies NonNullable<Parameters<typeof parseArgs>[0]>['options'];
 
 type Flags = BaseFlags & Partial<Record<keyof typeof MIGRATION_FLAGS, boolean>>;
@@ -74,30 +74,30 @@ const applyMigrationStatements = async (
   statements: Array<{ statement: string }>,
   slug: string,
 ): Promise<void> => {
-  if (flags.prod) {
-    spinner.info('Applying migration to production database');
+  if (flags.local) {
+    spinner.info('Applying migration to local database');
 
-    await fetch(`https://data.ronin.co/?data-selector=${slug}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${appTokenOrSessionToken}`,
-      },
-      body: JSON.stringify({
-        nativeQueries: statements.map((query) => ({
-          query: query.statement,
-          mode: 'write',
-        })),
-      }),
-    });
+    await db.query(statements.map(({ statement }) => statement));
+    fs.writeFileSync('.ronin/db.sqlite', await db.getContents());
 
     return;
   }
 
-  spinner.info('Applying migration to local database');
+  spinner.info('Applying migration to production database');
 
-  await db.query(statements.map(({ statement }) => statement));
-  fs.writeFileSync('.ronin/db.sqlite', await db.getContents());
+  await fetch(`https://data.ronin.co/?data-selector=${slug}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${appTokenOrSessionToken}`,
+    },
+    body: JSON.stringify({
+      nativeQueries: statements.map((query) => ({
+        query: query.statement,
+        mode: 'write',
+      })),
+    }),
+  });
 };
 
 /**
@@ -119,7 +119,7 @@ const create = async (
     spinner.text = 'Comparing models';
 
     const [existingModels, definedModels] = await Promise.all([
-      getModels(db, appToken ?? sessionToken, slug, flags.prod),
+      getModels(db, appToken ?? sessionToken, slug, flags.local),
       getModelDefinitions(),
     ]);
 
@@ -217,7 +217,7 @@ const apply = async (
       db,
       appToken ?? sessionToken,
       slug,
-      flags.prod,
+      flags.local,
     );
     const protocol = await new Protocol().load(migrationFilePath);
     const statements = protocol.getSQLStatements(existingModels);

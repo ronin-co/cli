@@ -11,7 +11,7 @@ import type { Row } from '@ronin/engine/types';
  * @param db - The database instance to query from.
  * @param token - Optional authentication token for production API requests.
  * @param spaceId - Optional space ID for production API requests.
- * @param isProduction - Optional flag to determine if production API should be used.
+ * @param isLocal - Optional flag to determine if production API should be used.
  *
  * @returns Promise resolving to an array of formatted Model objects.
  *
@@ -21,13 +21,15 @@ export const getModels = async (
   db: Database,
   token?: string,
   spaceId?: string,
-  isProduction?: boolean,
+  isLocal = true,
 ): Promise<Array<Model>> => {
   const transaction = new Transaction([{ get: { models: null } }]);
 
   let rawResults: Array<Array<Row>>;
 
-  if (isProduction) {
+  if (isLocal) {
+    rawResults = (await db.query(transaction.statements)).map((r) => r.rows);
+  } else {
     try {
       const nativeQueries = transaction.statements.map((statement) => ({
         query: statement.statement,
@@ -51,8 +53,6 @@ export const getModels = async (
     } catch (error) {
       throw new Error(`Failed to fetch remote models: ${(error as Error).message}`);
     }
-  } else {
-    rawResults = (await db.query(transaction.statements)).map((r) => r.rows);
   }
 
   const results = transaction.formatResults<Model>(rawResults, false);
