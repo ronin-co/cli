@@ -1,12 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
+import { getSyntaxPackage } from '@/src/utils/misc';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
-import type * as SyntaxPackage from '@ronin/syntax/queries';
-
-const roninSyntaxPath = require.resolve('@ronin/syntax/queries', {
-  paths: [process.cwd()],
-});
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.
@@ -45,13 +41,13 @@ export class Protocol {
    * @private
    */
   private getQueryObjects = async (queries: Array<string>): Promise<Array<Query>> => {
-    const roninSyntax = await import(roninSyntaxPath);
+    const roninSyntax = await getSyntaxPackage();
     const { getBatchProxy } = roninSyntax;
 
     const queryObjects = await getBatchProxy(
       () => queries.map((query) => this.queryToObject(roninSyntax, query).structure),
       { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
-      (queries: Array<Query>) => queries,
+      (queries) => queries,
     );
     return queryObjects;
   };
@@ -66,7 +62,7 @@ export class Protocol {
    * @private
    */
   private queryToObject = (
-    roninSyntax: typeof SyntaxPackage,
+    roninSyntax: Awaited<ReturnType<typeof getSyntaxPackage>>,
     query: string,
   ): { structure: Query; options: unknown } => {
     const { getSyntaxProxy } = roninSyntax;
@@ -136,7 +132,7 @@ export default () => [
 
     const queries = await import(filePath);
 
-    const roninSyntax = await import(roninSyntaxPath);
+    const roninSyntax = await getSyntaxPackage();
     const { getBatchProxy } = roninSyntax;
 
     const queryObjects = getBatchProxy(
@@ -144,7 +140,7 @@ export default () => [
         return queries.default();
       },
       { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
-      async (r: Array<Query>) => r,
+      (r) => r,
     );
 
     this._queries = (await queryObjects).map(
