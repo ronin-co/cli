@@ -4,6 +4,7 @@ import type { parseArgs } from 'node:util';
 import { fieldsToCreate, fieldsToDrop } from '@/src/utils/field';
 import type { Model, Result } from '@ronin/compiler';
 import type * as SyntaxPackage from '@ronin/syntax/queries';
+import resolveFrom from 'resolve-from';
 
 /** Represents a data item for logging */
 interface DataItem {
@@ -356,21 +357,13 @@ export const getResponseBody = async <T>(
  * @returns An instance of the package.
  */
 export const getSyntaxPackage = (): Promise<typeof SyntaxPackage> => {
-  let roninSyntaxPath: string;
+  const roninSyntaxPath = resolveFrom.silent(process.cwd(), '@ronin/syntax/queries');
 
-  try {
-    roninSyntaxPath = require.resolve('@ronin/syntax/queries', {
-      paths: [process.cwd()],
-    });
-  } catch (err) {
-    if ((err as { code?: string }).code === 'MODULE_NOT_FOUND') {
-      console.error(
-        'The "ronin" package must be installed in your project in order to create migrations.',
-      );
-      process.exit(1);
-    }
-
-    throw err;
+  if (!roninSyntaxPath) {
+    console.error(
+      'The "ronin" package must be installed in your project in order to create migrations.',
+    );
+    process.exit(1);
   }
 
   return import(roninSyntaxPath);
