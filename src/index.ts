@@ -1,9 +1,11 @@
 import { parseArgs } from 'node:util';
 
+import apply from '@/src/commands/apply';
+import diff from '@/src/commands/diff';
 import initializeProject from '@/src/commands/init';
 import logIn from '@/src/commands/login';
-import migrate, { MIGRATION_FLAGS } from '@/src/commands/migration';
 import { printHelp, printVersion } from '@/src/utils/info';
+import { MIGRATION_FLAGS } from '@/src/utils/migration';
 import { BASE_FLAGS, type BaseFlags } from '@/src/utils/misc';
 import { getSession } from '@/src/utils/session';
 import { spinner } from '@/src/utils/spinner';
@@ -64,9 +66,14 @@ const run = async (): Promise<void> => {
   // `init` sub command
   if (normalizedPositionals.includes('init')) return initializeProject(positionals);
 
-  // Handle 'migration' command
-  if (normalizedPositionals.includes('migration')) {
-    return migrate(appToken, session?.token, flags, positionals);
+  // `diff` sub command
+  if (normalizedPositionals.includes('diff')) {
+    return diff(appToken, session?.token, flags);
+  }
+
+  // `diff` sub command
+  if (normalizedPositionals.includes('apply')) {
+    return apply(appToken, session?.token, flags, positionals);
   }
 
   // If no matching flags or commands were found, render the help, since we don't want to
