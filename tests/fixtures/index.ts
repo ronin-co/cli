@@ -228,3 +228,22 @@ export const TestG = model({
     name: string(),
   },
 }) as unknown as Model;
+
+export const TestH = model({
+  slug: 'test',
+  fields: {
+    age: string(),
+    name: string(),
+    description: string(),
+  },
+}) as unknown as Model;
+
+export const TestI = model({
+  slug: 'test',
+  fields: {
+    age: string(),
+    name: string(),
+    bio: string(),
+    colour: string(),
+  },
+}) as unknown as Model;
