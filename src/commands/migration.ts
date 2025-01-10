@@ -17,7 +17,7 @@ import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getSpaces } from '@/src/utils/space';
 import { type Status, spinner } from '@/src/utils/spinner';
-import type { Model } from '@ronin/compiler';
+import { type Model, RoninError, type Statement } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
 
 export const MIGRATION_FLAGS = {
@@ -217,7 +217,18 @@ const apply = async (
       flags.prod,
     );
     const protocol = await new Protocol().load(migrationFilePath);
-    const statements = protocol.getSQLStatements(existingModels);
+    let statements: Array<Statement>;
+
+    try {
+      statements = protocol.getSQLStatements(existingModels);
+    } catch (err) {
+      if (err instanceof RoninError) {
+        spinner.fail(`Failed to apply migration: ${err.message}`);
+        process.exit(1);
+      }
+
+      throw err;
+    }
 
     const files = fs.readdirSync(
       path.join(process.cwd(), MODELS_IN_CODE_DIR, '.protocols'),
