@@ -5,4 +5,3 @@ import { version } from '../../package.json';
 export type Status = 'readingConfig' | 'readingModels' | 'comparing' | 'syncing';
 
 export const spinner: Ora = ora(`RONIN ${version}`).start();
-

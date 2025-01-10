@@ -54,7 +54,9 @@ export default async function main(
       }
     }
   } catch (error) {
-    spinner.fail(`An unexpected error occurred: ${error instanceof Error ? error.message : error}`);
+    spinner.fail(
+      `An unexpected error occurred: ${error instanceof Error ? error.message : error}`,
+    );
     process.exit(1);
   }
 }
@@ -105,7 +107,7 @@ const create = async (
 ): Promise<void> => {
   let status: Status = 'readingConfig';
   spinner.start('Reading configuration');
-  
+
   const db = await initializeDatabase();
 
   try {
@@ -185,7 +187,9 @@ const create = async (
 
     process.exit(0);
   } catch (err) {
-    spinner.fail(`Failed during ${status}:\n ${err instanceof Error ? err.message : err}`);
+    spinner.fail(
+      `Failed during ${status}:\n ${err instanceof Error ? err.message : err}`,
+    );
     throw err;
   }
 };

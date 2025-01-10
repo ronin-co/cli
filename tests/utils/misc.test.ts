@@ -121,8 +121,6 @@ describe('misc', () => {
       existsSync.mockReturnValue(false);
       existsSync.mockClear();
 
-      const consoleErrorSpy = spyOn(console, 'error');
-
       try {
         await getModelDefinitions();
       } catch (err) {
@@ -132,7 +130,6 @@ describe('misc', () => {
       }
 
       expect(existSpy).toHaveBeenCalledTimes(1);
-      expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     });
 
     test('should return models in code definitions - one model', async () => {

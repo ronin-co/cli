@@ -361,7 +361,9 @@ export const getSyntaxPackage = (): Promise<typeof SyntaxPackage> => {
   const roninSyntaxPath = resolveFrom.silent(process.cwd(), '@ronin/syntax/queries');
 
   if (!roninSyntaxPath) {
-    throw new Error('The "ronin" package must be installed in your project in order to create migrations.')
+    throw new Error(
+      'The "ronin" package must be installed in your project in order to create migrations.',
+    );
   }
 
   return import(roninSyntaxPath);
