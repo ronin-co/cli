@@ -56,7 +56,7 @@ describe('models', () => {
         method: 'POST',
       });
 
-      const models = await getModels(db, '', 'updated-bsql-ip', true);
+      const models = await getModels(db, '', 'updated-bsql-ip', false);
 
       expect(models).toStrictEqual([]);
       expect(models).toHaveLength(0);
@@ -77,7 +77,7 @@ describe('models', () => {
         method: 'POST',
       });
 
-      const models = await getModels(db, '', 'updated-bsql-ip', true);
+      const models = await getModels(db, '', 'updated-bsql-ip', false);
 
       expect(models).toStrictEqual([]);
       expect(models).toHaveLength(0);
@@ -92,7 +92,7 @@ describe('models', () => {
       });
 
       try {
-        await getModels(db, '', '', true);
+        await getModels(db, '', '', false);
       } catch (err) {
         const error = err as Error;
         expect(error).toBeInstanceOf(Error);
