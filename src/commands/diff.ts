@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import apply from '@/src/commands/apply';
 import { initializeDatabase } from '@/src/utils/database';
 import { type MigrationFlags, diffModels } from '@/src/utils/migration';
 import { MODELS_IN_CODE_DIR, getModelDefinitions, logTableDiff } from '@/src/utils/misc';
@@ -67,6 +68,11 @@ export default async (
     }
 
     spinner.succeed('Successfully generated migration protocol file');
+
+    // If desired, immediately apply the migration
+    if (flags.apply) {
+      await apply(appToken, sessionToken, flags, ['apply']);
+    }
 
     process.exit(0);
   } catch (err) {
