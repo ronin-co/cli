@@ -106,7 +106,6 @@ const create = async (
   flags: Flags,
 ): Promise<void> => {
   let status: Status = 'readingConfig';
-
   spinner.text = 'Reading configuration';
   
   const db = await initializeDatabase();
