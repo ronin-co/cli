@@ -17,7 +17,7 @@ import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getSpaces } from '@/src/utils/space';
 import { type Status, spinner } from '@/src/utils/spinner';
-import { type Model, RoninError, type Statement } from '@ronin/compiler';
+import { type Model, RoninError } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
 
 export const MIGRATION_FLAGS = {
@@ -54,9 +54,12 @@ export default async function main(
       }
     }
   } catch (error) {
-    spinner.fail(
-      `An unexpected error occurred: ${error instanceof Error ? error.message : error}`,
-    );
+    const message =
+      error instanceof RoninError
+        ? error.message
+        : `An unexpected error occurred: ${error instanceof Error ? error.message : error}`;
+    spinner.fail(message);
+
     process.exit(1);
   }
 }
@@ -217,18 +220,7 @@ const apply = async (
       flags.prod,
     );
     const protocol = await new Protocol().load(migrationFilePath);
-    let statements: Array<Statement>;
-
-    try {
-      statements = protocol.getSQLStatements(existingModels);
-    } catch (err) {
-      if (err instanceof RoninError) {
-        spinner.fail(`Failed to apply migration: ${err.message}`);
-        process.exit(1);
-      }
-
-      throw err;
-    }
+    const statements = protocol.getSQLStatements(existingModels);
 
     const files = fs.readdirSync(
       path.join(process.cwd(), MODELS_IN_CODE_DIR, '.protocols'),
