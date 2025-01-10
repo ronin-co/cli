@@ -1,10 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
+import { getSyntaxPackage } from '@/src/utils/misc';
 import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
-import type * as Package from 'ronin';
-
-const localRoninPath = path.join(process.cwd(), 'node_modules', 'ronin');
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.
@@ -30,45 +28,31 @@ export class Protocol {
    * @returns The Protocol instance for chaining.
    */
   async convertToQueryObjects(): Promise<Protocol> {
-    this._queries = await this.getQueryObjects(this._roninQueries);
+    const roninSyntax = await getSyntaxPackage();
+
+    this._queries = this._roninQueries.map((queryString) => {
+      return this.queryToObject(roninSyntax, queryString);
+    });
+
     return this;
   }
 
   /**
-   * Converts an array of query strings into Query objects.
-   *
-   * @param queries - Array of RONIN query strings.
-   *
-   * @returns Array of Query objects.
-   * @private
-   */
-  private getQueryObjects = async (queries: Array<string>): Promise<Array<Query>> => {
-    const ronin = await import(localRoninPath);
-    const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
-
-    const { getBatchProxy } = roninUtils;
-
-    const queryObjects = await getBatchProxy(
-      () => queries.map((query) => this.queryToObject(query, ronin).structure),
-      { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
-      (queries: Array<Query>) => queries,
-    );
-    return queryObjects;
-  };
-
-  /**
    * Converts a query string into a Query object.
    *
-   * @param query - RONIN query string
+   * @param roninSyntax - The RONIN syntax package.
+   * @param query - RONIN query string.
    *
    * @returns Object containing the Query and options.
    * @private
    */
   private queryToObject = (
+    roninSyntax: Awaited<ReturnType<typeof getSyntaxPackage>>,
     query: string,
-    ronin: typeof Package,
-  ): { structure: Query; options: unknown } => {
-    const { add, alter, create, drop, get, set } = ronin;
+  ): Query => {
+    const { getSyntaxProxy } = roninSyntax;
+    const queryTypes = ['create', 'drop', 'get', 'set', 'alter', 'add'];
+    const queryProxies = queryTypes.map((type) => getSyntaxProxy({ rootProperty: type }));
 
     const func = new Function(
       'create',
@@ -80,7 +64,7 @@ export class Protocol {
       `"use strict"; return ${query}`,
     );
 
-    return func(create, drop, get, set, alter, add);
+    return func(...queryProxies).structure;
   };
 
   /**
@@ -133,20 +117,11 @@ export default () => [
 
     const queries = await import(filePath);
 
-    const roninUtils = await import(path.join(localRoninPath, 'dist/utils'));
-    const { getBatchProxy } = roninUtils;
+    const roninSyntax = await getSyntaxPackage();
+    const { getBatchProxy } = roninSyntax;
+    const queryObjects = getBatchProxy(() => queries.default());
 
-    const queryObjects = getBatchProxy(
-      () => {
-        return queries.default();
-      },
-      { asyncContext: new (await import('node:async_hooks')).AsyncLocalStorage() },
-      async (r: Array<Query>) => r,
-    );
-
-    this._queries = (await queryObjects).map(
-      (query: { structure: Query }) => query.structure,
-    );
+    this._queries = queryObjects.map((query: { structure: Query }) => query.structure);
 
     return this;
   };
