@@ -214,6 +214,7 @@ export const sortModels = (models: Array<Model>): Array<Model> => {
   // Build a dependency map: slug -> set of slugs it depends on
   const dependencyMap = new Map<string, Set<string>>();
 
+
   // Initialize the map with empty sets
   for (const model of models) {
     dependencyMap.set(model.slug, new Set());
