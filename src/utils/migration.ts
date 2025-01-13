@@ -249,16 +249,56 @@ export const triggersToRecreate = (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
 ): Array<string> => {
+
   const diff: Array<string> = [];
 
   for (const definedModel of definedModels) {
     const existingModel = existingModels.find((m) => m.slug === definedModel.slug);
-    diff.push(...dropAndAddTriggers(definedModel, existingModel || ({} as Model)));
+    const modelRecreated = modelWillBeRecreated(
+      definedModel,
+      existingModel || ({} as Model),
+      definedModel.slug,
+    );
+
+    diff.push(
+      ...(modelRecreated
+        ? []
+        : dropTriggers(definedModel, existingModel || ({} as Model))),
+      ...createTriggers(definedModel, existingModel || ({} as Model)),
+    );
   }
+
   return diff;
 };
 
-const dropAndAddTriggers = (definedModel: Model, existingModel: Model): Array<string> => {
+export const dropTriggers = (definedModel: Model, existingModel: Model): Array<string> => {
+  const diff: Array<string> = [];
+  const definedTriggers = definedModel.triggers || [];
+  const existingTriggers = existingModel.triggers || [];
+
+  // Find every trigger that exists but not in defined
+  const triggersToDrop =
+    existingTriggers.filter(
+      (i) =>
+        !definedTriggers.some(
+          (d) =>
+            d.fields &&
+            i.fields &&
+            d.fields.length === i.fields.length &&
+            d.fields.every(
+              (f, idx) => JSON.stringify(f) === JSON.stringify(i.fields?.[idx]),
+            ),
+        ),
+    ) || [];
+
+  for (const trigger of triggersToDrop) {
+    diff.push(dropTriggerQuery(definedModel.slug, trigger.slug || 'no slug'));
+  }
+
+  return diff;
+};
+
+export const createTriggers = (definedModel: Model, existingModel: Model): Array<string> => {
   const diff: Array<string> = [];
   const definedTriggers = definedModel.triggers || [];
   const existingTriggers = existingModel.triggers || [];
@@ -276,25 +316,6 @@ const dropAndAddTriggers = (definedModel: Model, existingModel: Model): Array<st
           ),
       ),
   );
-
-  // Find every trigger that exists but not in defined
-  const triggersToDrop =
-    existingModel?.triggers?.filter(
-      (i) =>
-        !definedTriggers.some(
-          (d) =>
-            d.fields &&
-            i.fields &&
-            d.fields.length === i.fields.length &&
-            d.fields.every(
-              (f, idx) => JSON.stringify(f) === JSON.stringify(i.fields?.[idx]),
-            ),
-        ),
-    ) || [];
-
-  for (const trigger of triggersToDrop) {
-    diff.push(dropTriggerQuery(definedModel.slug, trigger.slug || 'no slug'));
-  }
 
   for (const trigger of triggersToAdd) {
     diff.push(createTriggerQuery(definedModel.slug, trigger));

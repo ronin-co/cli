@@ -224,8 +224,7 @@ describe('apply', () => {
     await db.query(statements);
 
     const newModels = await getModels(db);
-
-    expect(newModels[1]?.triggers?.[0]?.action).toBe('DELETE');
+    expect(newModels[0]?.triggers?.[0]?.action).toBe('DELETE');
   });
 
   test('complex model transformation with indexes and triggers', async () => {
@@ -284,6 +283,24 @@ describe('apply', () => {
     const newModels = await getModels(db);
     expect(newModels).toHaveLength(0);
   });
+
+  test('change trigger', async () => {
+    const definedModels: Array<Model> = [TestE];
+    const existingModels: Array<Model> = [TestD];
+
+    const db = await queryEphemeralDatabase(existingModels);
+    const models = await getModels(db);
+    const modelDiff = await diffModels(definedModels, models);
+
+    const protocol = new Protocol(modelDiff);
+    await protocol.convertToQueryObjects();
+
+    const statements = protocol.getSQLStatements(models);
+    await db.query(statements);
+
+    const newModels = await getModels(db);
+    expect(newModels).toHaveLength(1);
+  })
 
   test('complex model update with multiple changes', async () => {
     const definedModels: Array<Model> = [TestE, TestB, Account];
