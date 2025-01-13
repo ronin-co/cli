@@ -13,7 +13,7 @@ import {
   renameModelQuery,
   setFieldQuery,
 } from '@/src/utils/queries';
-import type { ModelField } from '@ronin/compiler';
+import type { ModelField, ModelTrigger } from '@ronin/compiler';
 
 describe('queries', () => {
   test('drop model query', () => {
@@ -59,6 +59,17 @@ describe('queries', () => {
   });
 
   test('create field query for link field', () => {
+    const field: ModelField = {
+      slug: 'profile',
+      type: 'link',
+      name: 'Profile',
+      target: 'profile',
+    };
+    const result = createFieldQuery('user', field);
+    expect(result).toBe(`alter.model('user').create.field(${JSON.stringify(field)})`);
+  });
+
+  test('create field query for link field without target', () => {
     const field: ModelField = {
       slug: 'profile',
       type: 'link',
@@ -118,6 +129,33 @@ describe('queries', () => {
       ...customQueries,
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
+    ]);
+  });
+
+  test('create temp model query with triggers', () => {
+    const fields: Array<ModelField> = [
+      {
+        slug: 'username',
+        type: 'string',
+        name: 'Username',
+        unique: true,
+        required: true,
+      },
+    ];
+    const triggers: Array<ModelTrigger> = [
+      {
+        action: 'INSERT',
+        when: 'BEFORE',
+        effects: [],
+      },
+    ];
+    const result = createTempModelQuery('user', fields, [], triggers);
+    expect(result).toEqual([
+      "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
+      'add.RONIN_TEMP_user.to(() => get.user())',
+      'drop.model("user")',
+      'alter.model("RONIN_TEMP_user").to({slug: "user"})',
+      'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[]})',
     ]);
   });
 
