@@ -45,10 +45,10 @@ export const prefillDatabase = async (
   );
 
   const modelTransaction = new Transaction(
-    // @ts-expect-error This is a temporay fix and will be removed as soon as create.model
-    // supports triggers.
     models
       .map((model) => ({ create: { model } }))
+      // @ts-expect-error This is a temporay fix and will be removed as soon as create.model
+      // supports triggers.
       .concat(triggers),
   );
 
