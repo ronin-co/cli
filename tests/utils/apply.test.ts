@@ -300,7 +300,7 @@ describe('apply', () => {
 
     const newModels = await getModels(db);
     expect(newModels).toHaveLength(1);
-  })
+  });
 
   test('complex model update with multiple changes', async () => {
     const definedModels: Array<Model> = [TestE, TestB, Account];

@@ -249,7 +249,6 @@ export const triggersToRecreate = (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
 ): Array<string> => {
-
   const diff: Array<string> = [];
 
   for (const definedModel of definedModels) {
@@ -271,7 +270,10 @@ export const triggersToRecreate = (
   return diff;
 };
 
-export const dropTriggers = (definedModel: Model, existingModel: Model): Array<string> => {
+export const dropTriggers = (
+  definedModel: Model,
+  existingModel: Model,
+): Array<string> => {
   const diff: Array<string> = [];
   const definedTriggers = definedModel.triggers || [];
   const existingTriggers = existingModel.triggers || [];
@@ -298,7 +300,10 @@ export const dropTriggers = (definedModel: Model, existingModel: Model): Array<s
   return diff;
 };
 
-export const createTriggers = (definedModel: Model, existingModel: Model): Array<string> => {
+export const createTriggers = (
+  definedModel: Model,
+  existingModel: Model,
+): Array<string> => {
   const diff: Array<string> = [];
   const definedTriggers = definedModel.triggers || [];
   const existingTriggers = existingModel.triggers || [];
