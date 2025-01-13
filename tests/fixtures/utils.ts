@@ -37,19 +37,8 @@ export const prefillDatabase = async (
 ): Promise<void> => {
   const rootModelTransaction = new Transaction([{ create: { model: ROOT_MODEL } }]);
 
-  const triggers = models.flatMap(
-    (model) =>
-      model.triggers?.flatMap((trigger) => ({
-        alter: { model: model.slug, create: { trigger } },
-      })) ?? [],
-  );
-
   const modelTransaction = new Transaction(
-    models
-      .map((model) => ({ create: { model } }))
-      // @ts-expect-error This is a temporay fix and will be removed as soon as create.model
-      // supports triggers.
-      .concat(triggers),
+    models.map((model) => ({ create: { model } })),
   );
 
   await db.query([...rootModelTransaction.statements, ...modelTransaction.statements]);
