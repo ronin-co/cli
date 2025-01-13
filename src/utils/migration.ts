@@ -308,7 +308,7 @@ export const createTriggers = (
   const definedTriggers = definedModel.triggers || [];
   const existingTriggers = existingModel.triggers || [];
 
-  // Find every trigger that is defined but not in existing
+  // Find every trigger that is defined but not in `existingModel`
   const triggersToAdd = definedTriggers.filter(
     (i) =>
       !existingTriggers.some(
