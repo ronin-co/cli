@@ -69,7 +69,7 @@ describe('queries', () => {
     expect(result).toBe(`alter.model('user').create.field(${JSON.stringify(field)})`);
   });
 
-  test('create field query for link field without target', () => {
+  test('create field query for link field', () => {
     const field: ModelField = {
       slug: 'profile',
       type: 'link',
