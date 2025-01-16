@@ -51,7 +51,6 @@ export const diffModels = async (
   let modelsToBeAdded = modelsToAdd(definedModels, existingModels);
   let modelsToBeDropped = modelsToDrop(definedModels, existingModels);
 
-
   if (modelsToBeRenamed.length > 0) {
     // Ask if the user wants to rename the models
     for (const model of modelsToBeRenamed) {
@@ -70,8 +69,6 @@ export const diffModels = async (
       }
     }
   }
-
-
 
   diff.push(...adjustModelMetaQueries);
   diff.push(...dropModels(modelsToBeDropped));
