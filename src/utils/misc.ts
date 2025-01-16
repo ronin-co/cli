@@ -178,7 +178,12 @@ export const getModelDefinitions = async (): Promise<Array<Model>> => {
   }
 
   const sortedModels = sortModels(
-    Object.values(await import(MODEL_IN_CODE_PATH)) as Array<Model>,
+    Object.values(await import(MODEL_IN_CODE_PATH))
+      .filter((value): value is Model => 
+        typeof value === 'object' && 
+        value !== null && 
+        'slug' in value
+      ) as Array<Model>,
   );
 
   // Check for duplicate model slugs
