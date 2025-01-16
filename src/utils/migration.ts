@@ -80,7 +80,6 @@ export const diffModels = async (
   diff.push(...recreateIndexes);
   diff.push(...recreateTriggers);
 
-  console.log(diff);
   return diff;
 };
 

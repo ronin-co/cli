@@ -37,8 +37,10 @@ export default async (
       logModelDiffs(definedModels, existingModels);
     }
 
+    spinner.stop()
     const modelDiff = await diffModels(definedModels, existingModels);
-    (modelDiff);
+    spinner.start()
+    
     if (modelDiff.length === 0) {
       spinner.succeed('No changes detected');
       return process.exit(0);
