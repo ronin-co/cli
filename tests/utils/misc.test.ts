@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
+import fs from 'node:fs';
 import {
   InvalidResponseError,
   MODEL_IN_CODE_PATH,
@@ -11,9 +12,7 @@ import {
   sortModels,
 } from '@/src/utils/misc';
 
-import fs from 'node:fs';
-
-import { Account, TestA, TestB } from '@/fixtures/index';
+import { Account, CONSTANTS, TestA, TestB } from '@/fixtures/index';
 import type { Model } from '@ronin/compiler';
 
 describe('misc', () => {
@@ -101,6 +100,20 @@ describe('misc', () => {
     test('should return models in code definitions - empty', async () => {
       mock.module(MODEL_IN_CODE_PATH, () => {
         return {};
+      });
+
+      const existsSync = spyOn(fs, 'existsSync');
+      existsSync.mockReturnValue(true);
+      existsSync.mockClear();
+
+      const models = await getModelDefinitions();
+      expect(models).toHaveLength(0);
+      expect(models).toStrictEqual([]);
+    });
+
+    test('should return models in code definitions and ignore constants - empty', async () => {
+      mock.module(MODEL_IN_CODE_PATH, () => {
+        return { CONSTANTS };
       });
 
       const existsSync = spyOn(fs, 'existsSync');

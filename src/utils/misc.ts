@@ -176,6 +176,7 @@ export const getModelDefinitions = async (): Promise<Array<Model>> => {
     spinner.fail('Could not find a model definition file schema/index.ts');
     process.exit(1);
   }
+  console.log(MODEL_IN_CODE_PATH);
 
   const sortedModels = sortModels(
     Object.values(await import(MODEL_IN_CODE_PATH)).filter(

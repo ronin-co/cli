@@ -2,6 +2,11 @@ import type { Model } from '@ronin/compiler';
 import { add } from 'ronin';
 import { blob, boolean, date, link, model, number, string } from 'ronin/schema';
 
+export const CONSTANTS = {
+  FIRSTNAME: 'Cornelius',
+  LASTNAME: 'Denninger',
+};
+
 const TestAccount = model({
   slug: 'account',
   fields: {
