@@ -127,7 +127,7 @@ describe('fields', () => {
       const diff = await diffFields(localFields, remoteFields, 'account', [], []);
       expect(diff).toHaveLength(1);
       expect(diff).toStrictEqual([
-        'alter.model(\'account\').create.field({"type":"string","slug":"name","model":{"slug":"account"}})',
+        'alter.model(\'account\').create.field({"type":"string","slug":"name"})',
       ]);
     });
 

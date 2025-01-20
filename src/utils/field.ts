@@ -218,14 +218,7 @@ export const createFields = (
   const diff: Array<string> = [];
 
   for (const fieldToAdd of fields) {
-    const { ...field } = fieldToAdd;
-
-    const fieldValue = {
-      ...field,
-      model: { slug: modelSlug },
-    };
-
-    diff.push(createFieldQuery(modelSlug, fieldValue));
+    diff.push(createFieldQuery(modelSlug, fieldToAdd));
   }
 
   return diff;
