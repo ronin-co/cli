@@ -31,7 +31,12 @@ export const getSpaces = async (
         queries: [
           {
             get: {
-              members: { including: ['space', 'account'] },
+              members: {
+                including: ['space', 'account'],
+                with: {
+                  team: null,
+                },
+              },
             },
           },
         ],
