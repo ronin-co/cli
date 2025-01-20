@@ -62,16 +62,6 @@ export const createModelQuery = (
  * ```
  */
 export const createFieldQuery = (modelSlug: string, field: ModelField): string => {
-  if (field.type === 'link') {
-    const fieldWithFlatTarget = field.target
-      ? {
-          ...field,
-          target: field.target,
-        }
-      : field;
-    return `alter.model('${modelSlug}').create.field(${JSON.stringify(fieldWithFlatTarget)})`;
-  }
-
   return `alter.model('${modelSlug}').create.field(${JSON.stringify(field)})`;
 };
 
