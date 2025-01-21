@@ -408,10 +408,11 @@ describe('apply', () => {
     await protocol.convertToQueryObjects();
 
     const statements = protocol.getSQLStatements(models);
-    console.log(modelDiff);
     await db.query(statements);
 
     const newModels = await getModels(db);
     expect(newModels).toHaveLength(2);
+    // @ts-expect-error This is defined!
+    expect(newModels[1]?.fields[0]?.actions?.onDelete).toBe('CASCADE');
   });
 });
