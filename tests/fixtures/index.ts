@@ -252,3 +252,17 @@ export const TestI = model({
     colour: string(),
   },
 }) as unknown as Model;
+
+export const TestJ = model({
+  slug: 'test',
+  fields: {
+    test: link({ target: 'comment' }),
+  },
+}) as unknown as Model;
+
+export const TestK = model({
+  slug: 'test',
+  fields: {
+    test: link({ target: 'comment', actions: { onDelete: 'CASCADE' } }),
+  },
+}) as unknown as Model;

@@ -11,6 +11,8 @@ import {
   TestG,
   TestH,
   TestI,
+  TestJ,
+  TestK,
 } from '@/fixtures/index';
 
 import { describe, expect, test } from 'bun:test';
@@ -392,5 +394,25 @@ describe('apply', () => {
 
     const newModels = await getModels(db);
     expect(newModels).toHaveLength(1);
+  });
+
+  test('create model with link cascade', async () => {
+    const definedModels: Array<Model> = [TestE, TestK];
+    const existingModels: Array<Model> = [TestE, TestJ];
+
+    const db = await queryEphemeralDatabase(existingModels);
+    const models = await getModels(db);
+
+    const modelDiff = await diffModels(definedModels, models);
+    const protocol = new Protocol(modelDiff);
+    await protocol.convertToQueryObjects();
+
+    const statements = protocol.getSQLStatements(models);
+    await db.query(statements);
+
+    const newModels = await getModels(db);
+    expect(newModels).toHaveLength(2);
+    // @ts-expect-error This is defined!
+    expect(newModels[1]?.fields[0]?.actions?.onDelete).toBe('CASCADE');
   });
 });
