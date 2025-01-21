@@ -269,6 +269,9 @@ const deleteFields = (fields: Array<ModelField>, modelSlug: string): Array<strin
  */
 export const fieldsAreDifferent = (local: ModelField, remote: ModelField): boolean => {
   return (
+    (local.type === 'link' &&
+      remote.type === 'link' &&
+      local.actions !== remote.actions) ||
     local.type !== remote.type ||
     (local.name && local.name !== remote.name) ||
     local.slug !== remote.slug ||
