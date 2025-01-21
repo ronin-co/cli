@@ -268,18 +268,11 @@ const deleteFields = (fields: Array<ModelField>, modelSlug: string): Array<strin
  * @returns True if the fields are different, false otherwise.
  */
 export const fieldsAreDifferent = (local: ModelField, remote: ModelField): boolean => {
+  const { name: localName, ...localAttributes } = local;
+  const { name: remoteName, ...remoteAttributes } = remote;
+
   return (
-    (local.type === 'link' &&
-      remote.type === 'link' &&
-      local.actions !== remote.actions) ||
-    local.type !== remote.type ||
-    (local.name && local.name !== remote.name) ||
-    local.slug !== remote.slug ||
-    local.unique !== remote.unique ||
-    local.required !== remote.required ||
-    local.defaultValue !== remote.defaultValue ||
-    (local.type === 'number' &&
-      remote.type === 'number' &&
-      local.increment !== remote.increment)
+    localName && localName !== remoteName ||
+    JSON.stringify(localAttributes) !== JSON.stringify(remoteAttributes)
   );
 };
