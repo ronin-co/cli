@@ -272,7 +272,7 @@ export const fieldsAreDifferent = (local: ModelField, remote: ModelField): boole
   const { name: remoteName, ...remoteAttributes } = remote;
 
   return (
-    localName && localName !== remoteName ||
+    (localName && localName !== remoteName) ||
     JSON.stringify(localAttributes) !== JSON.stringify(remoteAttributes)
   );
 };
