@@ -171,14 +171,14 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
  *
  * @throws Will exit process if model definition file is not found.
  */
-export const getModelDefinitions = async (): Promise<Array<Model>> => {
-  if (!fs.existsSync(MODEL_IN_CODE_PATH)) {
+export const getModelDefinitions = async (customPath?: string): Promise<Array<Model>> => {
+  if (!fs.existsSync(customPath ?? MODEL_IN_CODE_PATH)) {
     spinner.fail('Could not find a model definition file schema/index.ts');
     process.exit(1);
   }
 
   const sortedModels = sortModels(
-    Object.values(await import(MODEL_IN_CODE_PATH)).filter(
+    Object.values(await import(customPath ?? MODEL_IN_CODE_PATH)).filter(
       (value): value is Model =>
         typeof value === 'object' && value !== null && 'slug' in value,
     ) as Array<Model>,
