@@ -17,9 +17,12 @@ export default async (
   appToken: string | undefined,
   sessionToken: string | undefined,
   flags: MigrationFlags,
+  positionals?: Array<string>,
 ): Promise<void> => {
   let status: Status = 'readingConfig';
   spinner.text = 'Reading configuration';
+
+  const modelsInCodePath = positionals?.[positionals.indexOf('apply') + 1];
 
   const db = await initializeDatabase();
 
@@ -30,7 +33,7 @@ export default async (
 
     const [existingModels, definedModels] = await Promise.all([
       getModels(db, appToken ?? sessionToken, slug, flags.local),
-      getModelDefinitions(),
+      getModelDefinitions(modelsInCodePath),
     ]);
 
     if (flags.debug) {
