@@ -17,12 +17,14 @@ export default async (
   appToken: string | undefined,
   sessionToken: string | undefined,
   flags: MigrationFlags,
-  positionals?: Array<string>,
+  positionals: Array<string>,
 ): Promise<void> => {
   let status: Status = 'readingConfig';
   spinner.text = 'Reading configuration';
-
-  const modelsInCodePath = positionals?.[positionals.indexOf('apply') + 1];
+  const modelsInCodePath = path.join(
+    process.cwd(),
+    positionals[positionals.indexOf('diff') + 1],
+  );
 
   const db = await initializeDatabase();
 

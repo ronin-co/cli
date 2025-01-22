@@ -68,7 +68,7 @@ const run = async (): Promise<void> => {
 
   // `diff` sub command
   if (normalizedPositionals.includes('diff')) {
-    return diff(appToken, session?.token, flags);
+    return diff(appToken, session?.token, flags, positionals);
   }
 
   // `diff` sub command
