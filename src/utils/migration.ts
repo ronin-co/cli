@@ -33,6 +33,7 @@ export const IGNORED_FIELDS = [
  *
  * @param definedModels - The models defined locally.
  * @param existingModels - The models defined remotely.
+ * @param rename - Optional flag to automatically rename models without prompting.
  *
  * @returns An array of migration steps (as code strings).
  */
@@ -86,6 +87,7 @@ export const diffModels = async (
  *
  * @param definedModels - The models defined locally.
  * @param existingModels - The models defined in the database.
+ * @param rename - Optional flag to automatically rename fields without prompting.
  *
  * @returns An array of field adjustments as code strings.
  */
@@ -166,7 +168,8 @@ export const modelsToDrop = (
 };
 
 /**
- * Filters models that need to be added to the database as they are defined locally but absent remotely.
+ * Filters models that need to be added to the database as they are defined locally
+ * but absent remotely.
  *
  * @param definedModels - The models defined locally.
  * @param existingModels - The models currently defined in the database.
@@ -195,7 +198,7 @@ export const modelsToAdd = (
  * @param definedModels - The models defined locally.
  * @param existingModels - The models currently defined in the database.
  *
- * @returns An array of models to rename.
+ * @returns An array of objects containing the old and new model definitions.
  */
 export const modelsToRename = (
   definedModels: Array<Model>,
@@ -222,6 +225,14 @@ export const modelsToRename = (
   return modelsToRename;
 };
 
+/**
+ * Generates queries to adjust model metadata like name and ID prefix.
+ *
+ * @param definedModels - The models defined locally.
+ * @param existingModels - The models currently defined in the database.
+ *
+ * @returns An array of model metadata adjustment queries as code strings.
+ */
 export const adjustModelMeta = (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
@@ -245,6 +256,14 @@ export const adjustModelMeta = (
   return newModels;
 };
 
+/**
+ * Generates queries to recreate triggers for models.
+ *
+ * @param definedModels - The models defined locally.
+ * @param existingModels - The models currently defined in the database.
+ *
+ * @returns An array of trigger recreation queries as code strings.
+ */
 export const triggersToRecreate = (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
@@ -270,6 +289,14 @@ export const triggersToRecreate = (
   return diff;
 };
 
+/**
+ * Generates queries to drop triggers from a model.
+ *
+ * @param definedModel - The model defined locally.
+ * @param existingModel - The model currently defined in the database.
+ *
+ * @returns An array of trigger deletion queries as code strings.
+ */
 export const dropTriggers = (
   definedModel: Model,
   existingModel: Model,
@@ -300,6 +327,14 @@ export const dropTriggers = (
   return diff;
 };
 
+/**
+ * Generates queries to create triggers for a model.
+ *
+ * @param definedModel - The model defined locally.
+ * @param existingModel - The model currently defined in the database.
+ *
+ * @returns An array of trigger creation queries as code strings.
+ */
 export const createTriggers = (
   definedModel: Model,
   existingModel: Model,
@@ -329,6 +364,15 @@ export const createTriggers = (
   return diff;
 };
 
+/**
+ * Checks if a model needs to be recreated due to field changes.
+ *
+ * @param definedModel - The model defined locally.
+ * @param existingModel - The model currently defined in the database.
+ * @param slug - The model's slug identifier.
+ *
+ * @returns True if the model needs recreation, false otherwise.
+ */
 export const modelWillBeRecreated = (
   definedModel: Model,
   existingModel: Model,
@@ -341,6 +385,14 @@ export const modelWillBeRecreated = (
   );
 };
 
+/**
+ * Generates queries to recreate indexes for models.
+ *
+ * @param definedModels - The models defined locally.
+ * @param existingModels - The models currently defined in the database.
+ *
+ * @returns An array of index recreation queries as code strings.
+ */
 export const indexesToRecreate = (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
@@ -365,6 +417,14 @@ export const indexesToRecreate = (
   return diff;
 };
 
+/**
+ * Generates queries to drop indexes from a model.
+ *
+ * @param definedModel - The model defined locally.
+ * @param existingModel - The model currently defined in the database.
+ *
+ * @returns An array of index deletion queries as code strings.
+ */
 export const dropIndexes = (definedModel: Model, existingModel: Model): Array<string> => {
   const diff: Array<string> = [];
   const definedIndexes = definedModel.indexes || [];
@@ -392,6 +452,14 @@ export const dropIndexes = (definedModel: Model, existingModel: Model): Array<st
   return diff;
 };
 
+/**
+ * Generates queries to create indexes for a model.
+ *
+ * @param definedModel - The model defined locally.
+ * @param existingModel - The model currently defined in the database.
+ *
+ * @returns An array of index creation queries as code strings.
+ */
 export const createIndexes = (
   definedModel: Model,
   existingModel: Model,
@@ -420,11 +488,17 @@ export const createIndexes = (
   return diff;
 };
 
+/**
+ * Command line flags for migration operations.
+ */
 export const MIGRATION_FLAGS = {
   sql: { type: 'boolean', short: 's', default: false },
   local: { type: 'boolean', short: 'l', default: false },
   apply: { type: 'boolean', short: 'a', default: false },
 } satisfies NonNullable<Parameters<typeof parseArgs>[0]>['options'];
 
+/**
+ * Type definition for migration command flags.
+ */
 export type MigrationFlags = BaseFlags &
   Partial<Record<keyof typeof MIGRATION_FLAGS, boolean>>;
