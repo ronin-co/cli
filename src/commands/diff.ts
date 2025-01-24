@@ -21,10 +21,9 @@ export default async (
 ): Promise<void> => {
   let status: Status = 'readingConfig';
   spinner.text = 'Reading configuration';
-  const modelsInCodePath = path.join(
-    process.cwd(),
-    positionals[positionals.indexOf('diff') + 1],
-  );
+  const modelsInCodePath =
+    positionals[positionals.indexOf('diff') + 1] &&
+    path.join(process.cwd(), positionals[positionals.indexOf('diff') + 1]);
 
   const db = await initializeDatabase();
 
