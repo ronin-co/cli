@@ -17,6 +17,7 @@ export class Protocol {
   /**
    * Creates a new Protocol instance.
    *
+   * @param packages - A list of locally available RONIN packages.
    * @param roninQueries - Optional array of RONIN query strings to initialize with.
    */
   constructor(packages: LocalPackages, roninQueries: Array<string> = []) {

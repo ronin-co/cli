@@ -356,6 +356,12 @@ export const getResponseBody = async <T>(
   return json;
 };
 
+/** A list of all RONIN packages that must be locally available. */
+export interface LocalPackages {
+  syntax: typeof SyntaxPackage;
+  compiler: typeof CompilerPackage;
+}
+
 /**
  * Retrieves an instance of a RONIN package.
  *
@@ -376,11 +382,6 @@ const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
 
   return import(roninSyntaxPath);
 };
-
-export interface LocalPackages {
-  syntax: typeof SyntaxPackage;
-  compiler: typeof CompilerPackage;
-}
 
 /**
  * Loads all local RONIN packages.
