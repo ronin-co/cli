@@ -41,7 +41,7 @@ export const diffFields = async (
         rename ||
         (await confirm({
           message: `Did you mean to rename field: ${field.from.slug} -> ${field.to.slug}`,
-          default: false,
+          default: true,
         }));
 
       if (confirmRename) {

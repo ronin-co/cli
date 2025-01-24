@@ -64,11 +64,9 @@ export default async (
     spinner.succeed('Successfully applied migration');
     process.exit(0);
   } catch (err) {
-    const message =
-      err instanceof RoninError
-        ? err.message
-        : `Failed to apply migration: ${err instanceof Error ? err.message : err}`;
+    const message = err instanceof RoninError ? err.message : 'Failed to apply migration';
     spinner.fail(message);
+    spinner.fail(err instanceof Error ? err.message : String(err));
 
     process.exit(1);
   }
@@ -95,7 +93,7 @@ const applyMigrationStatements = async (
 
   spinner.info('Applying migration to production database');
 
-  await fetch(`https://data.ronin.co/?data-selector=${slug}`, {
+  const response = await fetch(`https://data.ronin.co/?data-selector=${slug}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -108,4 +106,10 @@ const applyMigrationStatements = async (
       })),
     }),
   });
+
+  const result = (await response.json()) as { error: { message: string } };
+
+  if (!response.ok) {
+    throw new Error(result.error.message);
+  }
 };

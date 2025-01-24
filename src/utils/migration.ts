@@ -60,7 +60,7 @@ export const diffModels = async (
         (process.env.NODE_ENV !== 'test' &&
           (await confirm({
             message: `Did you mean to rename model: ${model.from.slug} -> ${model.to.slug}`,
-            default: false,
+            default: true,
           })));
 
       if (confirmRename) {
