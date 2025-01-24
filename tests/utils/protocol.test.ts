@@ -110,7 +110,7 @@ describe('protocol', () => {
 
     expect(statements).toHaveLength(1);
     expect(statements[0].statement).toStrictEqual(
-      'SELECT * FROM "accounts" WHERE ("handle" = \'elaine\') LIMIT 1',
+      `SELECT "id", "ronin.locked", "ronin.createdAt", "ronin.createdBy", "ronin.updatedAt", "ronin.updatedBy", "handle" FROM "accounts" WHERE ("handle" = 'elaine') LIMIT 1`,
     );
   });
 
