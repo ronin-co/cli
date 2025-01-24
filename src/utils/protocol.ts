@@ -47,18 +47,21 @@ export class Protocol {
    */
   private queryToObject = (query: string): Query => {
     const { getSyntaxProxy } = this._packages.syntax;
-    const queryTypes = ['create', 'drop', 'get', 'set', 'alter', 'add'];
-    const queryProxies = queryTypes.map((type) => getSyntaxProxy({ rootProperty: type }));
-
-    const func = new Function(
-      'create',
-      'drop',
+    const queryTypes = [
       'get',
       'set',
-      'alter',
       'add',
-      `"use strict"; return ${query}`,
+      'remove',
+      'count',
+      'create',
+      'alter',
+      'drop',
+    ];
+    const queryProxies = queryTypes.map((type) =>
+      getSyntaxProxy({ rootProperty: type as 'drop' }),
     );
+
+    const func = new Function(...queryTypes, `"use strict"; return ${query}`);
 
     return func(...queryProxies).structure;
   };
