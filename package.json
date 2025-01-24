@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@iarna/toml": "2.2.5",
-    "@inquirer/prompts": "7.2.1",
+    "@inquirer/prompts": "7.2.3",
     "@ronin/engine": "0.0.27",
     "chalk-template": "1.1.0",
     "get-port": "7.1.0",
@@ -47,12 +47,12 @@
     "resolve-from": "5.0.0"
   },
   "devDependencies": {
-    "ronin": "6.0.7",
+    "ronin": "6.0.22",
     "@biomejs/biome": "1.9.4",
-    "@types/bun": "1.1.14",
+    "@types/bun": "1.2.0",
     "@types/ini": "4.1.1",
     "bun-bagel": "1.1.0",
     "tsup": "8.3.5",
-    "typescript": "5.7.2"
+    "typescript": "5.7.3"
   }
 }
