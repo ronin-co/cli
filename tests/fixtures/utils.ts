@@ -1,4 +1,4 @@
-import { ROOT_MODEL, Transaction } from '@ronin/compiler';
+import { getLocalPackages } from '@/src/utils/misc';
 
 import type { Model } from '@ronin/compiler';
 import { type Database, Engine } from '@ronin/engine';
@@ -35,6 +35,8 @@ export const prefillDatabase = async (
   db: Database,
   models: Array<Model>,
 ): Promise<void> => {
+  const { Transaction, ROOT_MODEL } = (await getLocalPackages()).compiler;
+
   const rootModelTransaction = new Transaction([{ create: { model: ROOT_MODEL } }]);
 
   const modelTransaction = new Transaction(

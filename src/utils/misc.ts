@@ -4,6 +4,7 @@ import type { parseArgs } from 'node:util';
 import { fieldsToCreate, fieldsToDrop } from '@/src/utils/field';
 import { spinner } from '@/src/utils/spinner';
 import type { Model, Result } from '@ronin/compiler';
+import type * as CompilerPackage from '@ronin/compiler';
 import type * as SyntaxPackage from '@ronin/syntax/queries';
 import resolveFrom from 'resolve-from';
 
@@ -355,13 +356,23 @@ export const getResponseBody = async <T>(
   return json;
 };
 
+/** A list of all RONIN packages that must be locally available. */
+export interface LocalPackages {
+  syntax: typeof SyntaxPackage;
+  compiler: typeof CompilerPackage;
+}
+
 /**
- * Retrieves an instance of the RONIN syntax package.
+ * Retrieves an instance of a RONIN package.
  *
  * @returns An instance of the package.
  */
-export const getSyntaxPackage = (): Promise<typeof SyntaxPackage> => {
-  const roninSyntaxPath = resolveFrom.silent(process.cwd(), '@ronin/syntax/queries');
+const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
+  name: Name,
+): Promise<
+  Name extends 'syntax/queries' ? LocalPackages['syntax'] : LocalPackages['compiler']
+> => {
+  const roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
 
   if (!roninSyntaxPath) {
     throw new Error(
@@ -370,4 +381,18 @@ export const getSyntaxPackage = (): Promise<typeof SyntaxPackage> => {
   }
 
   return import(roninSyntaxPath);
+};
+
+/**
+ * Loads all local RONIN packages.
+ *
+ * @returns The loaded packages.
+ */
+export const getLocalPackages = async (): Promise<LocalPackages> => {
+  const [syntax, compiler] = await Promise.all([
+    getPackage('syntax/queries'),
+    getPackage('compiler'),
+  ]);
+
+  return { syntax, compiler };
 };

@@ -1,11 +1,22 @@
 import fs from 'node:fs';
-import { ROOT_MODEL, Transaction } from '@ronin/compiler';
+import type { LocalPackages } from '@/src/utils/misc';
 import { type Database, Engine } from '@ronin/engine';
 import { MemoryResolver } from '@ronin/engine/resolvers/memory';
 
+/**
+ * Initializes a new database instance.
+ *
+ * @param packages - A list of locally available RONIN packages.
+ * @param fsPath - The file system path at which the database should be stored.
+ *
+ * @returns A new database instance.
+ */
 export const initializeDatabase = async (
+  packages: LocalPackages,
   fsPath = '.ronin/db.sqlite',
 ): Promise<Database> => {
+  const { Transaction, ROOT_MODEL } = packages.compiler;
+
   const engine = new Engine({
     resolvers: [(engine) => new MemoryResolver(engine)],
   });
