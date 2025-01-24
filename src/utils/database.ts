@@ -1,11 +1,13 @@
 import fs from 'node:fs';
-import { ROOT_MODEL, Transaction } from '@ronin/compiler';
+import { getPackage } from '@/src/utils/misc';
 import { type Database, Engine } from '@ronin/engine';
 import { MemoryResolver } from '@ronin/engine/resolvers/memory';
 
 export const initializeDatabase = async (
   fsPath = '.ronin/db.sqlite',
 ): Promise<Database> => {
+  const { Transaction, ROOT_MODEL } = await getPackage('compiler');
+
   const engine = new Engine({
     resolvers: [(engine) => new MemoryResolver(engine)],
   });

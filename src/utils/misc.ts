@@ -4,6 +4,7 @@ import type { parseArgs } from 'node:util';
 import { fieldsToCreate, fieldsToDrop } from '@/src/utils/field';
 import { spinner } from '@/src/utils/spinner';
 import type { Model, Result } from '@ronin/compiler';
+import type * as CompilerPackage from '@ronin/compiler';
 import type * as SyntaxPackage from '@ronin/syntax/queries';
 import resolveFrom from 'resolve-from';
 
@@ -356,12 +357,16 @@ export const getResponseBody = async <T>(
 };
 
 /**
- * Retrieves an instance of the RONIN syntax package.
+ * Retrieves an instance of a RONIN package.
  *
  * @returns An instance of the package.
  */
-export const getSyntaxPackage = (): Promise<typeof SyntaxPackage> => {
-  const roninSyntaxPath = resolveFrom.silent(process.cwd(), '@ronin/syntax/queries');
+export const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
+  name: Name,
+): Promise<
+  Name extends 'syntax/queries' ? typeof SyntaxPackage : typeof CompilerPackage
+> => {
+  const roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
 
   if (!roninSyntaxPath) {
     throw new Error(

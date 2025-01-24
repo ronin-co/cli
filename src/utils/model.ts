@@ -1,7 +1,6 @@
 import { IGNORED_FIELDS } from '@/src/utils/migration';
-import { type QueryResponse, getResponseBody } from '@/src/utils/misc';
+import { type QueryResponse, getPackage, getResponseBody } from '@/src/utils/misc';
 import type { Model } from '@ronin/compiler';
-import { Transaction } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
 import type { Row } from '@ronin/engine/types';
 
@@ -23,6 +22,7 @@ export const getModels = async (
   spaceId?: string,
   isLocal = true,
 ): Promise<Array<Model>> => {
+  const { Transaction } = await getPackage('compiler');
   const transaction = new Transaction([{ get: { models: null } }]);
 
   let rawResults: Array<Array<Row>>;

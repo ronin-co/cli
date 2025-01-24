@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
-import { getSyntaxPackage } from '@/src/utils/misc';
-import { type Model, type Query, type Statement, Transaction } from '@ronin/compiler';
+import { getPackage } from '@/src/utils/misc';
+import type { Model, Query, Statement } from '@ronin/compiler';
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.
@@ -28,7 +28,7 @@ export class Protocol {
    * @returns The Protocol instance for chaining.
    */
   async convertToQueryObjects(): Promise<Protocol> {
-    const roninSyntax = await getSyntaxPackage();
+    const roninSyntax = await getPackage('syntax/queries');
 
     this._queries = this._roninQueries.map((queryString) => {
       return this.queryToObject(roninSyntax, queryString);
@@ -47,7 +47,7 @@ export class Protocol {
    * @private
    */
   private queryToObject = (
-    roninSyntax: Awaited<ReturnType<typeof getSyntaxPackage>>,
+    roninSyntax: Awaited<ReturnType<typeof getPackage<'syntax/queries'>>>,
     query: string,
   ): Query => {
     const { getSyntaxProxy } = roninSyntax;
@@ -117,7 +117,7 @@ export default () => [
 
     const queries = await import(filePath);
 
-    const roninSyntax = await getSyntaxPackage();
+    const roninSyntax = await getPackage('syntax/queries');
     const { getBatchProxy } = roninSyntax;
     const queryObjects = getBatchProxy(() => queries.default());
 
@@ -164,7 +164,9 @@ export default () => [
    *
    * @returns Array of SQL statements.
    */
-  getSQLStatements = (models: Array<Model>): Array<Statement> => {
+  getSQLStatements = async (models: Array<Model>): Promise<Array<Statement>> => {
+    const { Transaction } = await getPackage('compiler');
+
     return new Transaction(this._queries, {
       models,
       inlineParams: true,
