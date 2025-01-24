@@ -1,9 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import { initializeDatabase } from '@/src/utils/database';
+import { getLocalPackages } from '@/src/utils/misc';
 
 describe('database', () => {
   test('should initialize database', async () => {
-    const db = await initializeDatabase('./tests/fixtures/minimal.db');
+    const packages = await getLocalPackages();
+
+    const db = await initializeDatabase(packages, './tests/fixtures/minimal.db');
     const results = await db.query([
       "SELECT name FROM sqlite_master WHERE type='table';",
     ]);

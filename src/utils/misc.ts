@@ -361,10 +361,10 @@ export const getResponseBody = async <T>(
  *
  * @returns An instance of the package.
  */
-export const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
+const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
   name: Name,
 ): Promise<
-  Name extends 'syntax/queries' ? typeof SyntaxPackage : typeof CompilerPackage
+  Name extends 'syntax/queries' ? LocalPackages['syntax'] : LocalPackages['compiler']
 > => {
   const roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
 
@@ -375,4 +375,23 @@ export const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
   }
 
   return import(roninSyntaxPath);
+};
+
+export interface LocalPackages {
+  syntax: typeof SyntaxPackage;
+  compiler: typeof CompilerPackage;
+}
+
+/**
+ * Loads all local RONIN packages.
+ *
+ * @returns The loaded packages.
+ */
+export const getLocalPackages = async (): Promise<LocalPackages> => {
+  const [syntax, compiler] = await Promise.all([
+    getPackage('syntax/queries'),
+    getPackage('compiler'),
+  ]);
+
+  return { syntax, compiler };
 };

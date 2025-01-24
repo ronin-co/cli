@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
-import { getPackage } from '@/src/utils/misc';
+import type { LocalPackages } from '@/src/utils/misc';
 import type { Model, Query, Statement } from '@ronin/compiler';
 
 /**
@@ -9,6 +9,7 @@ import type { Model, Query, Statement } from '@ronin/compiler';
  * It provides functionality to generate, save and load migration files and SQL statements.
  */
 export class Protocol {
+  private _packages: LocalPackages;
   private _queries: Array<Query> = [];
   private _roninQueries: Array<string>;
   private _protocolDir = `${process.cwd()}/schema/.protocols/`;
@@ -18,7 +19,8 @@ export class Protocol {
    *
    * @param roninQueries - Optional array of RONIN query strings to initialize with.
    */
-  constructor(roninQueries: Array<string> = []) {
+  constructor(packages: LocalPackages, roninQueries: Array<string> = []) {
+    this._packages = packages;
     this._roninQueries = roninQueries;
   }
 
@@ -28,10 +30,8 @@ export class Protocol {
    * @returns The Protocol instance for chaining.
    */
   async convertToQueryObjects(): Promise<Protocol> {
-    const roninSyntax = await getPackage('syntax/queries');
-
     this._queries = this._roninQueries.map((queryString) => {
-      return this.queryToObject(roninSyntax, queryString);
+      return this.queryToObject(queryString);
     });
 
     return this;
@@ -40,17 +40,13 @@ export class Protocol {
   /**
    * Converts a query string into a Query object.
    *
-   * @param roninSyntax - The RONIN syntax package.
    * @param query - RONIN query string.
    *
    * @returns Object containing the Query and options.
    * @private
    */
-  private queryToObject = (
-    roninSyntax: Awaited<ReturnType<typeof getPackage<'syntax/queries'>>>,
-    query: string,
-  ): Query => {
-    const { getSyntaxProxy } = roninSyntax;
+  private queryToObject = (query: string): Query => {
+    const { getSyntaxProxy } = this._packages.syntax;
     const queryTypes = ['create', 'drop', 'get', 'set', 'alter', 'add'];
     const queryProxies = queryTypes.map((type) => getSyntaxProxy({ rootProperty: type }));
 
@@ -117,8 +113,7 @@ export default () => [
 
     const queries = await import(filePath);
 
-    const roninSyntax = await getPackage('syntax/queries');
-    const { getBatchProxy } = roninSyntax;
+    const { getBatchProxy } = this._packages.syntax;
     const queryObjects = getBatchProxy(() => queries.default());
 
     this._queries = queryObjects.map((query: { structure: Query }) => query.structure);
@@ -152,7 +147,7 @@ export default () => [
    * @param models - Models used to compile the queries.
    */
   saveSQL = async (fileName: string, models: Array<Model>): Promise<void> => {
-    const statements = await this.getSQLStatements(models);
+    const statements = this.getSQLStatements(models);
     const sqlContent = statements.map(({ statement }) => statement).join('\n');
     fs.writeFileSync(`${this._protocolDir}${fileName}.sql`, sqlContent);
   };
@@ -164,8 +159,8 @@ export default () => [
    *
    * @returns Array of SQL statements.
    */
-  getSQLStatements = async (models: Array<Model>): Promise<Array<Statement>> => {
-    const { Transaction } = await getPackage('compiler');
+  getSQLStatements = (models: Array<Model>): Array<Statement> => {
+    const { Transaction } = this._packages.compiler;
 
     return new Transaction(this._queries, {
       models,

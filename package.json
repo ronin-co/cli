@@ -36,7 +36,6 @@
   "dependencies": {
     "@iarna/toml": "2.2.5",
     "@inquirer/prompts": "7.2.1",
-    "@ronin/compiler": "0.13.13",
     "@ronin/engine": "0.0.27",
     "chalk-template": "1.1.0",
     "get-port": "7.1.0",

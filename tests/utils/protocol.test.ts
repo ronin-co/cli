@@ -1,24 +1,31 @@
 import { describe, expect, test } from 'bun:test';
 import fs, { type PathOrFileDescriptor } from 'node:fs';
+import { getLocalPackages } from '@/src/utils/misc';
 import { Protocol } from '@/src/utils/protocol';
 import type { Model, Statement } from '@ronin/compiler';
 
 describe('protocol', () => {
-  test('should initialize with empty queries when none are provided', () => {
-    const protocol = new Protocol();
+  test('should initialize with empty queries when none are provided', async () => {
+    const packages = await getLocalPackages();
+
+    const protocol = new Protocol(packages);
     expect(protocol.queries).toEqual([]);
   });
 
-  test('should initialize with provided queries', () => {
+  test('should initialize with provided queries', async () => {
+    const packages = await getLocalPackages();
+
     const queries = ["create.model({slug: 'model', pluralSlug: 'models'})"];
-    const protocol = new Protocol(queries);
+    const protocol = new Protocol(packages, queries);
     expect(protocol.queries).toEqual([]);
     expect(protocol.roninQueries).toEqual(queries);
   });
 
   test('save method should write migration file to disk', async () => {
+    const packages = await getLocalPackages();
+
     const queries = ["create.model.to({slug: 'my_model', pluralSlug: 'my_models'})"];
-    const protocol = new Protocol(queries);
+    const protocol = new Protocol(packages, queries);
     const fileName = 'migration_test';
 
     // Mock `fs.writeFileSync`
@@ -44,8 +51,10 @@ describe('protocol', () => {
   });
 
   test('saveSQL method should write SQL statements to disk', async () => {
+    const packages = await getLocalPackages();
+
     const queries = ["create.model({slug: 'my_model', pluralSlug: 'my_models'})"];
-    const protocol = new Protocol(queries);
+    const protocol = new Protocol(packages, queries);
     const fileName = 'migration_sql_test';
     const models: Array<Model> = [];
 
@@ -80,6 +89,8 @@ describe('protocol', () => {
   });
 
   test('get SQL statements', async () => {
+    const packages = await getLocalPackages();
+
     const queries: Array<string> = ["get.account.with({handle: 'elaine'});"];
 
     const models: Array<Model> = [
@@ -93,7 +104,7 @@ describe('protocol', () => {
         ],
       },
     ];
-    const protocol = await new Protocol(queries).convertToQueryObjects();
+    const protocol = await new Protocol(packages, queries).convertToQueryObjects();
 
     const statements = protocol.getSQLStatements(models);
 
@@ -104,10 +115,12 @@ describe('protocol', () => {
   });
 
   test('load specific migration file', async () => {
+    const packages = await getLocalPackages();
+
     // Path to this file is `./tests/fixtures/protocol.ts`
     const fileName = `${process.cwd()}/tests/fixtures/protocol.ts`;
 
-    const protocol = new Protocol();
+    const protocol = new Protocol(packages);
     await protocol.load(fileName);
     expect(protocol.queries).toHaveLength(1);
     expect(JSON.stringify(protocol.queries[0])).toStrictEqual(
@@ -124,7 +137,9 @@ describe('protocol', () => {
   });
 
   test('load latest migration file', async () => {
-    const protocol = new Protocol();
+    const packages = await getLocalPackages();
+
+    const protocol = new Protocol(packages);
     try {
       await protocol.load();
     } catch (error) {

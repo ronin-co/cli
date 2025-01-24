@@ -4,12 +4,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { initializeDatabase } from '@/src/utils/database';
 import type { MigrationFlags } from '@/src/utils/migration';
-import { MODELS_IN_CODE_DIR } from '@/src/utils/misc';
+import { MODELS_IN_CODE_DIR, getLocalPackages } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner } from '@/src/utils/spinner';
-import { RoninError } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
 
 /**
@@ -24,17 +23,19 @@ export default async (
   const spinner = ora('Applying migration').start();
   const migrationFilePath = positionals[positionals.indexOf('apply') + 1];
 
-  const db = await initializeDatabase();
+  const packages = await getLocalPackages();
+  const db = await initializeDatabase(packages);
 
   try {
     const { slug } = await getOrSelectSpaceId(sessionToken, spinner);
     const existingModels = await getModels(
+      packages,
       db,
       appToken ?? sessionToken,
       slug,
       flags.local,
     );
-    const protocol = await new Protocol().load(migrationFilePath);
+    const protocol = await new Protocol(packages).load(migrationFilePath);
     const statements = protocol.getSQLStatements(existingModels);
 
     const files = fs.readdirSync(
@@ -64,7 +65,10 @@ export default async (
     spinner.succeed('Successfully applied migration');
     process.exit(0);
   } catch (err) {
-    const message = err instanceof RoninError ? err.message : 'Failed to apply migration';
+    const message =
+      err instanceof packages.compiler.RoninError
+        ? err.message
+        : 'Failed to apply migration';
     spinner.fail(message);
     spinner.fail(err instanceof Error ? err.message : String(err));
 

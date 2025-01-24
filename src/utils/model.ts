@@ -1,5 +1,9 @@
 import { IGNORED_FIELDS } from '@/src/utils/migration';
-import { type QueryResponse, getPackage, getResponseBody } from '@/src/utils/misc';
+import {
+  type LocalPackages,
+  type QueryResponse,
+  getResponseBody,
+} from '@/src/utils/misc';
 import type { Model } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
 import type { Row } from '@ronin/engine/types';
@@ -7,6 +11,7 @@ import type { Row } from '@ronin/engine/types';
 /**
  * Fetches and formats schema models from either production API or local database.
  *
+ * @param packages - A list of locally available RONIN packages.
  * @param db - The database instance to query from.
  * @param token - Optional authentication token for production API requests.
  * @param spaceId - Optional space ID for production API requests.
@@ -17,12 +22,13 @@ import type { Row } from '@ronin/engine/types';
  * @throws Error if production API request fails.
  */
 export const getModels = async (
+  packages: LocalPackages,
   db: Database,
   token?: string,
   spaceId?: string,
   isLocal = true,
 ): Promise<Array<Model>> => {
-  const { Transaction } = await getPackage('compiler');
+  const { Transaction } = packages.compiler;
   const transaction = new Transaction([{ get: { models: null } }]);
 
   let rawResults: Array<Array<Row>>;
