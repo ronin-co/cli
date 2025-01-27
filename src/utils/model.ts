@@ -14,7 +14,7 @@ import type { Row } from '@ronin/engine/types';
  * @param packages - A list of locally available RONIN packages.
  * @param db - The database instance to query from.
  * @param token - Optional authentication token for production API requests.
- * @param spaceId - Optional space ID for production API requests.
+ * @param space - Optional space ID for production API requests.
  * @param isLocal - Optional flag to determine if production API should be used.
  *
  * @returns Promise resolving to an array of formatted Model objects.
@@ -25,7 +25,7 @@ export const getModels = async (
   packages: LocalPackages,
   db: Database,
   token?: string,
-  spaceId?: string,
+  space?: string,
   isLocal = true,
 ): Promise<Array<Model>> => {
   const { Transaction } = packages.compiler;
@@ -42,7 +42,7 @@ export const getModels = async (
         values: statement.params,
       }));
 
-      const response = await fetch(`https://data.ronin.co/?data-selector=${spaceId}`, {
+      const response = await fetch(`https://data.ronin.co/?data-selector=${space}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
