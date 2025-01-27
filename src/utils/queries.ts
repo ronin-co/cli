@@ -160,6 +160,41 @@ export const createTempModelQuery = (
 };
 
 /**
+ *
+ */
+export const createTempColumnQuery = (
+  modelSlug: string,
+  field: ModelField,
+  indexes: Array<ModelIndex>,
+  triggers: Array<ModelTrigger>,
+): Array<string> => {
+  const queries: Array<string> = [];
+
+  // Add temp field with desired type
+  queries.push(
+    createFieldQuery(modelSlug, {
+      ...field,
+      slug: `${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}`,
+    }),
+  );
+
+  // Move data to temp field
+  queries.push(
+    `set.${modelSlug}.to.${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}(f => f.${field.slug})`,
+  );
+
+  // Drop original field
+  queries.push(dropFieldQuery(modelSlug, field.slug));
+
+  // Rename temp field to original field
+  queries.push(
+    renameFieldQuery(modelSlug, `${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}`, field.slug),
+  );
+
+  return queries;
+};
+
+/**
  * Serializes values for use in RONIN queries.
  *
  * @param value - The value to serialize.
