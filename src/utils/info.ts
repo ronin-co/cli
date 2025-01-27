@@ -1,8 +1,8 @@
+import { spinner } from '@/src/utils/spinner';
 import chalkTemplate from 'chalk-template';
 
-import { version } from '@/src/../package.json';
-
-export const printVersion = (): Promise<void> => {
+export const printVersion = (version: string): Promise<void> => {
+  spinner.stop();
   console.log(version);
   process.exit(0);
 };
