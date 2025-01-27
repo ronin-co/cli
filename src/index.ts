@@ -10,27 +10,27 @@ import { BASE_FLAGS, type BaseFlags } from '@/src/utils/misc';
 import { getSession } from '@/src/utils/session';
 import { spinner } from '@/src/utils/spinner';
 
-let flags: BaseFlags;
-let positionals: Array<string>;
+const run = async (): Promise<void> => {
+  let flags: BaseFlags;
+  let positionals: Array<string>;
 
-try {
-  ({ values: flags, positionals } = parseArgs({
-    args: process.argv,
-    options: { ...BASE_FLAGS, ...MIGRATION_FLAGS },
-    strict: true,
-    allowPositionals: true,
-  }));
-} catch (err) {
-  if (err instanceof Error) {
-    spinner.fail(err.message);
-  } else {
-    throw err;
+  try {
+    ({ values: flags, positionals } = parseArgs({
+      args: process.argv,
+      options: { ...BASE_FLAGS, ...MIGRATION_FLAGS },
+      strict: true,
+      allowPositionals: true,
+    }));
+  } catch (err) {
+    if (err instanceof Error) {
+      spinner.fail(err.message);
+    } else {
+      throw err;
+    }
+
+    process.exit(1);
   }
 
-  process.exit(1);
-}
-
-const run = async (): Promise<void> => {
   // Flags for printing useful information about the CLI.
   if (flags.help) return printHelp();
   if (flags.version) return printVersion();
@@ -81,7 +81,7 @@ const run = async (): Promise<void> => {
   return printHelp();
 };
 
-run();
+export default run;
 
 // Exit gracefully on SIGINT
 process.on('SIGINT', () => {
