@@ -64,15 +64,20 @@ export const getSpaces = async (
 
 /**
  * Helper to get or interactively select a space ID.
+ *
+ * @param sessionToken - Authentication token used to authorize the API request.
+ * @param spinner - Optional ora spinner instance to stop and start.
+ *
+ * @returns Promise resolving to the selected space ID.
  */
 export const getOrSelectSpaceId = async (
   sessionToken?: string,
   spinner?: Ora,
-): Promise<{ id: string; slug: string }> => {
+): Promise<string> => {
   const config = readConfig();
-  let space = { id: config.spaceId, slug: config.spaceSlug };
+  let spaceId = config.spaceId;
 
-  if (!space.id && sessionToken) {
+  if (!spaceId && sessionToken) {
     const spaces = await getSpaces(sessionToken);
 
     if (spaces?.length === 0) {
@@ -84,28 +89,26 @@ export const getOrSelectSpaceId = async (
     }
 
     if (spaces.length === 1) {
-      space = { id: spaces[0].id, slug: spaces[0].handle };
+      spaceId = spaces[0].id;
     } else {
       spinner?.stop();
-      space = await select({
+
+      spaceId = await select({
         message: 'Which space do you want to apply models to?',
         choices: spaces.map((space) => ({
           name: space.handle,
-          value: { id: space.id, slug: space.handle },
+          value: space.id,
           description: space.name,
         })),
       });
     }
 
-    saveConfig({ spaceId: space.id, spaceSlug: space.slug });
+    saveConfig({ spaceId });
   }
 
-  if (!space) {
+  if (!spaceId) {
     throw new Error('Space ID is not specified.');
   }
 
-  return {
-    id: space.id!,
-    slug: space.slug!,
-  };
+  return spaceId;
 };
