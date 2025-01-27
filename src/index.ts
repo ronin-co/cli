@@ -10,7 +10,16 @@ import { BASE_FLAGS, type BaseFlags } from '@/src/utils/misc';
 import { getSession } from '@/src/utils/session';
 import { spinner } from '@/src/utils/spinner';
 
-const run = async (): Promise<void> => {
+/**
+ * Runs the RONIN command-line interface (CLI) with the provided configuration options.
+ * The `@ronin/cli` package intentionally doesn't do this itself, since the CLI is instead
+ * automatically installed and exposed via the shorter `ronin` package name.
+ *
+ * @param options - Configuration options for customizing the behavior of the CLI.
+ *
+ * @returns Nothing.
+ */
+const run = async (options: { version: string }): Promise<void> => {
   let flags: BaseFlags;
   let positionals: Array<string>;
 
@@ -33,7 +42,7 @@ const run = async (): Promise<void> => {
 
   // Flags for printing useful information about the CLI.
   if (flags.help) return printHelp();
-  if (flags.version) return printVersion();
+  if (flags.version) return printVersion(options.version);
 
   // This ensures that people can accidentally type uppercase letters and still get the
   // command they are looking for.
