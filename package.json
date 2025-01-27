@@ -6,9 +6,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "bin": {
-    "ronin": "./dist/index.js"
-  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
@@ -28,11 +27,6 @@
   ],
   "author": "ronin",
   "license": "Apache-2.0",
-  "tsup": {
-    "banner": {
-      "js": "#!/usr/bin/env bun"
-    }
-  },
   "dependencies": {
     "@iarna/toml": "2.2.5",
     "@inquirer/prompts": "7.2.3",
