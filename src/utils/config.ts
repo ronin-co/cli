@@ -3,7 +3,6 @@ import path from 'node:path';
 
 interface Config {
   spaceId?: string;
-  spaceSlug?: string;
   modelsDir?: string;
 }
 
