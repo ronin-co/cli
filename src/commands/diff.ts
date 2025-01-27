@@ -34,12 +34,12 @@ export default async (
   const db = await initializeDatabase(packages);
 
   try {
-    const spaceId = await getOrSelectSpaceId(sessionToken, spinner);
+    const space = await getOrSelectSpaceId(sessionToken, spinner);
     status = 'comparing';
     spinner.text = 'Comparing models';
 
     const [existingModels, definedModels] = await Promise.all([
-      getModels(packages, db, appToken ?? sessionToken, spaceId, flags.local),
+      getModels(packages, db, appToken ?? sessionToken, space, flags.local),
       getModelDefinitions(modelsInCodePath),
     ]);
 

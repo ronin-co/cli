@@ -27,12 +27,12 @@ export default async (
   const db = await initializeDatabase(packages);
 
   try {
-    const spaceId = await getOrSelectSpaceId(sessionToken, spinner);
+    const space = await getOrSelectSpaceId(sessionToken, spinner);
     const existingModels = await getModels(
       packages,
       db,
       appToken ?? sessionToken,
-      spaceId,
+      space,
       flags.local,
     );
     const protocol = await new Protocol(packages).load(migrationFilePath);
@@ -65,7 +65,7 @@ export default async (
       flags,
       db,
       statements,
-      spaceId,
+      space,
     );
 
     spinner.succeed('Successfully applied migration');

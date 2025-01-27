@@ -74,10 +74,9 @@ export const getOrSelectSpaceId = async (
   sessionToken?: string,
   spinner?: Ora,
 ): Promise<string> => {
-  const config = readConfig();
-  let spaceId = config.spaceId;
+  let { space } = readConfig();
 
-  if (!spaceId && sessionToken) {
+  if (!space && sessionToken) {
     const spaces = await getSpaces(sessionToken);
 
     if (spaces?.length === 0) {
@@ -89,11 +88,11 @@ export const getOrSelectSpaceId = async (
     }
 
     if (spaces.length === 1) {
-      spaceId = spaces[0].id;
+      space = spaces[0].id;
     } else {
       spinner?.stop();
 
-      spaceId = await select({
+      space = await select({
         message: 'Which space do you want to apply models to?',
         choices: spaces.map((space) => ({
           name: space.handle,
@@ -103,12 +102,12 @@ export const getOrSelectSpaceId = async (
       });
     }
 
-    saveConfig({ spaceId });
+    saveConfig({ space });
   }
 
-  if (!spaceId) {
+  if (!space) {
     throw new Error('Space ID is not specified.');
   }
 
-  return spaceId;
+  return space;
 };
