@@ -40,6 +40,16 @@ const run = async (config: { version: string }): Promise<void> => {
     process.exit(1);
   }
 
+  // Exit gracefully on SIGINT
+  process.on('SIGINT', () => {
+    process.exit(0);
+  });
+
+  // Exit gracefully on SIGTERM
+  process.on('SIGTERM', () => {
+    process.exit(0);
+  });
+
   // Flags for printing useful information about the CLI.
   if (flags.help) return printHelp();
   if (flags.version) return printVersion(config.version);
@@ -91,13 +101,3 @@ const run = async (config: { version: string }): Promise<void> => {
 };
 
 export default run;
-
-// Exit gracefully on SIGINT
-process.on('SIGINT', () => {
-  process.exit(0);
-});
-
-// Exit gracefully on SIGTERM
-process.on('SIGTERM', () => {
-  process.exit(0);
-});
