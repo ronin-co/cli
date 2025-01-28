@@ -160,6 +160,44 @@ export const createTempModelQuery = (
 };
 
 /**
+ *
+ */
+export const createTempColumnQuery = (
+  modelSlug: string,
+  field: ModelField,
+  _indexes: Array<ModelIndex>,
+  _triggers: Array<ModelTrigger>,
+): Array<string> => {
+  const queries: Array<string> = [];
+  // 1. Create a temporary field with the new desired type and constraints.
+  // The temp field name is prefixed with RONIN_SCHEMA_TEMP_ to avoid conflicts.
+  queries.push(
+    createFieldQuery(modelSlug, {
+      ...field,
+      slug: `${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}`,
+    }),
+  );
+
+  // 2. Copy all data from the original field to the temporary field.
+  // This preserves the data while we make the schema changes.
+  queries.push(
+    `set.${modelSlug}.to.${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}(f => f.${field.slug})`,
+  );
+
+  // 3. Remove the original field now that data is safely copied.
+  // This is needed before we can rename the temp field to take its place.
+  queries.push(dropFieldQuery(modelSlug, field.slug));
+
+  // 4. Rename the temporary field to the original field name.
+  // This completes the field modification while preserving the data.
+  queries.push(
+    renameFieldQuery(modelSlug, `${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}`, field.slug),
+  );
+
+  return queries;
+};
+
+/**
  * Serializes values for use in RONIN queries.
  *
  * @param value - The value to serialize.

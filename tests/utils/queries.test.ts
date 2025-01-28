@@ -3,6 +3,7 @@ import {
   createFieldQuery,
   createIndexQuery,
   createModelQuery,
+  createTempColumnQuery,
   createTempModelQuery,
   createTriggerQuery,
   dropFieldQuery,
@@ -201,5 +202,26 @@ describe('queries', () => {
   test('drop index query', () => {
     const result = dropIndexQuery('user', 'emailIndex');
     expect(result).toBe('alter.model("user").drop.index("emailIndex")');
+  });
+
+  test('create temp column query', () => {
+    const result = createTempColumnQuery(
+      'user',
+      {
+        slug: 'username',
+        type: 'string',
+        name: 'Username',
+        unique: true,
+        required: true,
+      },
+      [],
+      [],
+    );
+    expect(result).toEqual([
+      `alter.model('user').create.field({"slug":"RONIN_TEMP_username","type":"string","name":"Username","unique":true,"required":true})`,
+      'set.user.to.RONIN_TEMP_username(f => f.username)',
+      'alter.model("user").drop.field("username")',
+      'alter.model("user").alter.field("RONIN_TEMP_username").to({slug: "username"})',
+    ]);
   });
 });

@@ -1,10 +1,10 @@
 import { RONIN_SCHEMA_TEMP_SUFFIX } from '@/src/utils/misc';
 import {
   createFieldQuery,
+  createTempColumnQuery,
   createTempModelQuery,
   dropFieldQuery,
   renameFieldQuery,
-  setFieldQuery,
 } from '@/src/utils/queries';
 import { confirm } from '@inquirer/prompts';
 import type { ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
@@ -32,7 +32,7 @@ export const diffFields = async (
 
   let fieldsToAdd = fieldsToCreate(definedFields, existingFields);
   let fieldsToDelete = fieldsToDrop(definedFields, existingFields);
-  const queriesForAdjustment = fieldsToAdjust(definedFields, existingFields, modelSlug);
+  const queriesForAdjustment = fieldsToAdjust(definedFields, existingFields);
 
   if (fieldsToBeRenamed.length > 0) {
     // Ask if the user wants to rename a field.
@@ -76,8 +76,17 @@ export const diffFields = async (
   diff.push(...createFields(fieldsToAdd, modelSlug));
   diff.push(...deleteFields(fieldsToDelete, modelSlug));
 
-  if (queriesForAdjustment)
-    diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
+  for (const field of queriesForAdjustment || []) {
+    // SQLite's ALTER TABLE is limited - adding UNIQUE or NOT NULL to an existing column
+    // requires recreating the entire table. For other constraint changes, we can use a
+    // temporary column approach (create temp, copy data, drop old, rename temp).
+    const existingField = existingFields.find((f) => f.slug === field.slug);
+    if (field.unique || field.required || existingField?.unique) {
+      diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
+    } else {
+      diff.push(...createTempColumnQuery(modelSlug, field, indexes, triggers));
+    }
+  }
 
   return diff;
 };
@@ -135,27 +144,16 @@ export const fieldsToRename = (
 export const fieldsToAdjust = (
   definedFields: Array<ModelField>,
   existingFields: Array<ModelField>,
-  modelSlug: string,
-): Array<string> | undefined => {
-  const tempTableSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`;
-  const diff: Array<string> = [];
+): Array<ModelField> | undefined => {
+  const diff: Array<ModelField> = [];
   let needsAdjustment = false;
 
   for (const local of definedFields) {
     const remote = existingFields.find((r) => r.slug === local.slug);
     if (remote && fieldsAreDifferent(local, remote)) {
       needsAdjustment = true;
+      diff.push(local);
     }
-
-    const adjustedFieldValue = {
-      type: local.type,
-      name: local.name,
-      unique: local.unique,
-      required: local.required,
-      ...(local.type === 'number' && { increment: local.increment }),
-    };
-
-    diff.push(setFieldQuery(tempTableSlug, local.slug, adjustedFieldValue));
   }
 
   return needsAdjustment ? diff : undefined;

@@ -1,6 +1,6 @@
 import type { Model } from '@ronin/compiler';
 import { add } from 'ronin';
-import { blob, boolean, date, link, model, number, string } from 'ronin/schema';
+import { blob, boolean, date, json, link, model, number, string } from 'ronin/schema';
 
 export const CONSTANTS = {
   FIRSTNAME: 'Cornelius',
@@ -264,5 +264,21 @@ export const TestK = model({
   slug: 'test',
   fields: {
     test: link({ target: 'comment', actions: { onDelete: 'CASCADE' } }),
+  },
+}) as unknown as Model;
+
+export const TestL = model({
+  slug: 'test',
+  fields: {
+    test: string(),
+    name: string(),
+  },
+}) as unknown as Model;
+
+export const TestM = model({
+  slug: 'test',
+  fields: {
+    test: json(),
+    name: string(),
   },
 }) as unknown as Model;

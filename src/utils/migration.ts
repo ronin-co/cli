@@ -275,7 +275,6 @@ export const triggersToRecreate = (
     const modelRecreated = modelWillBeRecreated(
       definedModel,
       existingModel || ({} as Model),
-      definedModel.slug,
     );
 
     diff.push(
@@ -369,19 +368,17 @@ export const createTriggers = (
  *
  * @param definedModel - The model defined locally.
  * @param existingModel - The model currently defined in the database.
- * @param slug - The model's slug identifier.
  *
  * @returns True if the model needs recreation, false otherwise.
  */
 export const modelWillBeRecreated = (
   definedModel: Model,
   existingModel: Model,
-  slug: string,
 ): boolean => {
   if (!existingModel) return false;
   return (
-    (fieldsToAdjust(definedModel.fields || [], existingModel.fields || [], slug) ?? [])
-      .length > 0
+    (fieldsToAdjust(definedModel.fields || [], existingModel.fields || []) ?? []).length >
+    0
   );
 };
 
@@ -404,7 +401,6 @@ export const indexesToRecreate = (
     const modelRecreated = modelWillBeRecreated(
       definedModel,
       existingModel || ({} as Model),
-      definedModel.slug,
     );
 
     diff.push(
