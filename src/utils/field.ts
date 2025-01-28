@@ -79,7 +79,7 @@ export const diffFields = async (
   for (const field of queriesForAdjustment || []) {
     // SQLite's ALTER TABLE is limited - adding UNIQUE or NOT NULL to an existing column
     // requires recreating the entire table. For other constraint changes, we can use a
-    // temporary column approach (create temp, copy data, drop old, rename new).
+    // temporary column approach (create temp, copy data, drop old, rename temp).
     const existingField = existingFields.find((f) => f.slug === field.slug);
     if (field.unique || field.required || existingField?.unique) {
       diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
