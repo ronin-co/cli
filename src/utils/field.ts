@@ -76,6 +76,8 @@ export const diffFields = async (
   diff.push(...createFields(fieldsToAdd, modelSlug));
   diff.push(...deleteFields(fieldsToDelete, modelSlug));
 
+  console.log('asgf', diff);
+
   for (const field of queriesForAdjustment || []) {
     // SQLite's ALTER TABLE is limited - adding UNIQUE or NOT NULL to an existing column
     // requires recreating the entire table. For other constraint changes, we can use a
@@ -196,8 +198,8 @@ export const fieldsToCreate = (
   definedFields: Array<ModelField>,
   existingFields: Array<ModelField>,
 ): Array<ModelField> => {
-  return definedFields.filter(
-    (field) => !existingFields.find((remote) => remote.slug === field.slug),
+  return existingFields.filter(
+    (field) => !definedFields.find((local) => local.slug === field.slug),
   );
 };
 
@@ -216,6 +218,9 @@ export const createFields = (
   const diff: Array<string> = [];
 
   for (const fieldToAdd of fields) {
+    if (fieldToAdd.unique) {
+      return createTempModelQuery(modelSlug, fields, [], [], []);
+    }
     diff.push(createFieldQuery(modelSlug, fieldToAdd));
   }
 
@@ -234,8 +239,8 @@ export const fieldsToDrop = (
   definedFields: Array<ModelField>,
   existingFields: Array<ModelField>,
 ): Array<ModelField> => {
-  return existingFields.filter(
-    (field) => !definedFields.find((local) => local.slug === field.slug),
+  return definedFields.filter(
+    (field) => !existingFields.find((remote) => remote.slug === field.slug),
   );
 };
 
@@ -249,8 +254,10 @@ export const fieldsToDrop = (
  */
 const deleteFields = (fields: Array<ModelField>, modelSlug: string): Array<string> => {
   const diff: Array<string> = [];
-
   for (const fieldToDrop of fields) {
+    if (fieldToDrop.unique) {
+      return createTempColumnQuery(modelSlug, fieldToDrop, [], []);
+    }
     diff.push(dropFieldQuery(modelSlug, fieldToDrop.slug));
   }
 

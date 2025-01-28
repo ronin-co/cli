@@ -15,6 +15,7 @@ import {
   TestK,
   TestL,
   TestM,
+  TestN,
 } from '@/fixtures/index';
 
 import { describe, expect, test } from 'bun:test';
@@ -456,5 +457,48 @@ describe('apply', () => {
     expect(newModels).toHaveLength(1);
     // @ts-expect-error This is defined!
     expect(newModels[0]?.fields[1]?.type).toBe('json');
+  });
+
+  test.only('adding a unique field', async () => {
+    const definedModels: Array<Model> = [TestN];
+    const existingModels: Array<Model> = [TestG];
+
+    const db = await queryEphemeralDatabase(existingModels);
+    const packages = await getLocalPackages();
+    const models = await getModels(packages, db);
+
+    const modelDiff = await diffModels(definedModels, models);
+
+    const protocol = new Protocol(packages, modelDiff);
+    await protocol.convertToQueryObjects();
+
+    const statements = protocol.getSQLStatements(models);
+    await db.query(statements);
+
+    const newModels = await getModels(packages, db);
+    expect(newModels).toHaveLength(1);
+    // @ts-expect-error This is defined!
+    expect(newModels[0]?.fields[0]?.unique).toBe(true);
+  });
+
+  test('removing a unique field', async () => {
+    const definedModels: Array<Model> = [TestG];
+    const existingModels: Array<Model> = [TestN];
+
+    const db = await queryEphemeralDatabase(existingModels);
+    const packages = await getLocalPackages();
+    const models = await getModels(packages, db);
+
+    const modelDiff = await diffModels(definedModels, models);
+    const protocol = new Protocol(packages, modelDiff);
+    await protocol.convertToQueryObjects();
+
+    const statements = protocol.getSQLStatements(models);
+    await db.query(statements);
+
+    const newModels = await getModels(packages, db);
+    expect(newModels).toHaveLength(1);
+    // @ts-expect-error This is defined!
+    expect(newModels[0]?.fields[0]?.unique).toBe(false);
   });
 });

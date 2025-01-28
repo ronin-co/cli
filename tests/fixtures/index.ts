@@ -282,3 +282,10 @@ export const TestM = model({
     name: string(),
   },
 }) as unknown as Model;
+
+export const TestN = model({
+  slug: 'test',
+  fields: {
+    name: string(),
+  },
+}) as unknown as Model;
