@@ -140,7 +140,7 @@ export const createTempModelQuery = (
   queries.push(createModelQuery(tempModelSlug, { fields }));
 
   // Move all the data to the copied model
-  queries.push(`add.${tempModelSlug}.to(() => get.${modelSlug}())`);
+  queries.push(`add.${tempModelSlug}.with(() => get.${modelSlug}())`);
 
   if (customQueries) {
     queries.push(...customQueries);
