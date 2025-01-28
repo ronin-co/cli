@@ -106,7 +106,7 @@ describe('queries', () => {
     const result = createTempModelQuery('user', fields, [], []);
     expect(result).toEqual([
       "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
-      'add.RONIN_TEMP_user.to(() => get.user())',
+      'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
     ]);
@@ -126,7 +126,7 @@ describe('queries', () => {
     const result = createTempModelQuery('user', fields, [], [], customQueries);
     expect(result).toEqual([
       "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
-      'add.RONIN_TEMP_user.to(() => get.user())',
+      'add.RONIN_TEMP_user.with(() => get.user())',
       ...customQueries,
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
@@ -153,7 +153,7 @@ describe('queries', () => {
     const result = createTempModelQuery('user', fields, [], triggers);
     expect(result).toEqual([
       "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
-      'add.RONIN_TEMP_user.to(() => get.user())',
+      'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
       'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[]})',

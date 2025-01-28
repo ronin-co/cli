@@ -46,7 +46,7 @@ describe('migration', () => {
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
         "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', type:'string'}]})",
-        'add.RONIN_TEMP_account.to(() => get.account())',
+        'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
       ]);
@@ -76,7 +76,7 @@ describe('migration', () => {
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
         "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', required:true, unique:true, type:'string'}]})",
-        'add.RONIN_TEMP_account.to(() => get.account())',
+        'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
       ]);
@@ -99,7 +99,7 @@ describe('migration', () => {
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
         "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', type:'string'}]})",
-        'add.RONIN_TEMP_account.to(() => get.account())',
+        'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
       ]);
@@ -132,7 +132,7 @@ describe('migration', () => {
 
         expect(modelDiff).toStrictEqual([
           "create.model({slug:'comment',fields:[{slug:'name', type:'string'}]})",
-          'alter.model("comment").create.trigger({"action":"INSERT","when":"BEFORE","effects":[{"add":{"comment":{"to":{"name":"Test"}}}}]})',
+          'alter.model("comment").create.trigger({"action":"INSERT","when":"BEFORE","effects":[{"add":{"comment":{"with":{"name":"Test"}}}}]})',
         ]);
       });
 
@@ -150,7 +150,7 @@ describe('migration', () => {
         expect(modelDiff).toHaveLength(2);
         expect(modelDiff).toStrictEqual([
           'alter.model("comment").drop.trigger("no slug")',
-          'alter.model("comment").create.trigger({"action":"DELETE","when":"AFTER","effects":[{"add":{"comment":{"to":{"name":"Test"}}}}]})',
+          'alter.model("comment").create.trigger({"action":"DELETE","when":"AFTER","effects":[{"add":{"comment":{"with":{"name":"Test"}}}}]})',
         ]);
       });
     });
