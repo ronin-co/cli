@@ -166,6 +166,7 @@ export default () => [
   getSQLStatements = (models: Array<Model>): Array<Statement> => {
     const { Transaction } = this._packages.compiler;
 
+    console.log(JSON.stringify(this._queries, null, 2));
     return new Transaction(this._queries, {
       models,
       inlineParams: true,

@@ -131,6 +131,7 @@ export const createTempModelQuery = (
   _indexes: Array<ModelIndex>,
   triggers: Array<ModelTrigger>,
   customQueries?: Array<string>,
+  includeFields?: Array<ModelField>,
 ): Array<string> => {
   const queries: Array<string> = [];
 
@@ -140,7 +141,13 @@ export const createTempModelQuery = (
   queries.push(createModelQuery(tempModelSlug, { fields }));
 
   // Move all the data to the copied model
-  queries.push(`add.${tempModelSlug}.with(() => get.${modelSlug}())`);
+  queries.push(
+    `add.${tempModelSlug}.with(() => get.${modelSlug}(${
+      includeFields
+        ? JSON.stringify({ selecting: includeFields.map((field) => field.slug) })
+        : ''
+    }))`,
+  );
 
   if (customQueries) {
     queries.push(...customQueries);

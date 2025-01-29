@@ -460,8 +460,8 @@ describe('apply', () => {
   });
 
   test.only('adding a unique field', async () => {
-    const definedModels: Array<Model> = [TestN];
-    const existingModels: Array<Model> = [TestG];
+    const definedModels: Array<Model> = [TestG];
+    const existingModels: Array<Model> = [TestN];
 
     const db = await queryEphemeralDatabase(existingModels);
     const packages = await getLocalPackages();
@@ -481,9 +481,9 @@ describe('apply', () => {
     expect(newModels[0]?.fields[0]?.unique).toBe(true);
   });
 
-  test('removing a unique field', async () => {
-    const definedModels: Array<Model> = [TestG];
-    const existingModels: Array<Model> = [TestN];
+  test.only('removing a unique field', async () => {
+    const definedModels: Array<Model> = [TestN];
+    const existingModels: Array<Model> = [TestG];
 
     const db = await queryEphemeralDatabase(existingModels);
     const packages = await getLocalPackages();

@@ -73,10 +73,8 @@ export const diffFields = async (
     }
   }
 
-  diff.push(...createFields(fieldsToAdd, modelSlug));
-  diff.push(...deleteFields(fieldsToDelete, modelSlug));
-
-  console.log('asgf', diff);
+  diff.push(...createFields(fieldsToAdd, modelSlug, definedFields));
+  diff.push(...deleteFields(fieldsToDelete, modelSlug, definedFields));
 
   for (const field of queriesForAdjustment || []) {
     // SQLite's ALTER TABLE is limited - adding UNIQUE or NOT NULL to an existing column
@@ -90,6 +88,7 @@ export const diffFields = async (
     }
   }
 
+  console.log(diff);
   return diff;
 };
 
@@ -198,8 +197,8 @@ export const fieldsToCreate = (
   definedFields: Array<ModelField>,
   existingFields: Array<ModelField>,
 ): Array<ModelField> => {
-  return existingFields.filter(
-    (field) => !definedFields.find((local) => local.slug === field.slug),
+  return definedFields.filter(
+    (field) => !existingFields.find((remote) => remote.slug === field.slug),
   );
 };
 
@@ -214,12 +213,13 @@ export const fieldsToCreate = (
 export const createFields = (
   fields: Array<ModelField>,
   modelSlug: string,
+  definedFields?: Array<ModelField>,
 ): Array<string> => {
   const diff: Array<string> = [];
 
   for (const fieldToAdd of fields) {
     if (fieldToAdd.unique) {
-      return createTempModelQuery(modelSlug, fields, [], [], []);
+      return createTempModelQuery(modelSlug, fields, [], [], [], definedFields);
     }
     diff.push(createFieldQuery(modelSlug, fieldToAdd));
   }
@@ -239,8 +239,8 @@ export const fieldsToDrop = (
   definedFields: Array<ModelField>,
   existingFields: Array<ModelField>,
 ): Array<ModelField> => {
-  return definedFields.filter(
-    (field) => !existingFields.find((remote) => remote.slug === field.slug),
+  return existingFields.filter(
+    (field) => !definedFields.find((local) => local.slug === field.slug),
   );
 };
 
@@ -252,11 +252,15 @@ export const fieldsToDrop = (
  *
  * @returns An array of SQL queries for deleting fields.
  */
-const deleteFields = (fields: Array<ModelField>, modelSlug: string): Array<string> => {
+const deleteFields = (
+  fieldsToDrop: Array<ModelField>,
+  modelSlug: string,
+  fields: Array<ModelField>,
+): Array<string> => {
   const diff: Array<string> = [];
-  for (const fieldToDrop of fields) {
+  for (const fieldToDrop of fieldsToDrop) {
     if (fieldToDrop.unique) {
-      return createTempColumnQuery(modelSlug, fieldToDrop, [], []);
+      return createTempModelQuery(modelSlug, fields, [], [], [], fields);
     }
     diff.push(dropFieldQuery(modelSlug, fieldToDrop.slug));
   }
