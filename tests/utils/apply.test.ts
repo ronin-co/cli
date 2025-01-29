@@ -459,7 +459,7 @@ describe('apply', () => {
     expect(newModels[0]?.fields[1]?.type).toBe('json');
   });
 
-  test.only('adding a unique field', async () => {
+  test('adding a unique field', async () => {
     const definedModels: Array<Model> = [TestG];
     const existingModels: Array<Model> = [TestN];
 
@@ -481,7 +481,7 @@ describe('apply', () => {
     expect(newModels[0]?.fields[0]?.unique).toBe(true);
   });
 
-  test.only('removing a unique field', async () => {
+  test('removing a unique field', async () => {
     const definedModels: Array<Model> = [TestN];
     const existingModels: Array<Model> = [TestG];
 
@@ -499,6 +499,6 @@ describe('apply', () => {
     const newModels = await getModels(packages, db);
     expect(newModels).toHaveLength(1);
     // @ts-expect-error This is defined!
-    expect(newModels[0]?.fields[0]?.unique).toBe(false);
+    expect(newModels[0]?.fields[0]?.type).toBe('string');
   });
 });

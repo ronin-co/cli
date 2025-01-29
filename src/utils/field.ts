@@ -88,7 +88,6 @@ export const diffFields = async (
     }
   }
 
-  console.log(diff);
   return diff;
 };
 
@@ -219,7 +218,17 @@ export const createFields = (
 
   for (const fieldToAdd of fields) {
     if (fieldToAdd.unique) {
-      return createTempModelQuery(modelSlug, fields, [], [], [], definedFields);
+      const existingFields = definedFields?.filter(
+        (f) => !fields.find((f2) => f2.slug === f.slug),
+      );
+      return createTempModelQuery(
+        modelSlug,
+        definedFields || [],
+        [],
+        [],
+        [],
+        existingFields,
+      );
     }
     diff.push(createFieldQuery(modelSlug, fieldToAdd));
   }
