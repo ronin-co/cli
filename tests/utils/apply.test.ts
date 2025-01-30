@@ -527,5 +527,7 @@ describe('apply', () => {
     expect(newModels[0]?.fields[0]?.type).toBe('string');
     // @ts-expect-error This is defined!
     expect(newModels[0]?.fields[1]?.type).toBe('string');
+    // @ts-expect-error This is defined!
+    expect(newModels[0]?.fields[3]?.unique).toBe(true);
   });
 });
