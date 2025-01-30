@@ -40,7 +40,7 @@ export const diffFields = async (
       const confirmRename =
         rename ||
         (await confirm({
-          message: `Did you mean to rename field: ${field.from.slug} -> ${field.to.slug}`,
+          message: `Did you mean to rename field: ${modelSlug}.${field.from.slug} -> ${modelSlug}.${field.to.slug}`,
           default: true,
         }));
 
@@ -73,8 +73,16 @@ export const diffFields = async (
     }
   }
 
-  diff.push(...createFields(fieldsToAdd, modelSlug, definedFields));
-  diff.push(...deleteFields(fieldsToDelete, modelSlug, definedFields));
+  const createFieldsQueries = createFields(fieldsToAdd, modelSlug, definedFields);
+  diff.push(...createFieldsQueries);
+  if (
+    !(
+      createFieldsQueries.length > 0 &&
+      createFieldsQueries.find((q) => q.includes(RONIN_SCHEMA_TEMP_SUFFIX))
+    )
+  ) {
+    diff.push(...deleteFields(fieldsToDelete, modelSlug, definedFields));
+  }
 
   for (const field of queriesForAdjustment || []) {
     // SQLite's ALTER TABLE is limited - adding UNIQUE or NOT NULL to an existing column
