@@ -289,3 +289,23 @@ export const TestN = model({
     name: string(),
   },
 }) as unknown as Model;
+
+export const TestO = model({
+  slug: 'test',
+  fields: {
+    name: string(),
+    age: string(),
+    email: string(),
+    bio: string(),
+  },
+}) as unknown as Model;
+
+export const TestP = model({
+  slug: 'test',
+  fields: {
+    name: string(),
+    age: string(),
+    feature: boolean(),
+    description: string({ unique: true }),
+  },
+}) as unknown as Model;
