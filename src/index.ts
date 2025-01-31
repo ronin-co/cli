@@ -34,11 +34,9 @@ const run = async (config: RunOptions): Promise<void> => {
       description: 'Data at the edge',
       version: config.version,
     },
-
     args: {
       ...SHARED_ARGS,
     },
-
     setup: async ({ args, cmd, rawArgs }): Promise<void> => {
       // By default `citty` does not print the help message if no command(s) are provided.
       if (Object.keys(args).length <= 1 && rawArgs.length === 0) {
