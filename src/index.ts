@@ -45,15 +45,11 @@ const run = async (config: RunOptions): Promise<void> => {
         await showUsage(cmd);
         process.exit(0);
       }
-
-      spinner.start();
     },
-
     cleanup: (): void => {
       spinner.stop();
       process.exit(0);
     },
-
     subCommands: {},
   });
 
