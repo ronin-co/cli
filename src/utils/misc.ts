@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { parseArgs } from 'node:util';
 import { fieldsToCreate, fieldsToDrop } from '@/src/utils/field';
 import { spinner } from '@/src/utils/spinner';
+import resolveFrom from 'resolve-from';
+
 import type { Model, Result } from '@ronin/compiler';
 import type * as CompilerPackage from '@ronin/compiler';
 import type * as SyntaxPackage from '@ronin/syntax/queries';
-import resolveFrom from 'resolve-from';
+import type { ArgsDef, Resolvable } from 'citty';
 
 /** Represents a data item for logging */
 interface DataItem {
@@ -16,22 +17,14 @@ interface DataItem {
 
 /** Flags that are available for all sub commands. */
 export const BASE_FLAGS = {
-  help: {
-    type: 'boolean',
-    short: 'h',
-    default: false,
-  },
-  version: {
-    type: 'boolean',
-    short: 'v',
-    default: false,
-  },
   debug: {
-    type: 'boolean',
-    short: 'd',
+    alias: 'd',
     default: false,
+    description: 'Shows additional debugging information',
+    type: 'boolean',
+    required: false,
   },
-} satisfies NonNullable<Parameters<typeof parseArgs>[0]>['options'];
+} satisfies Resolvable<ArgsDef>;
 
 /** Infers an object type from the list of base flags. */
 export type BaseFlags = Record<keyof typeof BASE_FLAGS, boolean | undefined>;

@@ -1,6 +1,6 @@
 import { defineCommand, runMain, showUsage } from 'citty';
 
-import { SHARED_ARGS } from '@/src/utils/args';
+import { BASE_FLAGS } from '@/src/utils/misc';
 import { spinner } from '@/src/utils/spinner';
 
 interface RunOptions {
@@ -35,7 +35,7 @@ const run = async (config: RunOptions): Promise<void> => {
       version: config.version,
     },
     args: {
-      ...SHARED_ARGS,
+      ...BASE_FLAGS,
     },
     setup: async ({ args, cmd, rawArgs }): Promise<void> => {
       // By default `citty` does not print the help message if no command(s) are provided.
