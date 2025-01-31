@@ -37,9 +37,11 @@ const run = async (config: RunOptions): Promise<void> => {
     args: {
       ...BASE_FLAGS,
     },
-    setup: async ({ args, cmd, rawArgs }): Promise<void> => {
+    setup: async ({ cmd, rawArgs }): Promise<void> => {
       // By default `citty` does not print the help message if no command(s) are provided.
-      if (Object.keys(args).length <= 1 && rawArgs.length === 0) {
+      const hasNoArgs = rawArgs.length === 0;
+      const hasNoSubCommand = rawArgs.some((arg) => arg.startsWith('-'));
+      if (hasNoArgs || hasNoSubCommand) {
         await showUsage(cmd);
         process.exit(0);
       }
