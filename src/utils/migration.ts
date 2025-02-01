@@ -1,6 +1,5 @@
-import type { parseArgs } from 'node:util';
 import { diffFields, fieldsToAdjust } from '@/src/utils/field';
-import { type BaseFlags, areArraysEqual } from '@/src/utils/misc';
+import { areArraysEqual } from '@/src/utils/misc';
 import {
   createIndexQuery,
   createModelQuery,
@@ -11,7 +10,11 @@ import {
   renameModelQuery,
 } from '@/src/utils/queries';
 import { confirm } from '@inquirer/prompts';
+
 import type { Model } from '@ronin/compiler';
+import type { ArgsDef, Resolvable } from 'citty';
+
+import type { BaseFlags } from '@/src/utils/misc';
 
 /**
  * Fields to ignore.
@@ -490,10 +493,25 @@ export const createIndexes = (
  * Command line flags for migration operations.
  */
 export const MIGRATION_FLAGS = {
-  sql: { type: 'boolean', short: 's', default: false },
-  local: { type: 'boolean', short: 'l', default: false },
-  apply: { type: 'boolean', short: 'a', default: false },
-} satisfies NonNullable<Parameters<typeof parseArgs>[0]>['options'];
+  sql: {
+    alias: 's',
+    default: false,
+    description: 'Use raw SQL queries for migrations.',
+    type: 'boolean',
+  },
+  local: {
+    alias: 'l',
+    default: false,
+    description: 'Apply migrations to a local database.',
+    type: 'boolean',
+  },
+  apply: {
+    alias: 'a',
+    default: false,
+    description: 'Apply the migration to the database.',
+    type: 'boolean',
+  },
+} satisfies Resolvable<ArgsDef>;
 
 /**
  * Type definition for migration command flags.
