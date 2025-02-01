@@ -32,7 +32,6 @@ export const BASE_FLAGS = {
     required: false,
   },
   version: {
-    alias: 'v',
     default: false,
     description: 'Shows the CLI version',
     type: 'boolean',
