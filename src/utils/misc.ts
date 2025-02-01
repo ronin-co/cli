@@ -24,6 +24,20 @@ export const BASE_FLAGS = {
     type: 'boolean',
     required: false,
   },
+  help: {
+    alias: 'h',
+    default: false,
+    description: 'Shows the help message',
+    type: 'boolean',
+    required: false,
+  },
+  version: {
+    alias: 'v',
+    default: false,
+    description: 'Shows the CLI version',
+    type: 'boolean',
+    required: false,
+  },
 } satisfies Resolvable<ArgsDef>;
 
 /** Infers an object type from the list of base flags. */
