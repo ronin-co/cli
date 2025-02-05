@@ -4,6 +4,7 @@ import apply from '@/src/commands/apply';
 import { initializeDatabase } from '@/src/utils/database';
 import { type MigrationFlags, diffModels } from '@/src/utils/migration';
 import {
+  MODELS_IN_CODE_DIR,
   MODEL_IN_CODE_PATH,
   getLocalPackages,
   getModelDefinitions,
