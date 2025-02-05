@@ -1,12 +1,13 @@
 import { parseArgs } from 'node:util';
 
+import path from 'node:path';
 import apply from '@/src/commands/apply';
 import diff from '@/src/commands/diff';
 import initializeProject from '@/src/commands/init';
 import logIn from '@/src/commands/login';
 import { printHelp, printVersion } from '@/src/utils/info';
 import { MIGRATION_FLAGS } from '@/src/utils/migration';
-import { BASE_FLAGS, type BaseFlags } from '@/src/utils/misc';
+import { BASE_FLAGS, type BaseFlags, MODEL_IN_CODE_PATH } from '@/src/utils/misc';
 import { getSession } from '@/src/utils/session';
 import { spinner } from '@/src/utils/spinner';
 
@@ -92,7 +93,10 @@ const run = async (config: { version: string }): Promise<void> => {
 
   // `diff` sub command
   if (normalizedPositionals.includes('apply')) {
-    return apply(appToken, session?.token, flags, positionals);
+    const migrationFilePath = positionals?.[positionals.indexOf('apply') + 1]
+      ? path.join(process.cwd(), positionals[positionals.indexOf('apply') + 1])
+      : MODEL_IN_CODE_PATH;
+    return apply(appToken, session?.token, flags, migrationFilePath);
   }
 
   // If no matching flags or commands were found, render the help, since we don't want to

@@ -4,7 +4,7 @@ import apply from '@/src/commands/apply';
 import { initializeDatabase } from '@/src/utils/database';
 import { type MigrationFlags, diffModels } from '@/src/utils/migration';
 import {
-  MODELS_IN_CODE_DIR,
+  MODEL_IN_CODE_PATH,
   getLocalPackages,
   getModelDefinitions,
   logTableDiff,
@@ -81,9 +81,13 @@ export default async (
 
     spinner.succeed('Successfully generated migration protocol file');
 
+    const migrationFilePath = positionals?.[positionals.indexOf('diff') + 1]
+      ? path.join(process.cwd(), positionals[positionals.indexOf('diff') + 1])
+      : MODEL_IN_CODE_PATH;
+
     // If desired, immediately apply the migration
     if (flags.apply) {
-      await apply(appToken, sessionToken, flags, ['apply']);
+      await apply(appToken, sessionToken, flags, migrationFilePath);
     }
 
     process.exit(0);
