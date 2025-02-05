@@ -18,10 +18,9 @@ export default async (
   appToken: string | undefined,
   sessionToken: string | undefined,
   flags: MigrationFlags,
-  positionals: Array<string>,
+  migrationFilePath: string,
 ): Promise<void> => {
   const spinner = ora('Applying migration').start();
-  const migrationFilePath = positionals[positionals.indexOf('apply') + 1];
 
   const packages = await getLocalPackages();
   const db = await initializeDatabase(packages);
