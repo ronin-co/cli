@@ -146,7 +146,9 @@ export const createModels = (models: Array<Model>): Array<string> => {
   const diff: Array<string> = [];
 
   for (const model of models) {
-    diff.push(createModelQuery(model.slug, { fields: model.fields || [] }));
+    diff.push(
+      createModelQuery(model.slug, model.fields ? { fields: model.fields } : undefined),
+    );
   }
 
   return diff;

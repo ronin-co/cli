@@ -227,7 +227,7 @@ describe('migration', () => {
       const queries = createModels(models);
 
       expect(queries).toHaveLength(1);
-      expect(queries).toStrictEqual(["create.model({slug:'test1',fields:[]})"]);
+      expect(queries).toStrictEqual(["create.model({slug:'test1'})"]);
     });
 
     test('returns empty array for empty model list', () => {
