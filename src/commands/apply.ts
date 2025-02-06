@@ -18,7 +18,7 @@ export default async (
   appToken: string | undefined,
   sessionToken: string | undefined,
   flags: MigrationFlags,
-  migrationFilePath: string,
+  migrationFilePath?: string,
 ): Promise<void> => {
   const spinner = ora('Applying migration').start();
 
@@ -75,7 +75,9 @@ export default async (
         ? err.message
         : 'Failed to apply migration';
     spinner.fail(message);
-    spinner.fail(err instanceof Error ? err.message : String(err));
+    !(err instanceof packages.compiler.RoninError) &&
+      err instanceof Error &&
+      spinner.fail(err.message);
 
     process.exit(1);
   }
