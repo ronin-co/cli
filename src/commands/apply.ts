@@ -18,7 +18,7 @@ export default async (
   appToken: string | undefined,
   sessionToken: string | undefined,
   flags: MigrationFlags,
-  migrationFilePath: string,
+  migrationFilePath?: string,
 ): Promise<void> => {
   const spinner = ora('Applying migration').start();
 
