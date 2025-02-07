@@ -148,7 +148,8 @@ export const formatSqliteStatement = (statement: string): string => {
 };
 
 /**
- * Adds ANSI color codes to SQL keywords, table names, and string literals for console output.
+ * Adds ANSI color codes to SQL keywords, table names, and string literals for console
+ * output.
  *
  * @param sql - The SQL statement to colorize.
  * @returns The SQL statement with ANSI color codes added.

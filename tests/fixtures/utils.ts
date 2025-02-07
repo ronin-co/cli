@@ -49,7 +49,8 @@ export const prefillDatabase = async (
 };
 
 /**
- * Runs a migration by comparing defined models against existing models and applying the differences.
+ * Runs a migration by comparing defined models against existing models and applying
+ * the differences.
  *
  * @param definedModels - The new/updated model definitions to migrate to.
  * @param existingModels - The current models in the database.
