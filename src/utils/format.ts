@@ -86,8 +86,9 @@ export const formatCode = (code: string): Promise<string> => {
  * Formats a SQLite statement by adding proper indentation and line breaks.
  * Also applies syntax highlighting for console output.
  *
- * @param statement - The SQLite statement to format
- * @returns The formatted and colorized SQL statement as a string
+ * @param statement - The SQLite statement to format.
+ *
+ * @returns The formatted and colorized SQL statement as a string.
  *
  * @example
  * ```typescript

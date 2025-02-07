@@ -53,7 +53,7 @@ export const prefillDatabase = async (
  *
  * @param definedModels - The new/updated model definitions to migrate to.
  * @param existingModels - The current models in the database.
- * @param enableRename - Whether to enable model renaming during migration (defaults to false).
+ * @param enableRename - Whether to enable model renaming during migration (defaults to `false`).
  *
  * @returns Object containing:
  *   - db: The ephemeral database instance.
