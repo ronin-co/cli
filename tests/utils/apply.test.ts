@@ -209,7 +209,7 @@ describe('apply', () => {
     });
 
     test('update model with many-to-many relationship', async () => {
-      const { models, db, modelDiff } = await runMigration(
+      const { models, db } = await runMigration(
         [TestP, TestR],
         [TestP, TestQ],
       );
