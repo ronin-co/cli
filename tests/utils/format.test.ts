@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
-import { detectFormatConfig, formatCode } from '@/src/utils/format';
+import {
+  colorizeSql,
+  detectFormatConfig,
+  formatCode,
+  formatSqliteStatement,
+} from '@/src/utils/format';
 
 describe('format', () => {
   test('detectFormatConfig should return defaults when no config files exist', () => {
@@ -157,5 +162,87 @@ describe('format', () => {
     fs.existsSync = originalExistsSync;
     fs.readFileSync = originalReadFileSync;
     console.log = originalConsoleLog;
+  });
+
+  describe('formatSqliteStatement', () => {
+    test('should format CREATE TABLE statement', () => {
+      const input = 'CREATE TABLE "users" (id INTEGER PRIMARY KEY, name TEXT)';
+      const formatted = formatSqliteStatement(input);
+      expect(formatted).toContain('\u001B[1;33mCREATE');
+      expect(formatted).toContain(
+        '(\n  id INTEGER \u001B[1;33mPRIMARY KEY\u001B[0m, name \u001B[1;33mTEXT\u001B[0m\n);',
+      );
+
+      // Test case where match fails
+      const noMatch = formatSqliteStatement('CREATE TABLE invalid');
+      expect(noMatch).toBe(colorizeSql('CREATE TABLE invalid'));
+    });
+
+    test('should format ALTER TABLE statement', () => {
+      const input = 'ALTER TABLE "users" ADD COLUMN "email" TEXT';
+      const formatted = formatSqliteStatement(input);
+      expect(formatted).toContain('\u001B[1;33mALTER\u001B[0m \u001B[1;33mTABLE\u001B');
+
+      // Test case where match fails
+      const noMatch = formatSqliteStatement('ALTER TABLE invalid');
+      expect(noMatch).toBe(colorizeSql('ALTER TABLE invalid'));
+    });
+
+    test('should format UPDATE statement', () => {
+      const input = 'UPDATE "users" SET name = "John" RETURNING *';
+      const formatted = formatSqliteStatement(input);
+      expect(formatted).toContain(
+        '\u001B[1;33mUPDATE\u001B[0m \u001B[1;36m"users"\u001B[0m\n\u001B[1;33mSET\u001B[0m name = \u001B[1;36m"John"\u001B[0m\n\u001B[1;33mRETURNING\u001B[0m *;',
+      );
+
+      // Test case where match fails
+      const noMatch = formatSqliteStatement('UPDATE invalid');
+      expect(noMatch).toBe(colorizeSql('UPDATE invalid'));
+    });
+
+    test('should format DROP TABLE statement', () => {
+      const input = 'DROP TABLE "users"';
+      const formatted = formatSqliteStatement(input);
+      expect(formatted).toBe(formatSqliteStatement('DROP TABLE "users";'));
+
+      // Test case where match fails
+      const noMatch = formatSqliteStatement('DROP TABLE');
+      expect(noMatch).toBe(colorizeSql('DROP TABLE'));
+    });
+
+    test('should format INSERT INTO statement', () => {
+      const input =
+        'INSERT INTO "users" (name, email) VALUES ("John", "john@example.com")';
+      const formatted = formatSqliteStatement(input);
+      expect(formatted).toContain('\u001B[1;33mINSERT\u001B');
+
+      // Test case where match fails
+      const noMatch = formatSqliteStatement('INSERT INTO invalid');
+      expect(noMatch).toBe(colorizeSql('INSERT INTO invalid'));
+    });
+
+    test('should colorize SQL keywords', () => {
+      const input = 'SELECT * FROM "users" WHERE id = 1';
+      const formatted = formatSqliteStatement(input);
+      expect(formatted).toContain('\x1b[1;33mSELECT\x1b[0m');
+    });
+
+    test('should colorize table names', () => {
+      const input = 'SELECT * FROM "users"';
+      const formatted = formatSqliteStatement(input);
+      expect(formatted).toContain('\x1b[1;36m"users"\x1b[0m');
+    });
+
+    test('should colorize string literals', () => {
+      const input = "SELECT * FROM users WHERE name = 'John'";
+      const formatted = formatSqliteStatement(input);
+      expect(formatted).toContain("\x1b[1;32m'John'\x1b[0m");
+    });
+
+    test('should handle non-matching statements', () => {
+      const input = 'INVALID STATEMENT';
+      const formatted = formatSqliteStatement(input);
+      expect(formatted).toBe(colorizeSql('INVALID STATEMENT'));
+    });
   });
 });

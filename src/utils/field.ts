@@ -91,6 +91,8 @@ export const diffFields = async (
     const existingField = existingFields.find((f) => f.slug === field.slug);
     if (field.unique || field.required || existingField?.unique) {
       diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
+    } else if (field.type === 'link' && field.kind === 'many') {
+      diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
     } else {
       diff.push(...createTempColumnQuery(modelSlug, field, indexes, triggers));
     }

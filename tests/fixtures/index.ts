@@ -309,3 +309,44 @@ export const TestP = model({
     description: string({ unique: true }),
   },
 }) as unknown as Model;
+
+export const TestQ = model({
+  slug: 'many',
+  fields: {
+    name: string(),
+    test: link({ target: 'test', kind: 'many', actions: { onDelete: 'CASCADE' } }),
+  },
+}) as unknown as Model;
+
+export const TestR = model({
+  slug: 'many',
+  fields: {
+    name: string(),
+    test: link({
+      target: 'test',
+      kind: 'many',
+      actions: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
+    }),
+  },
+}) as unknown as Model;
+
+export const TestS = model({
+  slug: 'many',
+  fields: {
+    name: string(),
+    test: link({
+      target: 'test',
+      kind: 'many',
+      actions: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
+    }),
+    email: string(),
+  },
+}) as unknown as Model;
+
+export const TestT = model({
+  slug: 'many',
+  fields: {
+    name: string(),
+    email: string(),
+  },
+}) as unknown as Model;
