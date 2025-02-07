@@ -209,10 +209,7 @@ describe('apply', () => {
     });
 
     test('update model with many-to-many relationship', async () => {
-      const { models, db } = await runMigration(
-        [TestP, TestR],
-        [TestP, TestQ],
-      );
+      const { models, db } = await runMigration([TestP, TestR], [TestP, TestQ]);
 
       const res = await getSQLTables(db);
 
