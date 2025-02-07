@@ -1,6 +1,5 @@
-import { getLocalPackages } from '@/src/utils/misc';
-
 import { diffModels } from '@/src/utils/migration';
+import { getLocalPackages } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import type { Model } from '@ronin/compiler';
@@ -69,6 +68,7 @@ export async function runMigration(
   enableRename = false,
 ) {
   const db = await queryEphemeralDatabase(existingModels);
+
   const packages = await getLocalPackages();
   const models = await getModels(packages, db);
 
@@ -77,6 +77,7 @@ export async function runMigration(
   await protocol.convertToQueryObjects();
 
   const statements = protocol.getSQLStatements(models);
+
   await db.query(statements);
 
   return {

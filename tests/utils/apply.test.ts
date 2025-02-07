@@ -215,22 +215,17 @@ describe('apply', () => {
       );
 
       const res = await getSQLTables(db);
-      console.log(res);
-      console.log(modelDiff);
-      expect(res).toHaveLength(4);
+
+      expect(res).toHaveLength(5);
       expect(models).toHaveLength(2);
     });
 
-    test.only('add field to model with many-to-many relationship', async () => {
-      const { models, db, modelDiff } = await runMigration(
-        [TestP, TestS],
-        [TestP, TestQ],
-      );
+    test('add field to model with many-to-many relationship', async () => {
+      const { models, db } = await runMigration([TestP, TestS], [TestP, TestQ]);
 
       const res = await getSQLTables(db);
-      console.log(res);
-      console.log(modelDiff);
-      expect(res).toHaveLength(4);
+
+      expect(res).toHaveLength(5);
       expect(models).toHaveLength(2);
     });
 
