@@ -1,20 +1,25 @@
-import ora from 'ora';
-
 import fs from 'node:fs';
 import path from 'node:path';
+
+import { defineCommand } from 'citty';
+import ora from 'ora';
+
 import { initializeDatabase } from '@/src/utils/database';
-import type { MigrationFlags } from '@/src/utils/migration';
-import { MODELS_IN_CODE_DIR, getLocalPackages } from '@/src/utils/misc';
+import { MIGRATION_FLAGS } from '@/src/utils/migration';
+import { BASE_FLAGS, MODELS_IN_CODE_DIR, getLocalPackages } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner } from '@/src/utils/spinner';
+
 import type { Database } from '@ronin/engine';
+
+import type { MigrationFlags } from '@/src/utils/migration';
 
 /**
  * Applies a migration file to the database.
  */
-export default async (
+const legacyCommand = async (
   appToken: string | undefined,
   sessionToken: string | undefined,
   flags: MigrationFlags,
@@ -81,6 +86,18 @@ export default async (
     process.exit(1);
   }
 };
+
+export default defineCommand({
+  meta: {
+    name: 'apply',
+    description: 'Apply the most recent patch to the database',
+  },
+  args: {
+    ...BASE_FLAGS,
+    ...MIGRATION_FLAGS,
+  },
+  run: async ({ args }): Promise<void> => {},
+});
 
 /**
  * Applies migration statements to the database.

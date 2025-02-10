@@ -1,8 +1,11 @@
 import http from 'node:http';
+
+import { defineCommand } from 'citty';
 import getPort from 'get-port';
 import open from 'open';
 import ora from 'ora';
 
+import { BASE_FLAGS } from '@/src/utils/misc';
 import { storeSession, storeTokenForBun, storeTokenForNPM } from '@/src/utils/session';
 
 const logIn = async (appToken?: string, exit = true): Promise<void> => {
@@ -74,4 +77,13 @@ const logIn = async (appToken?: string, exit = true): Promise<void> => {
   if (exit) process.exit(0);
 };
 
-export default logIn;
+export default defineCommand({
+  meta: {
+    name: 'login',
+    description: 'Authenticate with RONIN (run by default for every command)',
+  },
+  args: {
+    ...BASE_FLAGS,
+  },
+  run: async ({ args }): Promise<void> => {},
+});

@@ -2,14 +2,17 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import util from 'node:util';
+
+import { defineCommand } from 'citty';
 import json5 from 'json5';
 import ora from 'ora';
 
 import { exists } from '@/src/utils/file';
+import { BASE_FLAGS } from '@/src/utils/misc';
 
 const exec = util.promisify(childProcess.exec);
 
-export default async (positionals: Array<string>): Promise<void> => {
+const legacyComment = async (positionals: Array<string>): Promise<void> => {
   const spinner = ora('Initializing project').start();
   const lastPositional = positionals.at(-1);
   const spaceHandle = lastPositional === 'init' ? null : lastPositional;
@@ -77,3 +80,19 @@ export default async (positionals: Array<string>): Promise<void> => {
 
   spinner.succeed('Project initialized');
 };
+
+export default defineCommand({
+  meta: {
+    name: 'init',
+    description: 'Initialize the TypeScript types for a given space',
+  },
+  args: {
+    ...BASE_FLAGS,
+    space: {
+      description: 'The space handle to initialize the TypeScript types for',
+      required: true,
+      type: 'positional',
+    },
+  },
+  run: async ({ args }): Promise<void> => {},
+});

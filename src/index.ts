@@ -50,7 +50,12 @@ const run = async (config: RunOptions): Promise<void> => {
       spinner.stop();
       process.exit(0);
     },
-    subCommands: {},
+    subCommands: {
+      apply: import('./commands/apply').then((r) => r.default),
+      diff: import('./commands/diff').then((r) => r.default),
+      init: import('./commands/init').then((r) => r.default),
+      login: import('./commands/login').then((r) => r.default),
+    },
   });
 
   function shutdown(): void {

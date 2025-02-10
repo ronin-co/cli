@@ -1,9 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
+import { defineCommand } from 'citty';
+
 import apply from '@/src/commands/apply';
 import { initializeDatabase } from '@/src/utils/database';
-import { type MigrationFlags, diffModels } from '@/src/utils/migration';
+import { diffModels } from '@/src/utils/migration';
 import {
+  BASE_FLAGS,
   MODELS_IN_CODE_DIR,
   getLocalPackages,
   getModelDefinitions,
@@ -12,13 +16,17 @@ import {
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
-import { type Status, spinner } from '@/src/utils/spinner';
+import { spinner } from '@/src/utils/spinner';
+
 import type { Model } from '@ronin/compiler';
+
+import type { MigrationFlags } from '@/src/utils/migration';
+import type { Status } from '@/src/utils/spinner';
 
 /**
  * Creates a new migration based on model differences.
  */
-export default async (
+const legacyCommand = async (
   appToken: string | undefined,
   sessionToken: string | undefined,
   flags: MigrationFlags,
@@ -112,3 +120,14 @@ const logModelDiffs = (
     }
   }
 };
+
+export default defineCommand({
+  meta: {
+    name: 'diff',
+    description: 'Compare the database schema with the local schema and create a patch',
+  },
+  args: {
+    ...BASE_FLAGS,
+  },
+  run: async ({ args }): Promise<void> => {},
+});
