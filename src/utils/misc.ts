@@ -41,10 +41,13 @@ export type BaseFlags = Record<keyof typeof BASE_FLAGS, boolean | undefined>;
 /** Directory containing RONIN model definitions */
 export const MODELS_IN_CODE_DIR = 'schema';
 
+/** Default relative path to the RONIN schema definitions file */
+export const MODEL_IN_CODE_RELATIVE_PATH = path.join(MODELS_IN_CODE_DIR, 'index.ts');
+
 /** Path to the RONIN schema definitions file */
 export const MODEL_IN_CODE_PATH = path.resolve(
   process.cwd(),
-  readConfig().modelsDir ?? path.join(MODELS_IN_CODE_DIR, 'index.ts'),
+  readConfig().modelsDir ?? MODEL_IN_CODE_RELATIVE_PATH,
 );
 
 /** Directory containing RONIN migrations */
@@ -183,7 +186,7 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
 export const getModelDefinitions = async (customPath?: string): Promise<Array<Model>> => {
   let definedPath: string | undefined;
   if (!fs.existsSync(customPath ?? MODEL_IN_CODE_PATH)) {
-    spinner.fail('Could not find a model definition file schema/index.ts');
+    spinner.fail(`Could not find a model definition file ${MODEL_IN_CODE_RELATIVE_PATH}`);
 
     // If model definition file is not found at default path,
     // prompt user to specify custom path.
@@ -192,7 +195,7 @@ export const getModelDefinitions = async (customPath?: string): Promise<Array<Mo
         ? await input({
             message: 'Enter the path to the model definition file',
           })
-        : 'schema/index.ts';
+        : MODEL_IN_CODE_RELATIVE_PATH;
 
     if (!fs.existsSync(definedPath)) {
       spinner.fail('There is no migration file at the given path');
