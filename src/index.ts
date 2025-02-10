@@ -12,6 +12,8 @@ interface RunOptions {
    *
    * @example
    * ```ts
+   * import run from '@ronin/cli';
+   *
    * run({ version: '1.0.0' });
    * ```
    */
