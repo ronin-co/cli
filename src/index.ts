@@ -1,5 +1,6 @@
 import { defineCommand, runMain, showUsage } from 'citty';
 
+import { Context } from '@/src/context';
 import { BASE_FLAGS } from '@/src/utils/misc';
 import { spinner } from '@/src/utils/spinner';
 
@@ -45,6 +46,8 @@ const run = async (config: RunOptions): Promise<void> => {
         await showUsage(cmd);
         process.exit(0);
       }
+
+      await Context.instance.setup();
     },
     cleanup: (): void => {
       spinner.stop();
