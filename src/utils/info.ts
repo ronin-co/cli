@@ -3,7 +3,7 @@ import chalkTemplate from 'chalk-template';
 
 export const printVersion = (version: string): Promise<void> => {
   spinner.stop();
-  console.log('Trust issues', version);
+  console.log(version);
   process.exit(0);
 };
 
