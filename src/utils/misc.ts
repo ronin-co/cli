@@ -184,13 +184,16 @@ export const getModelDefinitions = async (customPath?: string): Promise<Array<Mo
   let definedPath: string | undefined;
   if (!fs.existsSync(customPath ?? MODEL_IN_CODE_PATH)) {
     spinner.fail('Could not find a model definition file schema/index.ts');
-    // Prompt the user to define a custom path
+    
+    // If model definition file is not found at default path,
+    // prompt user to specify custom path.
     definedPath =
       process.env.NODE_ENV !== 'test'
         ? await input({
             message: 'Enter the path to the model definition file',
           })
         : 'schema/index.ts';
+
     if (!fs.existsSync(definedPath)) {
       spinner.fail('There is no migration file at the given path');
       process.exit(1);

@@ -20,6 +20,7 @@ export default async (
   migrationFilePath?: string,
 ): Promise<void> => {
   const spinner = ora.info('Applying migration');
+  
   const packages = await getLocalPackages();
   const db = await initializeDatabase(packages);
 
@@ -33,7 +34,7 @@ export default async (
       flags.local,
     );
 
-    // Get all filenames of migrations in the migrations directory
+    // Get all filenames of migrations in the migrations directory.
     const migrations = fs.readdirSync(MIGRATIONS_PATH);
 
     const migrationPrompt =
