@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { parseArgs } from 'node:util';
+import { readConfig, saveConfig } from '@/src/utils/config';
 import { fieldsToCreate, fieldsToDrop } from '@/src/utils/field';
 import { spinner } from '@/src/utils/spinner';
+import { input } from '@inquirer/prompts';
 import type { Model, Result } from '@ronin/compiler';
 import type * as CompilerPackage from '@ronin/compiler';
 import type * as SyntaxPackage from '@ronin/syntax/queries';
@@ -40,10 +42,14 @@ export type BaseFlags = Record<keyof typeof BASE_FLAGS, boolean | undefined>;
 export const MODELS_IN_CODE_DIR = 'schema';
 
 /** Path to the RONIN schema definitions file */
-export const MODEL_IN_CODE_PATH = path.resolve(
+export const MODEL_IN_CODE_PATH =
+  readConfig()?.modelsDir ?? path.resolve(process.cwd(), MODELS_IN_CODE_DIR, 'index.ts');
+
+/** Directory containing RONIN migrations */
+export const MIGRATIONS_PATH = path.resolve(
   process.cwd(),
   MODELS_IN_CODE_DIR,
-  'index.ts',
+  'migrations',
 );
 
 /** Suffix used for temporary RONIN schemas */
@@ -173,13 +179,25 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
  * @throws Will exit process if model definition file is not found.
  */
 export const getModelDefinitions = async (customPath?: string): Promise<Array<Model>> => {
+  let definedPath: string | undefined;
   if (!fs.existsSync(customPath ?? MODEL_IN_CODE_PATH)) {
     spinner.fail('Could not find a model definition file schema/index.ts');
-    process.exit(1);
+    // Prompt the user to define a custom path
+    definedPath =
+      process.env.NODE_ENV !== 'test'
+        ? await input({
+            message: 'Enter the path to the model definition file',
+          })
+        : 'schema/index.ts';
+    if (!fs.existsSync(definedPath)) {
+      spinner.fail('There is no migration file at the given path');
+      process.exit(1);
+    }
+    saveConfig({ modelsDir: definedPath });
   }
 
   const sortedModels = sortModels(
-    Object.values(await import(customPath ?? MODEL_IN_CODE_PATH)).filter(
+    Object.values(await import(definedPath ?? customPath ?? MODEL_IN_CODE_PATH)).filter(
       (value): value is Model =>
         typeof value === 'object' && value !== null && 'slug' in value,
     ) as Array<Model>,

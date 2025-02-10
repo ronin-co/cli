@@ -4,7 +4,7 @@ import apply from '@/src/commands/apply';
 import { initializeDatabase } from '@/src/utils/database';
 import { type MigrationFlags, diffModels } from '@/src/utils/migration';
 import {
-  MODELS_IN_CODE_DIR,
+  MIGRATIONS_PATH,
   getLocalPackages,
   getModelDefinitions,
   logTableDiff,
@@ -59,10 +59,9 @@ export default async (
     status = 'syncing';
     spinner.text = 'Writing migration protocol file';
 
-    const migrationsDir = path.join(process.cwd(), MODELS_IN_CODE_DIR, '.protocols');
     const nextNum = (() => {
-      if (!fs.existsSync(migrationsDir)) return 1;
-      const files = fs.readdirSync(migrationsDir);
+      if (!fs.existsSync(MIGRATIONS_PATH)) return 1;
+      const files = fs.readdirSync(MIGRATIONS_PATH);
       const migrationFiles = files.filter((f) => f.startsWith('migration-'));
       if (migrationFiles.length === 0) return 1;
       const numbers = migrationFiles.map((f) => Number.parseInt(f.split('-')[1]));

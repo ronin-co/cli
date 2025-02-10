@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
+import { MIGRATIONS_PATH } from '@/src/utils/misc';
 import type { LocalPackages } from '@/src/utils/misc';
 import type { Model, Query, Statement } from '@ronin/compiler';
 
@@ -12,7 +13,7 @@ export class Protocol {
   private _packages: LocalPackages;
   private _queries: Array<Query> = [];
   private _roninQueries: Array<string>;
-  private _protocolDir = `${process.cwd()}/schema/.protocols/`;
+  private _protocolDir = MIGRATIONS_PATH;
 
   /**
    * Creates a new Protocol instance.
@@ -153,7 +154,7 @@ export default () => [
   saveSQL = async (fileName: string, models: Array<Model>): Promise<void> => {
     const statements = this.getSQLStatements(models);
     const sqlContent = statements.map(({ statement }) => statement).join('\n');
-    fs.writeFileSync(`${this._protocolDir}${fileName}.sql`, sqlContent);
+    fs.writeFileSync(`${this._protocolDir}/${fileName}.sql`, sqlContent);
   };
 
   /**
