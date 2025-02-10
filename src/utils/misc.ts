@@ -42,8 +42,10 @@ export type BaseFlags = Record<keyof typeof BASE_FLAGS, boolean | undefined>;
 export const MODELS_IN_CODE_DIR = 'schema';
 
 /** Path to the RONIN schema definitions file */
-export const MODEL_IN_CODE_PATH =
-  readConfig()?.modelsDir ?? path.resolve(process.cwd(), MODELS_IN_CODE_DIR, 'index.ts');
+export const MODEL_IN_CODE_PATH = path.resolve(
+  process.cwd(),
+  readConfig().modelsDir ?? path.join(MODELS_IN_CODE_DIR, 'index.ts'),
+);
 
 /** Directory containing RONIN migrations */
 export const MIGRATIONS_PATH = path.resolve(

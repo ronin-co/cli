@@ -1,5 +1,3 @@
-import ora from 'ora';
-
 import fs from 'node:fs';
 import path from 'node:path';
 import { initializeDatabase } from '@/src/utils/database';
@@ -8,7 +6,7 @@ import { MIGRATIONS_PATH, getLocalPackages } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
-import { spinner } from '@/src/utils/spinner';
+import { spinner as ora } from '@/src/utils/spinner';
 import { select } from '@inquirer/prompts';
 import type { Database } from '@ronin/engine';
 
@@ -21,7 +19,7 @@ export default async (
   flags: MigrationFlags,
   migrationFilePath?: string,
 ): Promise<void> => {
-  const spinner = ora('Applying migration');
+  const spinner = ora.info('Applying migration');
   const packages = await getLocalPackages();
   const db = await initializeDatabase(packages);
 
@@ -91,7 +89,7 @@ const applyMigrationStatements = async (
   slug: string,
 ): Promise<void> => {
   if (flags.local) {
-    spinner.info('Applying migration to local database');
+    ora.info('Applying migration to local database');
 
     await db.query(statements.map(({ statement }) => statement));
     fs.writeFileSync('.ronin/db.sqlite', await db.getContents());
@@ -99,7 +97,7 @@ const applyMigrationStatements = async (
     return;
   }
 
-  spinner.info('Applying migration to production database');
+  ora.info('Applying migration to production database');
 
   const response = await fetch(`https://data.ronin.co/?data-selector=${slug}`, {
     method: 'POST',
