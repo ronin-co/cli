@@ -7,7 +7,7 @@ import initializeProject from '@/src/commands/init';
 import logIn from '@/src/commands/login';
 import { printHelp, printVersion } from '@/src/utils/info';
 import { MIGRATION_FLAGS } from '@/src/utils/migration';
-import { BASE_FLAGS, type BaseFlags, MODEL_IN_CODE_PATH } from '@/src/utils/misc';
+import { BASE_FLAGS, type BaseFlags } from '@/src/utils/misc';
 import { getSession } from '@/src/utils/session';
 import { spinner } from '@/src/utils/spinner';
 
@@ -91,11 +91,12 @@ const run = async (config: { version: string }): Promise<void> => {
     return diff(appToken, session?.token, flags, positionals);
   }
 
-  // `diff` sub command
+  // `apply` sub command
   if (normalizedPositionals.includes('apply')) {
     const migrationFilePath = positionals?.[positionals.indexOf('apply') + 1]
       ? path.join(process.cwd(), positionals[positionals.indexOf('apply') + 1])
-      : MODEL_IN_CODE_PATH;
+      : undefined;
+
     return apply(appToken, session?.token, flags, migrationFilePath);
   }
 

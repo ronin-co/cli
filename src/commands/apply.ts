@@ -1,14 +1,13 @@
-import ora from 'ora';
-
 import fs from 'node:fs';
 import path from 'node:path';
 import { initializeDatabase } from '@/src/utils/database';
 import type { MigrationFlags } from '@/src/utils/migration';
-import { MODELS_IN_CODE_DIR, getLocalPackages } from '@/src/utils/misc';
+import { MIGRATIONS_PATH, getLocalPackages } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
-import { spinner } from '@/src/utils/spinner';
+import { spinner as ora } from '@/src/utils/spinner';
+import { select } from '@inquirer/prompts';
 import type { Database } from '@ronin/engine';
 
 /**
@@ -20,7 +19,7 @@ export default async (
   flags: MigrationFlags,
   migrationFilePath?: string,
 ): Promise<void> => {
-  const spinner = ora('Applying migration').start();
+  const spinner = ora.info('Applying migration');
 
   const packages = await getLocalPackages();
   const db = await initializeDatabase(packages);
@@ -34,30 +33,27 @@ export default async (
       space,
       flags.local,
     );
-    const protocol = await new Protocol(packages).load(migrationFilePath);
+
+    // Get all filenames of migrations in the migrations directory.
+    const migrations = fs.readdirSync(MIGRATIONS_PATH);
+
+    const migrationPrompt =
+      migrationFilePath ??
+      (await select({
+        message: 'Which migration do you want to apply?',
+        choices: migrations.map((migration) => ({
+          name: migration,
+          value: path.join(MIGRATIONS_PATH, migration),
+        })),
+      }));
+
+    const protocol = await new Protocol(packages).load(migrationPrompt);
     const statements = protocol.getSQLStatements(existingModels);
 
-    const files = fs.readdirSync(
-      path.join(process.cwd(), MODELS_IN_CODE_DIR, '.protocols'),
-    );
-    const latestProtocolFile = files.sort().pop() || 'migration';
-
-    const migrationsPath = path.join(process.cwd(), MODELS_IN_CODE_DIR, 'migrations');
-
-    if (!fs.existsSync(migrationsPath)) {
-      fs.mkdirSync(migrationsPath, { recursive: true });
+    // Create the migrations directory if it doesn't exist.
+    if (!fs.existsSync(MIGRATIONS_PATH)) {
+      fs.mkdirSync(MIGRATIONS_PATH, { recursive: true });
     }
-
-    fs.copyFileSync(
-      migrationFilePath ||
-        path.join(
-          process.cwd(),
-          MODELS_IN_CODE_DIR,
-          '.protocols',
-          path.basename(latestProtocolFile),
-        ),
-      path.join(migrationsPath, path.basename(latestProtocolFile)),
-    );
 
     await applyMigrationStatements(
       appToken ?? sessionToken,
@@ -94,7 +90,7 @@ const applyMigrationStatements = async (
   slug: string,
 ): Promise<void> => {
   if (flags.local) {
-    spinner.info('Applying migration to local database');
+    ora.info('Applying migration to local database');
 
     await db.query(statements.map(({ statement }) => statement));
     fs.writeFileSync('.ronin/db.sqlite', await db.getContents());
@@ -102,7 +98,7 @@ const applyMigrationStatements = async (
     return;
   }
 
-  spinner.info('Applying migration to production database');
+  ora.info('Applying migration to production database');
 
   const response = await fetch(`https://data.ronin.co/?data-selector=${slug}`, {
     method: 'POST',
