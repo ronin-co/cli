@@ -20,7 +20,7 @@ export default async (
   migrationFilePath?: string,
 ): Promise<void> => {
   const spinner = ora.info('Applying migration');
-  
+
   const packages = await getLocalPackages();
   const db = await initializeDatabase(packages);
 
