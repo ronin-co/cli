@@ -39,11 +39,11 @@ describe('protocol', () => {
       writeFileSyncCalled = true;
       expect(path).toBe(`${process.cwd()}/schema/migrations/${fileName}.ts`);
       expect(data).toContain(
-        "create.model.to({ slug: 'my_model', pluralSlug: 'my_models' })",
+        'create.model.to({ slug: "my_model", pluralSlug: "my_models" })',
       );
     };
 
-    await protocol.save(fileName);
+    protocol.save(fileName);
     expect(writeFileSyncCalled).toBe(true);
 
     // Restore `fs.writeFileSync`

@@ -133,14 +133,14 @@ export default () => [
    *
    * @returns The Protocol instance for chaining
    */
-  save = async (fileName: string): Promise<Protocol> => {
+  save = (fileName: string): Protocol => {
     const migrationContent = this.createMigrationProtocol();
     const directoryPath = path.resolve(this._protocolDir);
 
     fs.mkdirSync(directoryPath, { recursive: true });
     fs.writeFileSync(
       path.join(directoryPath, `${fileName}.ts`),
-      await formatCode(migrationContent),
+      formatCode(migrationContent),
     );
     return this;
   };

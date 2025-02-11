@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { format } from 'prettier';
+import { createFromBuffer } from '@dprint/formatter';
+import { getPath } from '@dprint/typescript';
 
 /**
  * Detects code formatting configuration from common config files.
@@ -70,16 +71,24 @@ export const detectFormatConfig = (): {
   };
 };
 
-export const formatCode = (code: string): Promise<string> => {
+export const formatCode = (code: string): string => {
   const config = detectFormatConfig();
+  const buffer = fs.readFileSync(getPath());
+  const formatter = createFromBuffer(buffer);
 
-  return format(code, {
-    parser: 'typescript',
-    useTabs: config.useTabs,
-    tabWidth: config.tabWidth,
-    singleQuote: config.singleQuote,
-    semi: config.semi,
+  const formated = formatter.formatText({
+    filePath: '.migration.ts',
+    fileText: code,
+    overrideConfig: {
+      parser: 'typescript',
+      useTabs: config.useTabs,
+      tabWidth: config.tabWidth,
+      singleQuote: config.singleQuote,
+      semi: config.semi,
+    },
   });
+
+  return formated;
 };
 
 /**
