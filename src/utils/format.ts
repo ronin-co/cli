@@ -77,7 +77,7 @@ export const formatCode = (code: string): string => {
   const formatter = createFromBuffer(buffer);
 
   const formated = formatter.formatText({
-    filePath: 'asd.ts',
+    filePath: '.migration.ts',
     fileText: code,
     overrideConfig: {
       parser: 'typescript',
