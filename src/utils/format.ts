@@ -3,9 +3,6 @@ import path from 'node:path';
 import { createFromBuffer } from '@dprint/formatter';
 import { getPath } from '@dprint/typescript';
 
-const buffer = fs.readFileSync(getPath());
-const formatter = createFromBuffer(buffer);
-
 /**
  * Detects code formatting configuration from common config files.
  *
@@ -76,6 +73,8 @@ export const detectFormatConfig = (): {
 
 export const formatCode = (code: string): string => {
   const config = detectFormatConfig();
+  const buffer = fs.readFileSync(getPath());
+  const formatter = createFromBuffer(buffer);
 
   const formated = formatter.formatText({
     filePath: 'asd.ts',
