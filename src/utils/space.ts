@@ -32,7 +32,7 @@ export const getSpaces = async (
           {
             get: {
               members: {
-                including: ['space', 'account'],
+                using: ['space', 'account'],
                 with: {
                   team: null,
                 },
