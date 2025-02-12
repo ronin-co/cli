@@ -497,6 +497,44 @@ describe('apply', () => {
     });
   });
 
+  describe('index', () => {
+    describe('without records', () => {
+      describe('create', () => {
+        test('simple', async () => {
+          const { models, db } = await runMigration([TestB], []);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+      });
+
+      describe('drop', () => {
+        test('simple', async () => {
+          const { models, db } = await runMigration([TestA], []);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+      });
+    });
+  });
+
   describe('complex', () => {
     describe('without records', () => {
       describe('update', () => {
