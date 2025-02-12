@@ -32,7 +32,7 @@ export const getSpaces = async (
           {
             get: {
               members: {
-                including: ['space', 'account'],
+                using: ['space', 'account'],
                 with: {
                   team: null,
                 },
@@ -91,8 +91,6 @@ export const getOrSelectSpaceId = async (
       space = spaces[0].id;
     } else {
       spinner?.stop();
-
-      console.log(spaces);
 
       space = await select({
         message: 'Which space do you want to apply models to?',
