@@ -92,6 +92,8 @@ export const getOrSelectSpaceId = async (
     } else {
       spinner?.stop();
 
+      console.log(spaces);
+
       space = await select({
         message: 'Which space do you want to apply models to?',
         choices: spaces.map((space) => ({

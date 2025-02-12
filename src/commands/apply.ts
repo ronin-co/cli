@@ -41,10 +41,13 @@ export default async (
       migrationFilePath ??
       (await select({
         message: 'Which migration do you want to apply?',
-        choices: migrations.map((migration) => ({
-          name: migration,
-          value: path.join(MIGRATIONS_PATH, migration),
-        })),
+        choices: migrations
+          // Sort in reverse lexical order
+          .sort((a, b) => b.localeCompare(a))
+          .map((migration) => ({
+            name: migration,
+            value: path.join(MIGRATIONS_PATH, migration),
+          })),
       }));
 
     const protocol = await new Protocol(packages).load(migrationPrompt);
