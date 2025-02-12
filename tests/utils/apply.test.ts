@@ -97,7 +97,7 @@ describe('apply', () => {
           });
         });
 
-        test('with many-to-many relationship', async () => {
+        test('with one-to-many relationship', async () => {
           const { models, db } = await runMigration([TestP, TestQ], []);
 
           const rowCounts: Record<string, number> = {};
@@ -369,7 +369,7 @@ describe('apply', () => {
           });
         });
 
-        test('many-to-many', async () => {
+        test('one-to-many', async () => {
           const { models, db } = await runMigration([TestP, TestR], [TestP, TestQ]);
 
           const rowCounts: Record<string, number> = {};
