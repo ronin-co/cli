@@ -293,6 +293,90 @@ describe('apply', () => {
             tests: 1,
           });
         });
+
+        test('meta properties', async () => {
+          const insert = {
+            add: {
+              test: {
+                with: {
+                  age: '20',
+                  active: false,
+                },
+              },
+            },
+          };
+
+          const get = {
+            get: {
+              tests: null,
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [TestC, TestA],
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            [TestC],
+            [TestA],
+            false,
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rowCounts = await getModelRowCounts(models, db);
+
+          const getTransaction = new Transaction([get], {
+            models: [TestC, TestA],
+            inlineParams: true,
+          });
+
+          const getResults = await db.query(getTransaction.statements);
+
+          expect(models).toHaveLength(1);
+          expect(models[0].name).toBe('ThisIsACoolModel');
+          expect(rowCounts).toEqual({
+            tests: 1,
+          });
+          expect(getResults[0].rows).toMatchObject([{ age: '20', active: false }]);
+        });
+
+        test('no changes between model sets', async () => {
+          const allModels = [TestG, Account, AccountNew, Profile];
+          const insert = [
+            {
+              add: {
+                test: { with: { age: '30', name: 'Test' } },
+              },
+            },
+            { add: { account: { with: { name: 'Account' } } } },
+            { add: { account_new: { with: { name: 'AccountNew' } } } },
+            { add: { profile: { with: { username: 'Profile' } } } },
+          ] as unknown;
+
+          // @ts-expect-error This is valid!
+          const transaction = new Transaction(insert, {
+            models: allModels,
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            allModels,
+            allModels,
+            false,
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rowCounts = await getModelRowCounts(models, db);
+
+          expect(models.length).toBe(allModels.length);
+          expect(rowCounts).toEqual({
+            tests: 1,
+            accounts: 1,
+            accounts_new: 1,
+            profiles: 1,
+          });
+        });
       });
     });
   });
