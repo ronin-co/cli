@@ -21,237 +21,564 @@ import {
   TestP,
   TestQ,
   TestR,
-  TestS,
   TestT,
 } from '@/fixtures/index';
-import { getSQLTables, runMigration } from '@/fixtures/utils';
+import { getRowCount, getSQLTables, runMigration } from '@/fixtures/utils';
 
 describe('apply', () => {
   describe('model', () => {
-    test('create a model', async () => {
-      const { models, statements } = await runMigration([TestA], []);
+    describe('without records', () => {
+      describe('create', () => {
+        test('simple', async () => {
+          const { models, statements, db } = await runMigration([TestA], []);
 
-      expect(statements).toHaveLength(4);
-      expect(models).toHaveLength(1);
-      expect(models[0].slug).toBe('test');
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(statements).toHaveLength(4);
+          expect(models).toHaveLength(1);
+          expect(models[0].slug).toBe('test');
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+
+        test('with index', async () => {
+          const { models, statements, db } = await runMigration([TestB], []);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(statements).toHaveLength(4);
+          expect(models).toHaveLength(1);
+          expect(models[0].slug).toBe('test');
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+
+        test('with triggers', async () => {
+          const { models, db } = await runMigration([TestC, TestD], []);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(2);
+          expect(models[0].triggers).toBeDefined();
+          expect(rowCounts).toEqual({
+            tests: 0,
+            comments: 0,
+          });
+        });
+
+        test('with relationships', async () => {
+          const { models, statements, db } = await runMigration([Account, Profile], []);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(statements.length).toEqual(4);
+          expect(models).toHaveLength(2);
+          expect(rowCounts).toEqual({
+            accounts: 0,
+            profiles: 0,
+          });
+        });
+
+        test('with one-to-many relationship', async () => {
+          const { models, db } = await runMigration([TestP, TestQ], []);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          const res = await getSQLTables(db);
+
+          expect(res).toHaveLength(4);
+          expect(models).toHaveLength(2);
+          expect(rowCounts).toEqual({
+            manies: 0,
+            tests: 0,
+          });
+        });
+      });
+
+      describe('drop', () => {
+        test('simple', async () => {
+          const { models, statements, db } = await runMigration([], [TestA]);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(statements).toHaveLength(2);
+          expect(models).toHaveLength(0);
+          expect(rowCounts).toEqual({});
+        });
+
+        test('multiple with dependencies', async () => {
+          const { models, db } = await runMigration([], [Account, Profile, TestA]);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(0);
+          expect(rowCounts).toEqual({});
+        });
+
+        test('with index', async () => {
+          const { models, statements, db } = await runMigration([], [TestB]);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(statements).toHaveLength(2);
+          expect(models).toHaveLength(0);
+          expect(rowCounts).toEqual({});
+        });
+      });
+
+      describe('update', () => {
+        test('fields', async () => {
+          const { models, statements, db } = await runMigration([TestF], [TestA]);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(statements).toHaveLength(7);
+          expect(models).toHaveLength(1);
+          expect(models[0].slug).toBe('test');
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+
+        test('meta properties', async () => {
+          const { models, db } = await runMigration([TestC], [TestA]);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          expect(models[0].name).toBe('ThisIsACoolModel');
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+
+        test('no changes between model sets', async () => {
+          const allModels = [TestG, Account, AccountNew, Profile];
+          const { models, db } = await runMigration(allModels, allModels);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models.length).toBe(allModels.length);
+          expect(rowCounts).toEqual({
+            tests: 0,
+            accounts: 0,
+            accounts_new: 0,
+            profiles: 0,
+          });
+        });
+      });
     });
 
-    test('drop a model', async () => {
-      const { models, statements } = await runMigration([], [TestA]);
+    describe('with records', () => {
+      describe('create', () => {
+        test('simple', async () => {
+          const { models, db } = await runMigration([TestA], []);
 
-      expect(statements).toHaveLength(2);
-      expect(models).toHaveLength(0);
-    });
-
-    test('update a model', async () => {
-      const { models, statements } = await runMigration([TestF], [TestA]);
-
-      expect(statements).toHaveLength(7);
-      expect(models).toHaveLength(1);
-      expect(models[0].slug).toBe('test');
-    });
-
-    test('update model meta properties', async () => {
-      const { models } = await runMigration([TestC], [TestA]);
-
-      expect(models).toHaveLength(1);
-      expect(models[0].name).toBe('ThisIsACoolModel');
-    });
-
-    test('drop multiple models with dependencies', async () => {
-      const { models } = await runMigration([], [Account, Profile, TestA]);
-
-      expect(models).toHaveLength(0);
-    });
-
-    test('migrate with no changes between model sets', async () => {
-      const allModels = [TestG, Account, AccountNew, Profile];
-      const { models } = await runMigration(allModels, allModels);
-
-      expect(models.length).toBe(allModels.length);
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+      });
     });
   });
+
   describe('field', () => {
-    test('add field and change field property', async () => {
-      const { models } = await runMigration([TestG], [TestF]);
+    describe('without records', () => {
+      describe('create', () => {
+        test('add field and change property', async () => {
+          const { models, db } = await runMigration([TestG], [TestF]);
 
-      expect(models).toHaveLength(1);
-    });
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
 
-    test('change field type', async () => {
-      const { models } = await runMigration([TestM], [TestL]);
+        test('add unique field', async () => {
+          const { models, db } = await runMigration([TestG], [TestN]);
 
-      expect(models).toHaveLength(1);
-      // @ts-expect-error This is defined!
-      expect(models[0]?.fields[1]?.type).toBe('json');
-    });
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          // @ts-expect-error This is defined!
+          expect(models[0]?.fields[0]?.unique).toBe(true);
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+      });
 
-    test('adding a unique field', async () => {
-      const { models } = await runMigration([TestG], [TestN]);
+      describe('drop', () => {
+        test('remove unique field', async () => {
+          const { models, db } = await runMigration([TestN], [TestG]);
 
-      expect(models).toHaveLength(1);
-      // @ts-expect-error This is defined!
-      expect(models[0]?.fields[0]?.unique).toBe(true);
-    });
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          // @ts-expect-error This is defined!
+          expect(models[0]?.fields[0]?.type).toBe('string');
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
 
-    test('removing a unique field', async () => {
-      const { models } = await runMigration([TestN], [TestG]);
+        test('remove field and add new fields', async () => {
+          const { models, modelDiff, db } = await runMigration([TestP], [TestO]);
 
-      expect(models).toHaveLength(1);
-      // @ts-expect-error This is defined!
-      expect(models[0]?.fields[0]?.type).toBe('string');
-    });
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(modelDiff).toHaveLength(4);
+          expect(models).toHaveLength(1);
+          // @ts-expect-error This is defined!
+          expect(models[0]?.fields[0]?.type).toBe('string');
+          // @ts-expect-error This is defined!
+          expect(models[0]?.fields[1]?.type).toBe('string');
+          // @ts-expect-error This is defined!
+          expect(models[0]?.fields[3]?.unique).toBe(true);
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+      });
 
-    test('removing field and adding new fields', async () => {
-      const { models, modelDiff } = await runMigration([TestP], [TestO]);
+      describe('update', () => {
+        test('type', async () => {
+          const { models, db } = await runMigration([TestM], [TestL]);
 
-      expect(modelDiff).toHaveLength(4);
-      expect(models).toHaveLength(1);
-      // @ts-expect-error This is defined!
-      expect(models[0]?.fields[0]?.type).toBe('string');
-      // @ts-expect-error This is defined!
-      expect(models[0]?.fields[1]?.type).toBe('string');
-      // @ts-expect-error This is defined!
-      expect(models[0]?.fields[3]?.unique).toBe(true);
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          // @ts-expect-error This is defined!
+          expect(models[0]?.fields[1]?.type).toBe('json');
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+
+        test('rename', async () => {
+          const { models, db } = await runMigration([TestI], [TestH], true);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+      });
     });
   });
-  describe('rename', () => {
-    test('update a model - rename', async () => {
-      const { models, statements } = await runMigration([Account], [AccountNew], true);
 
-      expect(statements).toHaveLength(2);
-      expect(models).toHaveLength(1);
-      expect(models[0].slug).toBe('account');
-    });
-
-    test('rename model with existing relationships', async () => {
-      const { models } = await runMigration(
-        [AccountNew, Profile],
-        [Account, Profile],
-        true,
-      );
-
-      expect(models.find((m) => m.slug === 'account_new')).toBeDefined();
-    });
-
-    test('create model with field rename', async () => {
-      const { models } = await runMigration([TestI], [TestH], true);
-
-      expect(models).toHaveLength(1);
-    });
-  });
-  describe('index', () => {
-    test('create a model with index', async () => {
-      const { models, statements } = await runMigration([TestB], []);
-
-      expect(statements).toHaveLength(4);
-      expect(models).toHaveLength(1);
-      expect(models[0].slug).toBe('test');
-    });
-
-    test('drop model with index', async () => {
-      const { models, statements } = await runMigration([], [TestB]);
-
-      expect(statements).toHaveLength(2);
-      expect(models).toHaveLength(0);
-    });
-  });
-  describe('trigger', () => {
-    test('create model with triggers', async () => {
-      const { models } = await runMigration([TestC, TestD], []);
-
-      expect(models).toHaveLength(2);
-      expect(models[0].triggers).toBeDefined();
-    });
-
-    test('update model triggers', async () => {
-      const { models } = await runMigration([TestE, TestC], [TestD]);
-
-      expect(models).toHaveLength(2);
-      expect(models[0]?.triggers?.[0]?.action).toBe('DELETE');
-    });
-
-    test('complex model transformation with indexes and triggers', async () => {
-      const { models } = await runMigration([TestE, TestB], [TestD, TestA]);
-
-      expect(models).toHaveLength(2);
-    });
-    test('change trigger', async () => {
-      const { models } = await runMigration([TestE], [TestD]);
-
-      expect(models).toHaveLength(1);
-      expect(models[0]?.triggers?.[0]?.action).toBe('DELETE');
-      expect(models[0]?.triggers?.[0]?.when).toBe('AFTER');
-    });
-  });
   describe('relationship', () => {
-    test('create multiple models with relationships', async () => {
-      const { models, statements } = await runMigration([Account, Profile], []);
+    describe('without records', () => {
+      describe('create', () => {
+        test('with link cascade', async () => {
+          const { models, db } = await runMigration([TestE, TestK], [TestE, TestJ]);
 
-      expect(statements.length).toEqual(4);
-      expect(models).toHaveLength(2);
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(2);
+          // @ts-expect-error This is defined!
+          expect(models[1]?.fields[0]?.actions?.onDelete).toBe('CASCADE');
+          expect(rowCounts).toEqual({
+            comments: 0,
+            tests: 0,
+          });
+        });
+
+        test('one-to-many', async () => {
+          const { models, db } = await runMigration([TestP, TestR], [TestP, TestQ]);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          const res = await getSQLTables(db);
+
+          expect(res).toHaveLength(5);
+          expect(models).toHaveLength(2);
+          expect(rowCounts).toEqual({
+            tests: 0,
+            manies: 0,
+          });
+        });
+      });
+
+      describe('drop', () => {
+        test('many-to-many', async () => {
+          const { models, db } = await runMigration([TestP, TestT], [TestP, TestQ]);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          const res = await getSQLTables(db);
+
+          expect(res).toHaveLength(3);
+          expect(models).toHaveLength(2);
+          expect(rowCounts).toEqual({
+            manies: 0,
+            tests: 0,
+          });
+        });
+      });
+
+      describe('update', () => {
+        test('model name', async () => {
+          const { models, statements, db } = await runMigration(
+            [Account],
+            [AccountNew],
+            true,
+          );
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(statements).toHaveLength(2);
+          expect(models).toHaveLength(1);
+          expect(models[0].slug).toBe('account');
+          expect(rowCounts).toEqual({
+            accounts: 0,
+          });
+        });
+
+        test('with existing relationships', async () => {
+          const { models, db } = await runMigration(
+            [AccountNew, Profile],
+            [Account, Profile],
+            true,
+          );
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models.find((m) => m.slug === 'account_new')).toBeDefined();
+          expect(rowCounts).toEqual({
+            account_news: 0,
+            profiles: 0,
+          });
+        });
+      });
     });
-    test('create model with link cascade', async () => {
-      const { models } = await runMigration([TestE, TestK], [TestE, TestJ]);
+  });
 
-      expect(models).toHaveLength(2);
-      // @ts-expect-error This is defined!
-      expect(models[1]?.fields[0]?.actions?.onDelete).toBe('CASCADE');
+  describe('trigger', () => {
+    describe('without records', () => {
+      describe('create', () => {
+        test('with model', async () => {
+          const { models, db } = await runMigration([TestC, TestD], []);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(2);
+          expect(models[0].triggers).toBeDefined();
+          expect(rowCounts).toEqual({
+            tests: 0,
+            comments: 0,
+          });
+        });
+      });
+
+      describe('update', () => {
+        test('action', async () => {
+          const { models, db } = await runMigration([TestE], [TestD]);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          expect(models[0]?.triggers?.[0]?.action).toBe('DELETE');
+          expect(models[0]?.triggers?.[0]?.when).toBe('AFTER');
+          expect(rowCounts).toEqual({
+            comments: 0,
+          });
+        });
+      });
     });
+  });
 
-    test('create model with many-to-many relationship', async () => {
-      const { models, db } = await runMigration([TestP, TestQ], []);
+  describe('index', () => {
+    describe('without records', () => {
+      describe('create', () => {
+        test('simple', async () => {
+          const { models, db } = await runMigration([TestB], []);
 
-      const res = await getSQLTables(db);
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+      });
 
-      expect(res).toHaveLength(4);
-      expect(models).toHaveLength(2);
-    });
+      describe('drop', () => {
+        test('simple', async () => {
+          const { models, db } = await runMigration([TestA], []);
 
-    test('update model with many-to-many relationship', async () => {
-      const { models, db } = await runMigration([TestP, TestR], [TestP, TestQ]);
-
-      const res = await getSQLTables(db);
-
-      expect(res).toHaveLength(5);
-      expect(models).toHaveLength(2);
-    });
-
-    test('add field to model with many-to-many relationship', async () => {
-      const { models, db } = await runMigration([TestP, TestS], [TestP, TestQ]);
-
-      const res = await getSQLTables(db);
-
-      expect(res).toHaveLength(5);
-      expect(models).toHaveLength(2);
-    });
-
-    test('remove many-to-many relationship', async () => {
-      const { models, db } = await runMigration([TestP, TestT], [TestP, TestQ]);
-
-      const res = await getSQLTables(db);
-
-      expect(res).toHaveLength(3);
-      expect(models).toHaveLength(2);
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(1);
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
+      });
     });
   });
 
   describe('complex', () => {
-    test('complex model update with multiple changes', async () => {
-      const { models } = await runMigration(
-        [TestE, TestB, Account],
-        [TestD, TestA, AccountNew],
-        true,
-      );
+    describe('without records', () => {
+      describe('update', () => {
+        test('multiple changes', async () => {
+          const { models, db } = await runMigration(
+            [TestE, TestB, Account],
+            [TestD, TestA, AccountNew],
+            true,
+          );
 
-      expect(models).toHaveLength(3);
-    });
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models).toHaveLength(3);
+          expect(rowCounts).toEqual({
+            tests: 0,
+            comments: 0,
+            accounts: 0,
+          });
+        });
 
-    test('create and update models with mixed operations', async () => {
-      const { models } = await runMigration([TestB, TestE, Account], [TestA, TestD]);
+        test('mixed operations', async () => {
+          const { models, db } = await runMigration(
+            [TestB, TestE, Account],
+            [TestA, TestD],
+          );
 
-      expect(models.length).toBeGreaterThan(1);
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models.length).toBeGreaterThan(1);
+          expect(rowCounts).toEqual({
+            tests: 0,
+            comments: 0,
+            accounts: 0,
+          });
+        });
+      });
     });
   });
-  describe('error', () => {});
 });
