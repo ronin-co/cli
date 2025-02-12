@@ -23,7 +23,16 @@ import {
   TestR,
   TestT,
 } from '@/fixtures/index';
-import { getRowCount, getSQLTables, runMigration } from '@/fixtures/utils';
+import {
+  getModelRowCounts,
+  getRowCount,
+  getSQLTables,
+  runMigration,
+} from '@/fixtures/utils';
+import { getLocalPackages } from '@/src/utils/misc';
+
+const packages = await getLocalPackages();
+const { Transaction } = packages.compiler;
 
 describe('apply', () => {
   describe('model', () => {
@@ -218,17 +227,70 @@ describe('apply', () => {
     describe('with records', () => {
       describe('create', () => {
         test('simple', async () => {
-          const { models, db } = await runMigration([TestA], []);
+          const insert = {
+            add: {
+              account: {
+                with: {
+                  name: 'Jacqueline',
+                },
+              },
+            },
+          };
 
-          const rowCounts: Record<string, number> = {};
-          for (const model of models) {
-            if (model.pluralSlug) {
-              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
-            }
-          }
-          expect(models).toHaveLength(1);
+          const transaction = new Transaction([insert], {
+            models: [Account, TestA],
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            [Account, TestA],
+            [Account],
+            false,
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rowCounts = await getModelRowCounts(models, db);
+
+          expect(models).toHaveLength(2);
           expect(rowCounts).toEqual({
+            accounts: 1,
             tests: 0,
+          });
+        });
+      });
+
+      describe('update', () => {
+        test('fields', async () => {
+          const insert = {
+            add: {
+              test: {
+                with: {
+                  age: '10',
+                  active: true,
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [TestF, TestA],
+            inlineParams: true,
+          });
+
+          const { models, statements, db } = await runMigration(
+            [TestF],
+            [TestA],
+            false,
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rowCounts = await getModelRowCounts(models, db);
+
+          expect(statements).toHaveLength(7);
+          expect(models).toHaveLength(1);
+          expect(models[0].slug).toBe('test');
+          expect(rowCounts).toEqual({
+            tests: 1,
           });
         });
       });

@@ -82,7 +82,7 @@ export async function runMigration(
   definedModels: Array<Model>,
   existingModels: Array<Model>,
   enableRename = false,
-  insertStatements = [],
+  insertStatements: Array<Statement> = [],
 ): Promise<{
   db: Database;
   packages: LocalPackages;
@@ -124,6 +124,26 @@ export async function getRowCount(db: Database, modelSlug: string): Promise<numb
   const res = await db.query([`SELECT COUNT(*) FROM ${modelSlug};`]);
   return res[0].rows[0]['COUNT(*)'];
 }
+
+/**
+ * Retrieves the number of records for each model in the database.
+ *
+ * @param models - Array of models to get row counts for
+ * @param db - The database instance to query
+ * @returns Record mapping model plural slugs to their row counts
+ */
+export const getModelRowCounts = async (
+  models: Array<Model>,
+  db: Database,
+): Promise<Record<string, number>> => {
+  const rowCounts: Record<string, number> = {};
+  for (const model of models) {
+    if (model.pluralSlug) {
+      rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+    }
+  }
+  return rowCounts;
+};
 
 /**
  * Retrieves a list of all table names from a SQLite database.
