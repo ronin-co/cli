@@ -64,7 +64,7 @@ describe('apply', () => {
         });
 
         test('with triggers', async () => {
-          const { models, statements, db } = await runMigration([TestC, TestD], []);
+          const { models, db } = await runMigration([TestC, TestD], []);
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
