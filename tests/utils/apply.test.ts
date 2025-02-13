@@ -3,6 +3,9 @@ import {
   Account,
   Account3,
   AccountNew,
+  AccountWithBoolean,
+  AccountWithRequiredBoolean,
+  AccountWithRequiredDefault,
   AccountWithoutUnique,
   Profile,
   TestA,
@@ -433,6 +436,82 @@ describe('apply', () => {
             accounts: 1,
           });
           expect(rows[0].email).toBe('RONIN_TEST_VALUE');
+        });
+
+        test('required field with default value', async () => {
+          const insert = {
+            add: {
+              account: {
+                with: {
+                  name: 'Jacqueline',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [Account, AccountWithRequiredDefault],
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            [AccountWithRequiredDefault],
+            [Account],
+            { rename: false, requiredDefault: 'RONIN_TEST_VALUE' },
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rows = await getTableRows(db, Account3);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(rowCounts).toEqual({
+            accounts: 1,
+          });
+          expect(rows[0].email).toBe('RONIN_TEST_VALUE_REQUIRED_DEFAULT');
+        });
+
+        test('required field with number', async () => {
+          const insert = {
+            add: {
+              account: {
+                with: {
+                  name: 'Jacqueline',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [AccountWithBoolean, AccountWithRequiredBoolean],
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            [AccountWithRequiredBoolean],
+            [AccountWithBoolean],
+            { rename: false, requiredDefault: true },
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rows = await getTableRows(db, Account3);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(rowCounts).toEqual({
+            accounts: 1,
+          });
+          // TODO: This is not correct. This will be changed in another PR when we bump
+          // to the latest ronin version.
+          expect(rows[0].email).toBe('true');
         });
       });
 

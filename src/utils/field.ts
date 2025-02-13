@@ -38,7 +38,7 @@ const handleRequiredField = async (
   queries: Array<string>;
 }> => {
   let defaultValue: string | boolean | undefined;
-  if (field.type === 'number') {
+  if (field.type === 'boolean') {
     defaultValue =
       options?.requiredDefault ||
       (await select({
@@ -65,7 +65,7 @@ const handleRequiredField = async (
   const queries = [
     // Set the default value for all existing records.
     `set.RONIN_TEMP_${modelSlug}.to({${field.slug}: ${
-      typeof defaultValue === 'boolean' ? defaultValue : `"${defaultValue}"`
+      typeof defaultValue === 'string' ? `"${defaultValue}"` : defaultValue
     }})`,
     // Re-add the NOT NULL constraint after defaults are set.
     `alter.model("RONIN_TEMP_${modelSlug}").alter.field("${field.slug}").to({required: true})`,
@@ -167,7 +167,7 @@ export const diffFields = async (
     const existingField = existingFields.find((f) => f.slug === field.slug);
     if (field.unique || existingField?.unique) {
       diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
-    } else if (field.required) {
+    } else if (field.required && !field.defaultValue) {
       const { definedFields: updatedFields, queries } = await handleRequiredField(
         modelSlug,
         field,
@@ -330,7 +330,7 @@ export const createFields = async (
         (f) => !fields.find((f2) => f2.slug === f.slug),
       );
 
-      if (fieldToAdd.required) {
+      if (fieldToAdd.required && !fieldToAdd.defaultValue) {
         const { definedFields: updatedFields, queries } = await handleRequiredField(
           modelSlug,
           fieldToAdd,
@@ -359,7 +359,7 @@ export const createFields = async (
     }
     // Handle required fields by prompting for default value since SQLite doesn't allow
     // adding NOT NULL columns without defaults.
-    if (fieldToAdd.required) {
+    if (fieldToAdd.required && !fieldToAdd.defaultValue) {
       const { defaultValue } = await handleRequiredField(
         modelSlug,
         fieldToAdd,
