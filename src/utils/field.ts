@@ -20,7 +20,6 @@ import type { ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
  * @param field - The field being made required.
  * @param definedFields - The complete list of fields defined for the model.
  * @param options - Optional configuration.
- * @param options.requiredDefault - A predefined default value to use instead of prompting.
  *
  * @returns Object containing:
  *   - defaultValue: The chosen default value for the required field.
