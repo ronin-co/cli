@@ -123,6 +123,22 @@ export const ModelsA = [TestAccount, TestProfile, TestBlog];
 export const ModelsB = [TestAccount2, TestProfile2, TestBlog2, TestComments];
 /* export const ModelsC = [Account2, Profile]; */
 
+export const AccountWithBoolean = model({
+  slug: 'account',
+  fields: {
+    name: string(),
+    email: boolean(),
+  },
+}) as unknown as Model;
+
+export const AccountWithRequiredBoolean = model({
+  slug: 'account',
+  fields: {
+    name: string(),
+    email: boolean({ required: true }),
+  },
+}) as unknown as Model;
+
 export const Account = model({
   slug: 'account',
   pluralSlug: 'accounts',
@@ -139,6 +155,22 @@ export const AccountNew = model({
   },
 }) as unknown as Model;
 
+export const AccountWithoutUnique = model({
+  slug: 'account',
+  fields: {
+    name: string(),
+    email: string({ required: true }),
+  },
+}) as unknown as Model;
+
+export const AccountWithRequiredDefault = model({
+  slug: 'account',
+  fields: {
+    name: string(),
+    email: string({ required: true, defaultValue: 'RONIN_TEST_VALUE_REQUIRED_DEFAULT' }),
+  },
+}) as unknown as Model;
+
 export const Account2 = model({
   slug: 'account',
   pluralSlug: 'accounts',
@@ -147,6 +179,15 @@ export const Account2 = model({
       required: true,
       unique: true,
     }),
+  },
+}) as unknown as Model;
+
+export const Account3 = model({
+  slug: 'account',
+  pluralSlug: 'accounts',
+  fields: {
+    name: string({ required: true, unique: true }),
+    email: string({ required: true, unique: true }),
   },
 }) as unknown as Model;
 
@@ -348,5 +389,13 @@ export const TestT = model({
   fields: {
     name: string(),
     email: string(),
+  },
+}) as unknown as Model;
+
+export const TestU = model({
+  slug: 'test',
+  fields: {
+    test: string(),
+    name: string({ required: true }),
   },
 }) as unknown as Model;

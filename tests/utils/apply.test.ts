@@ -1,7 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import {
   Account,
+  Account3,
   AccountNew,
+  AccountWithBoolean,
+  AccountWithRequiredBoolean,
+  AccountWithRequiredDefault,
+  AccountWithoutUnique,
   Profile,
   TestA,
   TestB,
@@ -22,8 +27,12 @@ import {
   TestQ,
   TestR,
   TestT,
+  TestU,
 } from '@/fixtures/index';
-import { getRowCount, getSQLTables, runMigration } from '@/fixtures/utils';
+import { getRowCount, getSQLTables, getTableRows, runMigration } from '@/fixtures/utils';
+import { getLocalPackages } from '@/src/utils/misc';
+const packages = await getLocalPackages();
+const { Transaction } = packages.compiler;
 
 describe('apply', () => {
   describe('model', () => {
@@ -254,7 +263,9 @@ describe('apply', () => {
         });
 
         test('add unique field', async () => {
-          const { models, db } = await runMigration([TestG], [TestN]);
+          const { models, db } = await runMigration([TestG], [TestN], {
+            requiredDefault: 'RONIN_TEST_VALUE',
+          });
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -331,7 +342,10 @@ describe('apply', () => {
         });
 
         test('rename', async () => {
-          const { models, db } = await runMigration([TestI], [TestH], true);
+          const { models, db } = await runMigration([TestI], [TestH], {
+            rename: true,
+            requiredDefault: 'RONIN_TEST_VALUE',
+          });
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -343,6 +357,201 @@ describe('apply', () => {
           expect(rowCounts).toEqual({
             tests: 0,
           });
+        });
+      });
+    });
+
+    describe('with records', () => {
+      describe('create', () => {
+        test('required field & unqiue', async () => {
+          const insert = {
+            add: {
+              account: {
+                with: {
+                  name: 'Jacqueline',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [Account, Account3],
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            [Account3],
+            [Account],
+            { rename: false, requiredDefault: 'RONIN_TEST_VALUE' },
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rows = await getTableRows(db, Account3);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(rowCounts).toEqual({
+            accounts: 1,
+          });
+
+          expect(rows[0].email).toBe('RONIN_TEST_VALUE');
+        });
+
+        test('required field', async () => {
+          const insert = {
+            add: {
+              account: {
+                with: {
+                  name: 'Jacqueline',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [Account, AccountWithoutUnique],
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            [AccountWithoutUnique],
+            [Account],
+            { rename: false, requiredDefault: 'RONIN_TEST_VALUE' },
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rows = await getTableRows(db, Account3);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(rowCounts).toEqual({
+            accounts: 1,
+          });
+          expect(rows[0].email).toBe('RONIN_TEST_VALUE');
+        });
+
+        test('required field with default value', async () => {
+          const insert = {
+            add: {
+              account: {
+                with: {
+                  name: 'Jacqueline',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [Account, AccountWithRequiredDefault],
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            [AccountWithRequiredDefault],
+            [Account],
+            { rename: false, requiredDefault: 'RONIN_TEST_VALUE' },
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rows = await getTableRows(db, Account3);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(rowCounts).toEqual({
+            accounts: 1,
+          });
+          expect(rows[0].email).toBe('RONIN_TEST_VALUE_REQUIRED_DEFAULT');
+        });
+
+        test('required field with number', async () => {
+          const insert = {
+            add: {
+              account: {
+                with: {
+                  name: 'Jacqueline',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [AccountWithBoolean, AccountWithRequiredBoolean],
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            [AccountWithRequiredBoolean],
+            [AccountWithBoolean],
+            { rename: false, requiredDefault: true },
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rows = await getTableRows(db, Account3);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(rowCounts).toEqual({
+            accounts: 1,
+          });
+          // TODO: This is not correct. This will be changed in another PR when we bump
+          // to the latest ronin version.
+          expect(rows[0].email).toBe('true');
+        });
+      });
+
+      describe('update', () => {
+        test('required field', async () => {
+          const insert = {
+            add: {
+              test: {
+                with: {
+                  test: 'test',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [TestL, TestU],
+            inlineParams: true,
+          });
+
+          const { models, db } = await runMigration(
+            [TestU],
+            [TestL],
+            { rename: false, requiredDefault: 'RONIN_TEST_VALUE' },
+            transaction.statements.map((statement) => statement),
+          );
+
+          const rows = await getTableRows(db, TestU);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(rowCounts).toEqual({
+            tests: 1,
+          });
+
+          expect(rows[0].name).toBe('RONIN_TEST_VALUE');
         });
       });
     });
@@ -412,11 +621,10 @@ describe('apply', () => {
 
       describe('update', () => {
         test('model name', async () => {
-          const { models, statements, db } = await runMigration(
-            [Account],
-            [AccountNew],
-            true,
-          );
+          const { models, statements, db } = await runMigration([Account], [AccountNew], {
+            rename: true,
+            requiredDefault: 'RONIN_TEST_VALUE',
+          });
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -436,7 +644,7 @@ describe('apply', () => {
           const { models, db } = await runMigration(
             [AccountNew, Profile],
             [Account, Profile],
-            true,
+            { rename: true, requiredDefault: 'RONIN_TEST_VALUE' },
           );
 
           const rowCounts: Record<string, number> = {};
@@ -542,7 +750,7 @@ describe('apply', () => {
           const { models, db } = await runMigration(
             [TestE, TestB, Account],
             [TestD, TestA, AccountNew],
-            true,
+            { rename: true, requiredDefault: 'RONIN_TEST_VALUE' },
           );
 
           const rowCounts: Record<string, number> = {};
@@ -563,6 +771,7 @@ describe('apply', () => {
           const { models, db } = await runMigration(
             [TestB, TestE, Account],
             [TestA, TestD],
+            { rename: true, requiredDefault: 'RONIN_TEST_VALUE' },
           );
 
           const rowCounts: Record<string, number> = {};

@@ -14,6 +14,14 @@ import { confirm } from '@inquirer/prompts';
 import type { Model } from '@ronin/compiler';
 
 /**
+ * Options for migration operations.
+ */
+export type MigrationOptions = {
+  rename?: boolean;
+  requiredDefault?: boolean | string;
+};
+
+/**
  * Fields to ignore.
  * There are several fields that are not relevant for the migration process.
  */
@@ -40,7 +48,7 @@ export const IGNORED_FIELDS = [
 export const diffModels = async (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
-  rename?: boolean,
+  options?: MigrationOptions,
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
 
@@ -56,7 +64,7 @@ export const diffModels = async (
     // Ask if the user wants to rename the models
     for (const model of modelsToBeRenamed) {
       const confirmRename =
-        rename ||
+        options?.rename ||
         (process.env.NODE_ENV !== 'test' &&
           (await confirm({
             message: `Did you mean to rename model: ${model.from.slug} -> ${model.to.slug}`,
@@ -74,7 +82,7 @@ export const diffModels = async (
   diff.push(...adjustModelMetaQueries);
   diff.push(...dropModels(modelsToBeDropped));
   diff.push(...createModels(modelsToBeAdded));
-  diff.push(...(await adjustModels(definedModels, existingModels, rename)));
+  diff.push(...(await adjustModels(definedModels, existingModels, options)));
   diff.push(...recreateIndexes);
   diff.push(...recreateTriggers);
 
@@ -94,7 +102,7 @@ export const diffModels = async (
 const adjustModels = async (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
-  rename?: boolean,
+  options?: MigrationOptions,
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
 
@@ -109,7 +117,7 @@ const adjustModels = async (
           localModel.slug,
           localModel.indexes || [],
           localModel.triggers || [],
-          rename,
+          options,
         )),
       );
     }
