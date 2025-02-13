@@ -65,7 +65,7 @@ export class Protocol {
 
     const func = new Function(...queryTypes, `"use strict"; return ${query}`);
 
-    return func(...queryProxies).structure;
+    return func(...queryProxies);
   };
 
   /**
@@ -166,6 +166,8 @@ export default () => [
    */
   getSQLStatements = (models: Array<Model>): Array<Statement> => {
     const { Transaction } = this._packages.compiler;
+
+    console.log('THIS', this._queries)
 
     return new Transaction(this._queries, {
       models,
