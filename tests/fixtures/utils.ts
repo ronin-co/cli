@@ -1,4 +1,4 @@
-import { diffModels } from '@/src/utils/migration';
+import { type MigrationOptions, diffModels } from '@/src/utils/migration';
 import { type LocalPackages, getLocalPackages } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
@@ -66,8 +66,7 @@ export const prefillDatabase = async (
  *
  * @param definedModels - The new/updated model definitions to migrate to.
  * @param existingModels - The current models in the database.
- * @param enableRename - Whether to enable model renaming during migration
- * (defaults to `false`).
+ * @param options - Optional configuration for migration operations.
  * @param insertStatements - The statements that should be executed to insert records into
  * the database.
  *
@@ -81,10 +80,7 @@ export const prefillDatabase = async (
 export const runMigration = async (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
-  options?: {
-    rename?: boolean;
-    requiredDefault?: boolean | string;
-  },
+  options?: MigrationOptions,
   insertStatements: Array<Statement> = [],
 ): Promise<{
   db: Database;

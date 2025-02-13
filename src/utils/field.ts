@@ -1,3 +1,4 @@
+import type { MigrationOptions } from '@/src/utils/migration';
 import { RONIN_SCHEMA_TEMP_SUFFIX } from '@/src/utils/misc';
 import {
   createFieldQuery,
@@ -30,9 +31,7 @@ const handleRequiredField = async (
   modelSlug: string,
   field: ModelField,
   definedFields: Array<ModelField> | undefined,
-  options?: {
-    requiredDefault?: boolean | string;
-  },
+  options?: MigrationOptions,
 ): Promise<{
   defaultValue: string | boolean | undefined;
   definedFields: Array<ModelField> | undefined;
@@ -94,10 +93,7 @@ export const diffFields = async (
   modelSlug: string,
   indexes: Array<ModelIndex>,
   triggers: Array<ModelTrigger>,
-  options?: {
-    rename?: boolean;
-    requiredDefault?: boolean | string;
-  },
+  options?: MigrationOptions,
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
 
@@ -321,9 +317,7 @@ export const createFields = async (
   fields: Array<ModelField>,
   modelSlug: string,
   definedFields?: Array<ModelField>,
-  options?: {
-    requiredDefault?: boolean | string;
-  },
+  options?: MigrationOptions,
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
 

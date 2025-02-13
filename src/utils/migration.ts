@@ -14,6 +14,14 @@ import { confirm } from '@inquirer/prompts';
 import type { Model } from '@ronin/compiler';
 
 /**
+ * Options for migration operations.
+ */
+export type MigrationOptions = {
+  rename?: boolean;
+  requiredDefault?: boolean | string;
+};
+
+/**
  * Fields to ignore.
  * There are several fields that are not relevant for the migration process.
  */
@@ -40,10 +48,7 @@ export const IGNORED_FIELDS = [
 export const diffModels = async (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
-  options?: {
-    rename?: boolean;
-    requiredDefault?: boolean | string;
-  },
+  options?: MigrationOptions,
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
 
@@ -97,10 +102,7 @@ export const diffModels = async (
 const adjustModels = async (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
-  options?: {
-    rename?: boolean;
-    requiredDefault?: boolean | string;
-  },
+  options?: MigrationOptions,
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
 
