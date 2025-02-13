@@ -126,23 +126,26 @@ export const dropFieldQuery = (modelSlug: string, fieldSlug: string): string => 
  * ```
  */
 export const createTempModelQuery = (
-  modelSlug: string,
-  fields: Array<ModelField>,
-  _indexes: Array<ModelIndex>,
-  triggers: Array<ModelTrigger>,
+  model: Model,
   customQueries?: Array<string>,
   includeFields?: Array<ModelField>,
 ): Array<string> => {
   const queries: Array<string> = [];
 
-  const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`;
+  const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${model.slug}`;
 
   // Create a copy of the model
-  queries.push(createModelQuery(tempModelSlug, { fields }));
+  queries.push(
+    createModelQuery(tempModelSlug, {
+      fields: model.fields,
+      name: model.name,
+      idPrefix: model.idPrefix,
+    }),
+  );
 
   // Move all the data to the copied model
   queries.push(
-    `add.${tempModelSlug}.with(() => get.${modelSlug}(${
+    `add.${tempModelSlug}.with(() => get.${model.slug}(${
       includeFields
         ? JSON.stringify({ selecting: includeFields.map((field) => field.slug) })
         : ''
@@ -154,13 +157,13 @@ export const createTempModelQuery = (
   }
 
   // Delete the original model
-  queries.push(dropModelQuery(modelSlug));
+  queries.push(dropModelQuery(model.slug));
 
   // Rename the copied model to the original model
-  queries.push(`alter.model("${tempModelSlug}").to({slug: "${modelSlug}"})`);
+  queries.push(`alter.model("${tempModelSlug}").to({slug: "${model.slug}"})`);
 
-  for (const trigger of triggers) {
-    queries.push(createTriggerQuery(modelSlug, trigger));
+  for (const trigger of model.triggers || []) {
+    queries.push(createTriggerQuery(model.slug, trigger));
   }
 
   return queries;
