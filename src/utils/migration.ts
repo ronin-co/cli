@@ -4,6 +4,7 @@ import { type BaseFlags, areArraysEqual } from '@/src/utils/misc';
 import {
   createIndexQuery,
   createModelQuery,
+  createTempModelQuery,
   createTriggerQuery,
   dropIndexQuery,
   dropModelQuery,
@@ -252,14 +253,19 @@ export const adjustModelMeta = (
 
   for (const model of definedModels) {
     const currentModel = databaseModelsMap.get(model.slug);
-    if (!(model.name && model.idPrefix)) continue;
-    if (
-      currentModel &&
-      (model.name !== currentModel.name || model.idPrefix !== currentModel.idPrefix)
-    ) {
-      newModels.push(
-        `alter.model("${model.slug}").to({name: "${model.name}", idPrefix: "${model.idPrefix}"})`,
-      );
+
+    if (currentModel) {
+      // The `name` and the `idPrefix` are generated in the compiler thus they are
+      // not always present. So if the defined model has no name or idPrefix we skip
+      // the model.
+      if (model.idPrefix && model.idPrefix !== currentModel.idPrefix) {
+        // If the prefix changes we need to recreate the model.
+        // All records inserted will use the new prefix. All old ids are not updated.
+        newModels.push(...createTempModelQuery(model));
+      } else if (model.name && model.name !== currentModel.name) {
+        // Otherwise, just update the name.
+        newModels.push(`alter.model("${model.slug}").to({name: "${model.name}"})`);
+      }
     }
   }
 

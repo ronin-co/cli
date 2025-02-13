@@ -30,7 +30,10 @@ import {
   TestU,
 } from '@/fixtures/index';
 import { getRowCount, getSQLTables, getTableRows, runMigration } from '@/fixtures/utils';
+import { formatSqliteStatement } from '@/src/utils/format';
 import { getLocalPackages } from '@/src/utils/misc';
+import type { Model } from '@ronin/syntax/schema';
+import { model, string } from 'ronin/schema';
 const packages = await getLocalPackages();
 const { Transaction } = packages.compiler;
 
@@ -187,8 +190,11 @@ describe('apply', () => {
           });
         });
 
-        test('meta properties', async () => {
-          const { models, db } = await runMigration([TestC], [TestA]);
+        test.only('meta properties', async () => {
+          const { models, db, modelDiff, statements } = await runMigration(
+            [TestC],
+            [TestA],
+          );
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -196,6 +202,11 @@ describe('apply', () => {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
+          console.log(modelDiff);
+          for (const statement of statements) {
+            console.log(formatSqliteStatement(statement.statement));
+          }
+          console.log(JSON.stringify(models, null, 2));
           expect(models).toHaveLength(1);
           expect(models[0].name).toBe('ThisIsACoolModel');
           expect(rowCounts).toEqual({
@@ -239,6 +250,58 @@ describe('apply', () => {
           expect(rowCounts).toEqual({
             tests: 0,
           });
+        });
+      });
+
+      describe('update', () => {
+        test.only('id prefix', async () => {
+          const definedModel = model({
+            slug: 'test',
+            idPrefix: 'test',
+            fields: {
+              name: string(),
+            },
+          }) as unknown as Model;
+
+          const existingModel = model({
+            slug: 'test',
+            idPrefix: 'corny',
+            fields: {
+              name: string(),
+            },
+          }) as unknown as Model;
+
+          const insert = {
+            add: {
+              test: {
+                with: {
+                  name: 'Ilayda',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            models: [definedModel, existingModel],
+            inlineParams: true,
+          });
+
+          const { modelDiff, db, statements, models } = await runMigration(
+            [definedModel],
+            [existingModel],
+            {},
+            transaction.statements.map((statement) => statement),
+          );
+
+          console.log(models);
+
+          await db.query(transaction.statements);
+
+          const rows = await getTableRows(db, definedModel);
+          console.log(rows);
+
+          expect(rows[0].id).toContain('corny_');
+          expect(rows[1].id).toContain('test_');
         });
       });
     });

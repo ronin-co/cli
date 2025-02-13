@@ -118,13 +118,15 @@ export const diffFields = async (
         if (field.from.type === 'link') {
           diff.push(
             ...createTempModelQuery(
-              modelSlug,
-              [
-                { ...field.to, slug: field.from.slug },
-                ...definedFields.filter((local) => local.slug !== field.to.slug),
-              ],
-              indexes,
-              triggers,
+              {
+                slug: modelSlug,
+                fields: [
+                  { ...field.to, slug: field.from.slug },
+                  ...definedFields.filter((local) => local.slug !== field.to.slug),
+                ],
+                triggers,
+                indexes,
+              },
               [
                 renameFieldQuery(
                   `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`,
@@ -176,10 +178,12 @@ export const diffFields = async (
 
       diff.push(
         ...createTempModelQuery(
-          modelSlug,
-          updatedFields || [],
-          [],
-          [],
+          {
+            slug: modelSlug,
+            fields: updatedFields || [],
+            indexes,
+            triggers,
+          },
           queries,
           existingFields,
         ),
@@ -284,7 +288,7 @@ const adjustFields = (
   indexes: Array<ModelIndex>,
   triggers: Array<ModelTrigger>,
 ): Array<string> => {
-  return createTempModelQuery(modelSlug, fields, indexes, triggers);
+  return createTempModelQuery({ slug: modelSlug, fields, indexes, triggers });
 };
 
 /**
@@ -338,20 +342,20 @@ export const createFields = async (
         );
 
         return createTempModelQuery(
-          modelSlug,
-          updatedFields || [],
-          [],
-          [],
+          {
+            slug: modelSlug,
+            fields: updatedFields || [],
+          },
           queries,
           existingFields,
         );
       }
 
       return createTempModelQuery(
-        modelSlug,
-        definedFields || [],
-        [],
-        [],
+        {
+          slug: modelSlug,
+          fields: definedFields || [],
+        },
         [],
         existingFields,
       );
@@ -419,7 +423,14 @@ const deleteFields = (
   const diff: Array<string> = [];
   for (const fieldToDrop of fieldsToDrop) {
     if (fieldToDrop.unique) {
-      return createTempModelQuery(modelSlug, fields, [], [], [], fields);
+      return createTempModelQuery(
+        {
+          slug: modelSlug,
+          fields,
+        },
+        [],
+        fields,
+      );
     }
     diff.push(dropFieldQuery(modelSlug, fieldToDrop.slug));
   }
