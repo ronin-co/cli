@@ -6,8 +6,78 @@ import {
   dropFieldQuery,
   renameFieldQuery,
 } from '@/src/utils/queries';
-import { confirm } from '@inquirer/prompts';
+import { confirm, input, select } from '@inquirer/prompts';
 import type { ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
+
+/**
+ * Handles migration of a required field by prompting for a default value and generating
+ * the necessary queries.
+ * This is needed when adding a required constraint to an existing field or creating
+ * a new required field.
+ *
+ * @param modelSlug - The slug/identifier of the model containing the field
+ * @param field - The field being made required
+ * @param definedFields - The complete list of fields defined for the model
+ * @param options - Optional configuration
+ * @param options.requiredDefault - A predefined default value to use instead of prompting
+ *
+ * @returns Object containing:
+ *   - defaultValue: The chosen default value for the required field
+ *   - definedFields: Updated field definitions with required constraints temporarily removed
+ *   - queries: Array of migration queries to set default values and add required constraints
+ */
+const handleRequiredField = async (
+  modelSlug: string,
+  field: ModelField,
+  definedFields: Array<ModelField> | undefined,
+  options?: {
+    requiredDefault?: boolean | string;
+  },
+): Promise<{
+  defaultValue: string | boolean | undefined;
+  definedFields: Array<ModelField> | undefined;
+  queries: Array<string>;
+}> => {
+  let defaultValue: string | boolean | undefined;
+  if (field.type === 'number') {
+    defaultValue =
+      options?.requiredDefault ||
+      (await select({
+        message: `Field ${modelSlug}.${field.slug} is required. Select a default value (or manually drop all records):`,
+        choices: [
+          { name: 'True', value: true },
+          { name: 'False', value: false },
+        ],
+      }));
+  } else {
+    defaultValue =
+      options?.requiredDefault ||
+      (await input({
+        message: `Field ${modelSlug}.${field.slug} is required. Enter a default value (or manually drop all records):`,
+      }));
+  }
+
+  // Temporarily remove required constraints to allow setting default values.
+  const updatedFields = definedFields?.map((f) => ({
+    ...f,
+    required: false,
+  }));
+
+  const queries = [
+    // Set the default value for all existing records.
+    `set.RONIN_TEMP_${modelSlug}.to({${field.slug}: ${
+      typeof defaultValue === 'boolean' ? defaultValue : `"${defaultValue}"`
+    }})`,
+    // Re-add the NOT NULL constraint after defaults are set
+    `alter.model("RONIN_TEMP_${modelSlug}").alter.field("${field.slug}").to({required: true})`,
+  ];
+
+  return {
+    defaultValue,
+    definedFields: updatedFields,
+    queries,
+  };
+};
 
 /**
  * Generates the difference (migration steps) between local and remote fields of a model.
@@ -24,7 +94,10 @@ export const diffFields = async (
   modelSlug: string,
   indexes: Array<ModelIndex>,
   triggers: Array<ModelTrigger>,
-  rename?: boolean,
+  options?: {
+    rename?: boolean;
+    requiredDefault?: boolean | string;
+  },
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
 
@@ -38,7 +111,7 @@ export const diffFields = async (
     // Ask if the user wants to rename a field.
     for (const field of fieldsToBeRenamed) {
       const confirmRename =
-        rename ||
+        options?.rename ||
         (await confirm({
           message: `Did you mean to rename field: ${modelSlug}.${field.from.slug} -> ${modelSlug}.${field.to.slug}`,
           default: true,
@@ -73,7 +146,13 @@ export const diffFields = async (
     }
   }
 
-  const createFieldsQueries = createFields(fieldsToAdd, modelSlug, definedFields);
+  const createFieldsQueries = await createFields(
+    fieldsToAdd,
+    modelSlug,
+    definedFields,
+    options,
+  );
+
   diff.push(...createFieldsQueries);
   if (
     !(
@@ -89,8 +168,26 @@ export const diffFields = async (
     // requires recreating the entire table. For other constraint changes, we can use a
     // temporary column approach (create temp, copy data, drop old, rename temp).
     const existingField = existingFields.find((f) => f.slug === field.slug);
-    if (field.unique || field.required || existingField?.unique) {
+    if (field.unique || existingField?.unique) {
       diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
+    } else if (field.required) {
+      const { definedFields: updatedFields, queries } = await handleRequiredField(
+        modelSlug,
+        field,
+        definedFields,
+        options,
+      );
+
+      diff.push(
+        ...createTempModelQuery(
+          modelSlug,
+          updatedFields || [],
+          [],
+          [],
+          queries,
+          existingFields,
+        ),
+      );
     } else if (field.type === 'link' && field.kind === 'many') {
       diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
     } else {
@@ -219,18 +316,43 @@ export const fieldsToCreate = (
  *
  * @returns An array of SQL queries for creating fields.
  */
-export const createFields = (
+export const createFields = async (
   fields: Array<ModelField>,
   modelSlug: string,
   definedFields?: Array<ModelField>,
-): Array<string> => {
+  options?: {
+    requiredDefault?: boolean | string;
+  },
+): Promise<Array<string>> => {
   const diff: Array<string> = [];
 
   for (const fieldToAdd of fields) {
+    // If the field is unique, we need to create a temporary model with the existing fields
+    // and the new field. This is because SQLite doesn't support adding a UNIQUE constraint
+    // to an existing column.
     if (fieldToAdd.unique) {
       const existingFields = definedFields?.filter(
         (f) => !fields.find((f2) => f2.slug === f.slug),
       );
+
+      if (fieldToAdd.required) {
+        const { definedFields: updatedFields, queries } = await handleRequiredField(
+          modelSlug,
+          fieldToAdd,
+          definedFields,
+          options,
+        );
+
+        return createTempModelQuery(
+          modelSlug,
+          updatedFields || [],
+          [],
+          [],
+          queries,
+          existingFields,
+        );
+      }
+
       return createTempModelQuery(
         modelSlug,
         definedFields || [],
@@ -239,6 +361,35 @@ export const createFields = (
         [],
         existingFields,
       );
+    }
+    // If the field is required, we need to decide how to handle it, because
+    // We cannot create a NOT NULL column without a default value.
+    // So we create prompt the user what to insert as default value, and afterwards drop
+    // the NOT NULL constraint.
+    // https://stackoverflow.com/questions/3997966/can-i-add-a-not-null-column-without-default-value
+    // We only need to handle this if the field is required and there are records in the table.
+    // Else we can just create the field and be done with it.
+    if (fieldToAdd.required) {
+      const { defaultValue } = await handleRequiredField(
+        modelSlug,
+        fieldToAdd,
+        definedFields,
+        options,
+      );
+
+      // Create field without NOT NULL constraint.
+      diff.push(createFieldQuery(modelSlug, { ...fieldToAdd, required: false }));
+      // Now set a placeholder value.
+      diff.push(
+        `set.${modelSlug}.to({${fieldToAdd.slug}: ${
+          typeof defaultValue === 'boolean' ? defaultValue : `"${defaultValue}"`
+        }})`,
+      );
+      // Now add the NOT NULL constraint.
+      diff.push(
+        `alter.model("${modelSlug}").alter.field("${fieldToAdd.slug}").to({required: true})`,
+      );
+      return diff;
     }
     diff.push(createFieldQuery(modelSlug, fieldToAdd));
   }

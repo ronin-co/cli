@@ -2,7 +2,7 @@ import { diffModels } from '@/src/utils/migration';
 import { type LocalPackages, getLocalPackages } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
-import type { Model, Statement } from '@ronin/compiler';
+import { type Model, type Statement, Transaction } from '@ronin/compiler';
 import { type Database, Engine } from '@ronin/engine';
 import { MemoryResolver } from '@ronin/engine/resolvers/memory';
 
@@ -78,24 +78,27 @@ export const prefillDatabase = async (
  *   - statements: The SQL statements that were executed.
  *   - modelDiff: The computed differences between defined and existing models.
  */
-export async function runMigration(
+export const runMigration = async (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
-  enableRename = false,
-  insertStatements = [],
+  options?: {
+    rename?: boolean;
+    requiredDefault?: boolean | string;
+  },
+  insertStatements: Array<Statement> = [],
 ): Promise<{
   db: Database;
   packages: LocalPackages;
   models: Array<Model>;
   statements: Array<Statement>;
   modelDiff: Array<string>;
-}> {
+}> => {
   const db = await queryEphemeralDatabase(existingModels, insertStatements);
 
   const packages = await getLocalPackages();
   const models = await getModels(packages, db);
 
-  const modelDiff = await diffModels(definedModels, models, enableRename);
+  const modelDiff = await diffModels(definedModels, models, options);
   const protocol = new Protocol(packages, modelDiff);
   await protocol.convertToQueryObjects();
 
@@ -110,7 +113,7 @@ export async function runMigration(
     statements,
     modelDiff,
   };
-}
+};
 
 /**
  * Retrieves the number of records in a table.
@@ -120,10 +123,10 @@ export async function runMigration(
  *
  * @returns The number of records in the table.
  */
-export async function getRowCount(db: Database, modelSlug: string): Promise<number> {
+export const getRowCount = async (db: Database, modelSlug: string): Promise<number> => {
   const res = await db.query([`SELECT COUNT(*) FROM ${modelSlug};`]);
   return res[0].rows[0]['COUNT(*)'];
-}
+};
 
 /**
  * Retrieves a list of all table names from a SQLite database.
@@ -132,7 +135,32 @@ export async function getRowCount(db: Database, modelSlug: string): Promise<numb
  *
  * @returns A list of table names mapped from the query results.
  */
-export async function getSQLTables(db: Database): Promise<Array<Record<string, string>>> {
+export const getSQLTables = async (
+  db: Database,
+): Promise<Array<Record<string, string>>> => {
   const res = await db.query(['SELECT name FROM sqlite_master WHERE type="table";']);
   return res[0].rows;
-}
+};
+
+/**
+ * Retrieves all rows from a table.
+ *
+ * @param db - The database instance to query.
+ * @param model - The model to get the rows for.
+ *
+ * @returns A list of rows from the table.
+ */
+export const getTableRows = async (
+  db: Database,
+  model: Model,
+): Promise<Array<Record<string, string>>> => {
+  const transaction = new Transaction(
+    [{ get: { [model?.pluralSlug || `${model.slug}s`]: null } }],
+    {
+      models: [model],
+      inlineParams: true,
+    },
+  );
+  const result = await db.query(transaction.statements);
+  return result[0].rows;
+};

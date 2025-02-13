@@ -193,7 +193,9 @@ describe('fields', () => {
           target: 'profile',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], [], true);
+      const diff = await diffFields(localFields, remoteFields, 'account', [], [], {
+        rename: true,
+      });
       expect(diff).toHaveLength(5);
       expect(diff).toStrictEqual([
         "create.model({slug:'RONIN_TEMP_account',fields:[{type:'link', slug:'profile', target:'profile'}]})",
@@ -217,7 +219,9 @@ describe('fields', () => {
           slug: 'profile',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], [], true);
+      const diff = await diffFields(localFields, remoteFields, 'account', [], [], {
+        rename: true,
+      });
 
       expect(diff).toHaveLength(1);
       expect(diff).toStrictEqual([

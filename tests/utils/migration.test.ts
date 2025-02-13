@@ -41,7 +41,7 @@ describe('migration', () => {
 
     test('generates migration steps when renaming model slug', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account], [Account2], true);
+      const modelDiff = await diffModels([Account], [Account2], { rename: true });
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
@@ -106,7 +106,9 @@ describe('migration', () => {
     });
 
     test('renames model when model is renamed', async () => {
-      const modelDiff = await diffModels([AccountNew, Profile], [Account, Profile], true);
+      const modelDiff = await diffModels([AccountNew, Profile], [Account, Profile], {
+        rename: true,
+      });
 
       expect(modelDiff).toHaveLength(1);
       expect(modelDiff).toStrictEqual([
