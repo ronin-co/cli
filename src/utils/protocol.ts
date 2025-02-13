@@ -60,7 +60,7 @@ export class Protocol {
       'drop',
     ];
     const queryProxies = queryTypes.map((type) =>
-      getSyntaxProxy({ rootProperty: type as 'drop' }),
+      getSyntaxProxy({ root: type as 'drop' }),
     );
 
     const func = new Function(...queryTypes, `"use strict"; return ${query}`);
