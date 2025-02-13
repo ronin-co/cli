@@ -15,16 +15,16 @@ import type { ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
  * This is needed when adding a required constraint to an existing field or creating
  * a new required field.
  *
- * @param modelSlug - The slug/identifier of the model containing the field
- * @param field - The field being made required
- * @param definedFields - The complete list of fields defined for the model
- * @param options - Optional configuration
- * @param options.requiredDefault - A predefined default value to use instead of prompting
+ * @param modelSlug - The slug/identifier of the model containing the field.
+ * @param field - The field being made required.
+ * @param definedFields - The complete list of fields defined for the model.
+ * @param options - Optional configuration.
+ * @param options.requiredDefault - A predefined default value to use instead of prompting.
  *
  * @returns Object containing:
- *   - defaultValue: The chosen default value for the required field
- *   - definedFields: Updated field definitions with required constraints temporarily removed
- *   - queries: Array of migration queries to set default values and add required constraints
+ *   - defaultValue: The chosen default value for the required field.
+ *   - definedFields: Updated field definitions with required constraints temporarily removed.
+ *   - queries: Array of migration queries to set default values and add required constraints.
  */
 const handleRequiredField = async (
   modelSlug: string,
@@ -68,7 +68,7 @@ const handleRequiredField = async (
     `set.RONIN_TEMP_${modelSlug}.to({${field.slug}: ${
       typeof defaultValue === 'boolean' ? defaultValue : `"${defaultValue}"`
     }})`,
-    // Re-add the NOT NULL constraint after defaults are set
+    // Re-add the NOT NULL constraint after defaults are set.
     `alter.model("RONIN_TEMP_${modelSlug}").alter.field("${field.slug}").to({required: true})`,
   ];
 
@@ -164,9 +164,10 @@ export const diffFields = async (
   }
 
   for (const field of queriesForAdjustment || []) {
-    // SQLite's ALTER TABLE is limited - adding UNIQUE or NOT NULL to an existing column
-    // requires recreating the entire table. For other constraint changes, we can use a
-    // temporary column approach (create temp, copy data, drop old, rename temp).
+    // SQLite has limited ALTER TABLE support. When adding UNIQUE or NOT NULL constraints,
+    // we must recreate the entire table. For other constraint changes, we can use a more
+    // efficient approach: create a temporary column, copy the data, drop the old column,
+    // and rename the temporary one.
     const existingField = existingFields.find((f) => f.slug === field.slug);
     if (field.unique || existingField?.unique) {
       diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
@@ -362,13 +363,8 @@ export const createFields = async (
         existingFields,
       );
     }
-    // If the field is required, we need to decide how to handle it, because
-    // We cannot create a NOT NULL column without a default value.
-    // So we create prompt the user what to insert as default value, and afterwards drop
-    // the NOT NULL constraint.
-    // https://stackoverflow.com/questions/3997966/can-i-add-a-not-null-column-without-default-value
-    // We only need to handle this if the field is required and there are records in the table.
-    // Else we can just create the field and be done with it.
+    // Handle required fields by prompting for default value since SQLite doesn't allow
+    // adding NOT NULL columns without defaults.
     if (fieldToAdd.required) {
       const { defaultValue } = await handleRequiredField(
         modelSlug,
