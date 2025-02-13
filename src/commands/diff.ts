@@ -70,7 +70,7 @@ export default async (
 
     const paddedNum = String(nextNum).padStart(4, '0');
     const protocol = new Protocol(packages, modelDiff);
-    await protocol.convertToQueryObjects();
+    protocol.convertToQueryObjects();
     protocol.save(`migration-${paddedNum}`);
 
     if (flags.sql) {

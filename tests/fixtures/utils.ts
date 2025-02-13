@@ -97,7 +97,7 @@ export async function runMigration(
 
   const modelDiff = await diffModels(definedModels, models, enableRename);
   const protocol = new Protocol(packages, modelDiff);
-  await protocol.convertToQueryObjects();
+  protocol.convertToQueryObjects();
 
   const statements = protocol.getSQLStatements(models);
 

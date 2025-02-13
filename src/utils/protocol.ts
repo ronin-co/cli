@@ -31,7 +31,7 @@ export class Protocol {
    *
    * @returns The Protocol instance for chaining.
    */
-  async convertToQueryObjects(): Promise<Protocol> {
+  convertToQueryObjects(): Protocol {
     this._queries = this._roninQueries.map((queryString) => {
       return this.queryToObject(queryString);
     });
@@ -166,8 +166,6 @@ export default () => [
    */
   getSQLStatements = (models: Array<Model>): Array<Statement> => {
     const { Transaction } = this._packages.compiler;
-
-    console.log('THIS', this._queries)
 
     return new Transaction(this._queries, {
       models,
