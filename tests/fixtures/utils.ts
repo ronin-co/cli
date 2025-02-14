@@ -1,6 +1,6 @@
 import { type MigrationOptions, diffModels } from '@/src/utils/migration';
 import { type LocalPackages, getLocalPackages } from '@/src/utils/misc';
-import { getModels } from '@/src/utils/model';
+import { convertModelToArrayFields, getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { type Model, type Statement, Transaction } from '@ronin/compiler';
 import { type Database, Engine } from '@ronin/engine';
@@ -89,16 +89,16 @@ export const runMigration = async (
   statements: Array<Statement>;
   modelDiff: Array<string>;
 }> => {
-  const db = await queryEphemeralDatabase(existingModels, insertStatements);
+  // We need to convert the models.fields: Object -> Array
+  const db = await queryEphemeralDatabase(existingModels.map((model) => convertModelToArrayFields(model)), insertStatements);
 
   const packages = await getLocalPackages();
   const models = await getModels(packages, db);
-
   const modelDiff = await diffModels(definedModels, models, options);
   const protocol = new Protocol(packages, modelDiff);
   await protocol.convertToQueryObjects();
 
-  const statements = protocol.getSQLStatements(models);
+  const statements = protocol.getSQLStatements(models.map((model) => convertModelToArrayFields(model)));
 
   await db.query(statements);
 

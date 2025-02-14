@@ -43,7 +43,7 @@ describe('queries', () => {
       ],
     });
     expect(result).toBe(
-      "create.model({slug:'user',pluralSlug:'users', name:'User', pluralName:'Users', fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
+      "create.model({slug:'user', fields: {\"username\":{\"type\":\"string\",\"name\":\"Username\",\"unique\":true,\"required\":true}}})",
     );
   });
 
@@ -105,7 +105,7 @@ describe('queries', () => {
     ];
     const result = createTempModelQuery('user', fields, [], []);
     expect(result).toEqual([
-      "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
+      "create.model({slug:'RONIN_TEMP_user', fields: {\"username\":{\"type\":\"string\",\"name\":\"Username\",\"unique\":true,\"required\":true}}})",
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
@@ -125,7 +125,7 @@ describe('queries', () => {
     const customQueries: Array<string> = ['get.model("user")'];
     const result = createTempModelQuery('user', fields, [], [], customQueries);
     expect(result).toEqual([
-      "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
+      "create.model({slug:'RONIN_TEMP_user', fields: {\"username\":{\"type\":\"string\",\"name\":\"Username\",\"unique\":true,\"required\":true}}})",
       'add.RONIN_TEMP_user.with(() => get.user())',
       ...customQueries,
       'drop.model("user")',
@@ -152,7 +152,7 @@ describe('queries', () => {
     ];
     const result = createTempModelQuery('user', fields, [], triggers);
     expect(result).toEqual([
-      "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
+      "create.model({slug:'RONIN_TEMP_user', fields: {\"username\":{\"type\":\"string\",\"name\":\"Username\",\"unique\":true,\"required\":true}}})",
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',

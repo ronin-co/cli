@@ -1,4 +1,5 @@
 import { RONIN_SCHEMA_TEMP_SUFFIX } from '@/src/utils/misc';
+import { convertArrayToObject } from '@/src/utils/model';
 import type { Model, ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
 
 /**
@@ -37,12 +38,14 @@ export const createModelQuery = (
 ): string => {
   if (properties) {
     const propertiesString = Object.entries(properties)
-      .filter(([_, value]) => value !== undefined)
+      .filter(([key, value]) => value !== undefined && key !== 'fields')
       .map(([key, value]) => {
         return `${key}:${serialize(value)}`;
       })
       .join(', ');
-    return `create.model({slug:'${modelSlug}',${propertiesString}})`;
+
+    const fields = convertArrayToObject(properties.fields)
+    return `create.model({slug:'${modelSlug}', fields: ${JSON.stringify(fields)}})`;
   }
   return `create.model({slug:'${modelSlug}'})`;
 };

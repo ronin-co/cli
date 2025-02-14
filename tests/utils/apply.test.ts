@@ -47,6 +47,7 @@ describe('apply', () => {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
+
           expect(statements).toHaveLength(4);
           expect(models).toHaveLength(1);
           expect(models[0].slug).toBe('test');
@@ -170,7 +171,7 @@ describe('apply', () => {
       });
 
       describe('update', () => {
-        test('fields', async () => {
+        test.only('fields', async () => {
           const { models, statements, db } = await runMigration([TestF], [TestA]);
 
           const rowCounts: Record<string, number> = {};

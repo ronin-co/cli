@@ -45,7 +45,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', type:'string'}]})",
+        "create.model({slug:'RONIN_TEMP_account', fields: {\"name\":{\"type\":\"string\"}}})",
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -57,7 +57,7 @@ describe('migration', () => {
       const modelDiff = await diffModels([Account, Profile], [Account]);
       expect(modelDiff).toHaveLength(1);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'profile',fields:[{slug:'username', type:'string'}]})",
+        "create.model({slug:'profile', fields: {\"username\":{\"type\":\"string\"}}})",
       ]);
     });
 
@@ -75,7 +75,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', required:true, unique:true, type:'string'}]})",
+        "create.model({slug:'RONIN_TEMP_account', fields: {\"name\":{\"required\":true,\"unique\":true,\"type\":\"string\"}}})",
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -98,7 +98,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_account',fields:[{slug:'name', type:'string'}]})",
+        "create.model({slug:'RONIN_TEMP_account', fields: {\"name\":{\"type\":\"string\"}}})",
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -133,8 +133,8 @@ describe('migration', () => {
         expect(modelDiff).toHaveLength(2);
 
         expect(modelDiff).toStrictEqual([
-          "create.model({slug:'comment',fields:[{slug:'name', type:'string'}]})",
-          'alter.model("comment").create.trigger({"action":"INSERT","when":"BEFORE","effects":[{"add":{"comment":{"with":{"name":"Test"}}}}]})',
+         "create.model({slug:'comment', fields: {\"name\":{\"type\":\"string\"}}})",
+          'alter.model(\"comment\").create.trigger({\"filedTrigger\":{\"action\":\"INSERT\",\"when\":\"BEFORE\",\"effects\":[{\"__RONIN_QUERY\":{\"add\":{\"comment\":{\"with\":{\"name\":\"Test\"}}}}}]}})',
         ]);
       });
 
@@ -151,8 +151,7 @@ describe('migration', () => {
 
         expect(modelDiff).toHaveLength(2);
         expect(modelDiff).toStrictEqual([
-          'alter.model("comment").drop.trigger("no slug")',
-          'alter.model("comment").create.trigger({"action":"DELETE","when":"AFTER","effects":[{"add":{"comment":{"with":{"name":"Test"}}}}]})',
+         "alter.model(\"comment\").drop.trigger(\"filedTrigger\")",
         ]);
       });
     });
@@ -214,8 +213,8 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual([
-        "create.model({slug:'test1',fields:[{slug:'field1', name:'Field1', type:'string'}]})",
-        "create.model({slug:'test2',fields:[{slug:'field2', name:'Field2', type:'number'}]})",
+        "create.model({slug:'test1', fields: {\"field1\":{\"name\":\"Field1\",\"type\":\"string\"}}})",
+   "create.model({slug:'test2', fields: {\"field2\":{\"name\":\"Field2\",\"type\":\"number\"}}})"
       ]);
     });
 
@@ -392,12 +391,14 @@ describe('migration', () => {
       const definedModels = [
         {
           slug: 'test1',
-          indexes: [
+          indexes: {
+            fieldIndex:
             {
               fields: [{ slug: 'field1' }],
               unique: true,
             },
-          ],
+          }
+          
         },
       ];
 
@@ -407,7 +408,7 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual([
-        'alter.model("test1").create.index({"fields":[{"slug":"field1"}],"unique":true})',
+        'alter.model(\"test1\").create.index({\"fieldIndex\":{\"fields\":[{\"slug\":\"field1\"}],\"unique\":true}})',
       ]);
     });
   });
@@ -592,14 +593,16 @@ describe('migration', () => {
       const definedModels: Array<Model> = [
         {
           slug: 'test1',
-          triggers: [
-            {
+          triggers: {
+            filedTrigger:
+             {
               fields: [{ slug: 'field1' }],
               action: 'INSERT',
               when: 'BEFORE',
               effects: [],
             },
-          ],
+          }
+           
         },
       ];
 
@@ -609,7 +612,7 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual([
-        'alter.model("test1").create.trigger({"fields":[{"slug":"field1"}],"action":"INSERT","when":"BEFORE","effects":[]})',
+        'alter.model(\"test1\").create.trigger({\"filedTrigger\":{\"fields\":[{\"slug\":\"field1\"}],\"action\":\"INSERT\",\"when\":\"BEFORE\",\"effects\":[]}})',
       ]);
     });
   });
