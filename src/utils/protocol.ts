@@ -49,29 +49,25 @@ export class Protocol {
    * @private
    */
   private queryToObject = (query: string): Query => {
-    const { getSyntaxProxy, getBatchProxy } = this._packages.syntax;
+    const { getSyntaxProxy } = this._packages.syntax;
 
-    const results = getBatchProxy(() => {
-      const queryTypes = [
-        'get',
-        'set',
-        'add',
-        'remove',
-        'count',
-        'create',
-        'alter',
-        'drop',
-      ];
-      const queryProxies = queryTypes.map((type) => {
-        return getSyntaxProxy({ root: `${QUERY_SYMBOLS.QUERY}.${type}` });
-      });
-
-      const func = new Function(...queryTypes, `"use strict"; return ${query}`);
-
-      return [func(...queryProxies)];
+    const queryTypes = [
+      'get',
+      'set',
+      'add',
+      'remove',
+      'count',
+      'create',
+      'alter',
+      'drop',
+    ];
+    const queryProxies = queryTypes.map((type) => {
+      return getSyntaxProxy({ root: `${QUERY_SYMBOLS.QUERY}.${type}` });
     });
 
-    return results.map(({ structure }) => structure)[0];
+    const func = new Function(...queryTypes, `"use strict"; return ${query}`);
+
+    return func(...queryProxies)[QUERY_SYMBOLS.QUERY];
   };
 
   /**
