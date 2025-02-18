@@ -64,45 +64,42 @@ export const getModels = async (
   const results = transaction.formatResults<Model>(rawResults, false);
   const models = 'records' in results[0] ? results[0].records : [];
 
-
- 
-
   const test = {
-    "name": {
-      type: "string"
+    name: {
+      type: 'string',
     },
-    "yeet": {
-      type: "string",
-      yeet: "broke"
-    }
-  }
+    yeet: {
+      type: 'string',
+      yeet: 'broke',
+    },
+  };
 
   return models.map((model) => ({
     ...model,
-    fields: convertObjectToArray(model.fields)?.filter((field) => !IGNORED_FIELDS.includes(field.slug)),
+    fields: convertObjectToArray(model.fields)?.filter(
+      (field) => !IGNORED_FIELDS.includes(field.slug),
+    ),
   }));
 };
 
-
-const convertObjectToArray = (input: any): any[] => {
+export const convertObjectToArray = (input: any): any[] => {
   return Object.entries(input).map(([key, value]) => ({ slug: key, ...value }));
-}
+};
 
 export const convertArrayToObject = (fields: any[] | undefined) => {
   if (!fields) return {};
-  
+
   return fields.reduce((obj, field) => {
     const { slug, ...rest } = field;
     obj[slug] = rest;
     return obj;
   }, {});
-}
+};
 
 export const convertModelToArrayFields = (model: Model): any => {
-  return {...model, fields: convertObjectToArray(model.fields)}
-}
+  return { ...model, fields: convertObjectToArray(model.fields) };
+};
 
 export const convertModelToObjectFields = (model: Model): any => {
-  return {...model, fields: convertArrayToObject(model.fields)}
-}
-
+  return { ...model, fields: convertArrayToObject(model.fields) };
+};

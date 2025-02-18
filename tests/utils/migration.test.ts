@@ -45,7 +45,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_account', fields: {\"name\":{\"type\":\"string\"}}})",
+        'create.model({slug:\'RONIN_TEMP_account\', fields: {"name":{"type":"string"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -57,7 +57,7 @@ describe('migration', () => {
       const modelDiff = await diffModels([Account, Profile], [Account]);
       expect(modelDiff).toHaveLength(1);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'profile', fields: {\"username\":{\"type\":\"string\"}}})",
+        'create.model({slug:\'profile\', fields: {"username":{"type":"string"}}})',
       ]);
     });
 
@@ -75,7 +75,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_account', fields: {\"name\":{\"required\":true,\"unique\":true,\"type\":\"string\"}}})",
+        'create.model({slug:\'RONIN_TEMP_account\', fields: {"name":{"required":true,"unique":true,"type":"string"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -98,7 +98,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_account', fields: {\"name\":{\"type\":\"string\"}}})",
+        'create.model({slug:\'RONIN_TEMP_account\', fields: {"name":{"type":"string"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -120,8 +120,9 @@ describe('migration', () => {
       test('handles index changes', async () => {
         const modelDiff = await diffModels([TestB], [TestA]);
 
+        console.log(modelDiff);
         expect(modelDiff).toBeDefined();
-        expect(modelDiff).toHaveLength(8);
+        expect(modelDiff).toHaveLength(7);
       });
     });
 
@@ -133,8 +134,8 @@ describe('migration', () => {
         expect(modelDiff).toHaveLength(2);
 
         expect(modelDiff).toStrictEqual([
-         "create.model({slug:'comment', fields: {\"name\":{\"type\":\"string\"}}})",
-          'alter.model(\"comment\").create.trigger({\"filedTrigger\":{\"action\":\"INSERT\",\"when\":\"BEFORE\",\"effects\":[{\"__RONIN_QUERY\":{\"add\":{\"comment\":{\"with\":{\"name\":\"Test\"}}}}}]}})',
+          'create.model({slug:\'comment\', fields: {"name":{"type":"string"}}})',
+          'alter.model("comment").create.trigger({"slug":"filedTrigger","action":"INSERT","when":"BEFORE","effects":[{"__RONIN_QUERY":{"add":{"comment":{"with":{"name":"Test"}}}}}]})',
         ]);
       });
 
@@ -151,7 +152,8 @@ describe('migration', () => {
 
         expect(modelDiff).toHaveLength(2);
         expect(modelDiff).toStrictEqual([
-         "alter.model(\"comment\").drop.trigger(\"filedTrigger\")",
+          'alter.model("comment").drop.trigger("filedTrigger")',
+          'alter.model("comment").create.trigger({"slug":"filedTrigger","action":"DELETE","when":"AFTER","effects":[{"__RONIN_QUERY":{"add":{"comment":{"with":{"name":"Test"}}}}}]})',
         ]);
       });
     });
@@ -213,8 +215,8 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual([
-        "create.model({slug:'test1', fields: {\"field1\":{\"name\":\"Field1\",\"type\":\"string\"}}})",
-   "create.model({slug:'test2', fields: {\"field2\":{\"name\":\"Field2\",\"type\":\"number\"}}})"
+        'create.model({slug:\'test1\', fields: {"field1":{"name":"Field1","type":"string"}}})',
+        'create.model({slug:\'test2\', fields: {"field2":{"name":"Field2","type":"number"}}})',
       ]);
     });
 
@@ -243,34 +245,31 @@ describe('migration', () => {
     test('adds new indexes and drops removed ones', () => {
       const definedModel = {
         slug: 'test',
-        indexes: [
-          {
+        indexes: {
+          index_1: {
             fields: [{ slug: 'field1' }],
             unique: true,
           },
-        ],
+        },
       };
 
       const existingModel = {
         slug: 'test',
-        indexes: [
-          {
+        indexes: {
+          index_1: {
             fields: [{ slug: 'field2' }],
             unique: false,
             slug: 'old_index',
           },
-        ],
+        },
       };
 
-      const queries = [
-        ...dropIndexes(definedModel, existingModel),
-        ...createIndexes(definedModel, existingModel),
-      ];
+      const queries = [...indexesToRecreate([definedModel], [existingModel])];
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual([
-        'alter.model("test").drop.index("old_index")',
-        'alter.model("test").create.index({"fields":[{"slug":"field1"}],"unique":true})',
+        'alter.model("test").drop.index("index_1")',
+        'alter.model("test").create.index({"slug":"index_1","fields":[{"slug":"field1"}],"unique":true})',
       ]);
     });
 
@@ -335,44 +334,44 @@ describe('migration', () => {
       const definedModels = [
         {
           slug: 'test1',
-          indexes: [
-            {
+          indexes: {
+            index_1: {
               fields: [{ slug: 'field1' }],
               unique: true,
             },
-          ],
+          },
         },
         {
           slug: 'test2',
-          indexes: [
-            {
+          indexes: {
+            index2: {
               fields: [{ slug: 'field2' }],
               unique: false,
             },
-          ],
+          },
         },
       ];
 
       const existingModels = [
         {
           slug: 'test1',
-          indexes: [
-            {
+          indexes: {
+            index_1: {
               fields: [{ slug: 'field1' }],
               unique: false,
               slug: 'old_index1',
             },
-          ],
+          },
         },
         {
           slug: 'test2',
-          indexes: [
-            {
+          indexes: {
+            index2: {
               fields: [{ slug: 'different' }],
               unique: false,
               slug: 'old_index2',
             },
-          ],
+          },
         },
       ];
 
@@ -380,10 +379,10 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(4);
       expect(queries).toStrictEqual([
-        'alter.model("test1").drop.index("old_index1")',
-        'alter.model("test1").create.index({"fields":[{"slug":"field1"}],"unique":true})',
-        'alter.model("test2").drop.index("old_index2")',
-        'alter.model("test2").create.index({"fields":[{"slug":"field2"}],"unique":false})',
+        'alter.model("test1").drop.index("index_1")',
+        'alter.model("test1").create.index({"slug":"index_1","fields":[{"slug":"field1"}],"unique":true})',
+        'alter.model("test2").drop.index("index2")',
+        'alter.model("test2").create.index({"slug":"index2","fields":[{"slug":"field2"}],"unique":false})',
       ]);
     });
 
@@ -392,13 +391,11 @@ describe('migration', () => {
         {
           slug: 'test1',
           indexes: {
-            fieldIndex:
-            {
+            fieldIndex: {
               fields: [{ slug: 'field1' }],
               unique: true,
             },
-          }
-          
+          },
         },
       ];
 
@@ -408,7 +405,7 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual([
-        'alter.model(\"test1\").create.index({\"fieldIndex\":{\"fields\":[{\"slug\":\"field1\"}],\"unique\":true}})',
+        'alter.model("test1").create.index({"slug":"fieldIndex","fields":[{"slug":"field1"}],"unique":true})',
       ]);
     });
   });
@@ -512,61 +509,61 @@ describe('migration', () => {
       const definedModels: Array<Model> = [
         {
           slug: 'test1',
-          triggers: [
-            {
+          triggers: {
+            trigger1: {
               fields: [{ slug: 'field1' }],
               action: 'INSERT',
               when: 'BEFORE',
               effects: [],
             },
-          ],
+          },
         },
         {
           slug: 'test2',
-          triggers: [
-            {
+          triggers: {
+            trigger2: {
               fields: [{ slug: 'field2' }],
               action: 'DELETE',
               when: 'AFTER',
               effects: [],
             },
-          ],
+          },
         },
       ];
 
       const existingModels: Array<Model> = [
         {
           slug: 'test1',
-          triggers: [
-            {
+          triggers: {
+            trigger1: {
               fields: [{ slug: 'field1' }],
               action: 'UPDATE',
               when: 'AFTER',
               effects: [],
-              slug: 'old_trigger1',
             },
-          ],
+          },
         },
         {
           slug: 'test2',
-          triggers: [
-            {
+          triggers: {
+            trigger2: {
               fields: [{ slug: 'field3' }],
               action: 'INSERT',
               when: 'BEFORE',
               effects: [],
-              slug: 'old_trigger2',
             },
-          ],
+          },
         },
       ];
 
       const queries = triggersToRecreate(definedModels, existingModels);
 
-      expect(queries).toHaveLength(2);
+      expect(queries).toHaveLength(4);
       expect(queries).toStrictEqual([
-        'alter.model("test2").drop.trigger("old_trigger2")',
-        'alter.model("test2").create.trigger({"fields":[{"slug":"field2"}],"action":"DELETE","when":"AFTER","effects":[]})',
+        'alter.model("test1").drop.trigger("trigger1")',
+        'alter.model("test1").create.trigger({"slug":"trigger1","fields":[{"slug":"field1"}],"action":"INSERT","when":"BEFORE","effects":[]})',
+        'alter.model("test2").drop.trigger("trigger2")',
+        'alter.model("test2").create.trigger({"slug":"trigger2","fields":[{"slug":"field2"}],"action":"DELETE","when":"AFTER","effects":[]})',
       ]);
     });
 
@@ -594,15 +591,13 @@ describe('migration', () => {
         {
           slug: 'test1',
           triggers: {
-            filedTrigger:
-             {
+            filedTrigger: {
               fields: [{ slug: 'field1' }],
               action: 'INSERT',
               when: 'BEFORE',
               effects: [],
             },
-          }
-           
+          },
         },
       ];
 
@@ -612,7 +607,7 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual([
-        'alter.model(\"test1\").create.trigger({\"filedTrigger\":{\"fields\":[{\"slug\":\"field1\"}],\"action\":\"INSERT\",\"when\":\"BEFORE\",\"effects\":[]}})',
+        'alter.model("test1").create.trigger({"slug":"filedTrigger","fields":[{"slug":"field1"}],"action":"INSERT","when":"BEFORE","effects":[]})',
       ]);
     });
   });

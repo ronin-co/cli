@@ -249,8 +249,7 @@ export const TestD = model({
     name: string(),
   },
   triggers: {
-    filedTrigger:
-    {
+    filedTrigger: {
       action: 'INSERT',
       when: 'BEFORE',
       // @ts-expect-error Fix in models
@@ -265,8 +264,7 @@ export const TestE = model({
     name: string(),
   },
   triggers: {
-    filedTrigger:
-    {
+    filedTrigger: {
       action: 'DELETE',
       when: 'AFTER',
       // @ts-expect-error Fix in models

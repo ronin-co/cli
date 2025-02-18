@@ -33,6 +33,7 @@ export class Protocol {
    */
   async convertToQueryObjects(): Promise<Protocol> {
     this._queries = this._roninQueries.map((queryString) => {
+      console.log(queryString);
       return this.queryToObject(queryString)();
     });
 
@@ -47,7 +48,7 @@ export class Protocol {
    * @returns Object containing the Query and options.
    * @private
    */
-  private queryToObject = (query: string): Query => {
+  private queryToObject = (query: string): (() => Query) => {
     const { getSyntaxProxy } = this._packages.syntax;
     const queryTypes = [
       'get',
@@ -59,12 +60,11 @@ export class Protocol {
       'alter',
       'drop',
     ];
-    const queryProxies = queryTypes.map((type) =>
-      getSyntaxProxy({ root: type as 'drop' }),
-    );
+    const queryProxies = queryTypes.map((type) => getSyntaxProxy({ root: type }));
 
     const func = new Function(...queryTypes, `"use strict"; return ${query}`);
 
+    console.log(func(...queryProxies).structure);
     return func(...queryProxies).structure;
   };
 
@@ -167,7 +167,6 @@ export default () => [
   getSQLStatements = (models: Array<Model>): Array<Statement> => {
     const { Transaction } = this._packages.compiler;
 
-    console.log(JSON.stringify(this._queries, null, 2));
     return new Transaction(this._queries, {
       models,
       inlineParams: true,

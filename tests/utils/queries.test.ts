@@ -43,7 +43,7 @@ describe('queries', () => {
       ],
     });
     expect(result).toBe(
-      "create.model({slug:'user', fields: {\"username\":{\"type\":\"string\",\"name\":\"Username\",\"unique\":true,\"required\":true}}})",
+      'create.model({slug:\'user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
     );
   });
 
@@ -105,7 +105,7 @@ describe('queries', () => {
     ];
     const result = createTempModelQuery('user', fields, [], []);
     expect(result).toEqual([
-      "create.model({slug:'RONIN_TEMP_user', fields: {\"username\":{\"type\":\"string\",\"name\":\"Username\",\"unique\":true,\"required\":true}}})",
+      'create.model({slug:\'RONIN_TEMP_user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
@@ -125,7 +125,7 @@ describe('queries', () => {
     const customQueries: Array<string> = ['get.model("user")'];
     const result = createTempModelQuery('user', fields, [], [], customQueries);
     expect(result).toEqual([
-      "create.model({slug:'RONIN_TEMP_user', fields: {\"username\":{\"type\":\"string\",\"name\":\"Username\",\"unique\":true,\"required\":true}}})",
+      'create.model({slug:\'RONIN_TEMP_user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       ...customQueries,
       'drop.model("user")',
@@ -143,20 +143,21 @@ describe('queries', () => {
         required: true,
       },
     ];
-    const triggers: Array<ModelTrigger> = [
-      {
+    const triggers: ModelTrigger = {
+      test: {
         action: 'INSERT',
         when: 'BEFORE',
         effects: [],
       },
-    ];
+    };
+
     const result = createTempModelQuery('user', fields, [], triggers);
     expect(result).toEqual([
-      "create.model({slug:'RONIN_TEMP_user', fields: {\"username\":{\"type\":\"string\",\"name\":\"Username\",\"unique\":true,\"required\":true}}})",
+      'create.model({slug:\'RONIN_TEMP_user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
-      'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[]})',
+      'alter.model("user").create.trigger({"slug":"test","action":"INSERT","when":"BEFORE","effects":[]})',
     ]);
   });
 
@@ -190,12 +191,14 @@ describe('queries', () => {
 
   test('add index query', () => {
     const result = createIndexQuery('user', {
-      fields: [{ slug: 'email' }],
-      unique: true,
+      test: {
+        fields: [{ slug: 'email' }],
+        unique: true,
+      },
     });
 
     expect(result).toBe(
-      'alter.model("user").create.index({"fields":[{"slug":"email"}],"unique":true})',
+      'alter.model("user").create.index({"slug":"test","fields":[{"slug":"email"}],"unique":true})',
     );
   });
 

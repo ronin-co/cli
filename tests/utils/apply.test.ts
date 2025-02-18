@@ -171,7 +171,7 @@ describe('apply', () => {
       });
 
       describe('update', () => {
-        test.only('fields', async () => {
+        test('fields', async () => {
           const { models, statements, db } = await runMigration([TestF], [TestA]);
 
           const rowCounts: Record<string, number> = {};
@@ -263,7 +263,7 @@ describe('apply', () => {
           });
         });
 
-        test('add unique field', async () => {
+        test.only('add unique field', async () => {
           const { models, db } = await runMigration([TestG], [TestN], {
             requiredDefault: 'RONIN_TEST_VALUE',
           });
@@ -727,7 +727,7 @@ describe('apply', () => {
 
       describe('drop', () => {
         test('simple', async () => {
-          const { models, db } = await runMigration([TestA], []);
+          const { models, db } = await runMigration([], [TestA]);
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -735,10 +735,7 @@ describe('apply', () => {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
-          expect(models).toHaveLength(1);
-          expect(rowCounts).toEqual({
-            tests: 0,
-          });
+          expect(models).toHaveLength(0);
         });
       });
     });

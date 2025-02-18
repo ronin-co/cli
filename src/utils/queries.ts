@@ -1,5 +1,5 @@
 import { RONIN_SCHEMA_TEMP_SUFFIX } from '@/src/utils/misc';
-import { convertArrayToObject } from '@/src/utils/model';
+import { convertArrayToObject, convertObjectToArray } from '@/src/utils/model';
 import type { Model, ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
 
 /**
@@ -44,7 +44,7 @@ export const createModelQuery = (
       })
       .join(', ');
 
-    const fields = convertArrayToObject(properties.fields)
+    const fields = convertArrayToObject(properties.fields);
     return `create.model({slug:'${modelSlug}', fields: ${JSON.stringify(fields)}})`;
   }
   return `create.model({slug:'${modelSlug}'})`;
@@ -280,7 +280,7 @@ export const renameFieldQuery = (modelSlug: string, from: string, to: string): s
  * @returns A string representing the query.
  */
 export const createTriggerQuery = (modelSlug: string, trigger: ModelTrigger): string => {
-  return `alter.model("${modelSlug}").create.trigger(${JSON.stringify(trigger)})`;
+  return `alter.model("${modelSlug}").create.trigger(${JSON.stringify(convertObjectToArray(trigger)[0])})`;
 };
 
 /**
@@ -316,5 +316,5 @@ export const dropIndexQuery = (modelSlug: string, indexSlug: string): string => 
  * @returns A string representing the query.
  */
 export const createIndexQuery = (modelSlug: string, index: ModelIndex): string => {
-  return `alter.model("${modelSlug}").create.index(${JSON.stringify(index)})`;
+  return `alter.model("${modelSlug}").create.index(${JSON.stringify(convertObjectToArray(index)[0])})`;
 };

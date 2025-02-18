@@ -13,8 +13,8 @@ import {
 } from '@/src/utils/misc';
 
 import { Account, CONSTANTS, TestA, TestB } from '@/fixtures/index';
-import type { Model } from '@ronin/compiler';
 import { convertModelToArrayFields } from '@/src/utils/model';
+import type { Model } from '@ronin/compiler';
 
 describe('misc', () => {
   describe('log data table', () => {
@@ -148,11 +148,13 @@ describe('misc', () => {
 
     test('should return models in code definitions - one model', async () => {
       mock.module('@/src/utils/misc', () => {
-        return { getModelDefinitions: (): Array<Model> => [convertModelToArrayFields(Account)] };
+        return {
+          getModelDefinitions: (): Array<Model> => [convertModelToArrayFields(Account)],
+        };
       });
 
       const models = await getModelDefinitions();
-      console.log("yeet",models)
+
       expect(models).toEqual([
         {
           slug: 'account',

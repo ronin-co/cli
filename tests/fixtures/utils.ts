@@ -49,6 +49,17 @@ export const prefillDatabase = async (
 
   const rootModelTransaction = new Transaction([{ create: { model: ROOT_MODEL } }]);
 
+  /*   console.log(JSON.stringify(models, null, 2));
+  for (model in models) {
+    for (const key of Object.keys(model)) {
+      try {
+        structuredClone(model[key]);
+      } catch (err) {
+        console.error(`Failed to clone key: ${key}`, err);
+      }
+    }
+  } */
+  console.log(JSON.stringify(models, null, 2));
   const modelTransaction = new Transaction(
     models.map((model) => ({ create: { model } })),
   );
@@ -90,7 +101,7 @@ export const runMigration = async (
   modelDiff: Array<string>;
 }> => {
   // We need to convert the models.fields: Object -> Array
-  const db = await queryEphemeralDatabase(existingModels.map((model) => convertModelToArrayFields(model)), insertStatements);
+  const db = await queryEphemeralDatabase(existingModels, insertStatements);
 
   const packages = await getLocalPackages();
   const models = await getModels(packages, db);
@@ -98,7 +109,9 @@ export const runMigration = async (
   const protocol = new Protocol(packages, modelDiff);
   await protocol.convertToQueryObjects();
 
-  const statements = protocol.getSQLStatements(models.map((model) => convertModelToArrayFields(model)));
+  const statements = protocol.getSQLStatements(
+    models.map((model) => convertModelToArrayFields(model)),
+  );
 
   await db.query(statements);
 

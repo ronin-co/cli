@@ -1,6 +1,7 @@
 import type { parseArgs } from 'node:util';
 import { diffFields, fieldsToAdjust } from '@/src/utils/field';
 import { type BaseFlags, areArraysEqual } from '@/src/utils/misc';
+import { convertModelToArrayFields } from '@/src/utils/model';
 import {
   createIndexQuery,
   createModelQuery,
@@ -11,8 +12,7 @@ import {
   renameModelQuery,
 } from '@/src/utils/queries';
 import { confirm } from '@inquirer/prompts';
-import type { Model } from '@ronin/compiler';
-import { convertModelToArrayFields } from '@/src/utils/model';
+import type { Model, ModelTrigger } from '@ronin/compiler';
 
 /**
  * Options for migration operations.
@@ -51,8 +51,12 @@ export const diffModels = async (
   existingModelsWithFieldObject: Array<Model>,
   options?: MigrationOptions,
 ): Promise<Array<string>> => {
-  const definedModels = definedModelsWithFieldObject.map(model => convertModelToArrayFields(model))
-  const existingModels = existingModelsWithFieldObject.map(model => convertModelToArrayFields(model))
+  const definedModels = definedModelsWithFieldObject.map((model) =>
+    convertModelToArrayFields(model),
+  );
+  const existingModels = existingModelsWithFieldObject.map((model) =>
+    convertModelToArrayFields(model),
+  );
 
   const diff: Array<string> = [];
 
@@ -291,12 +295,38 @@ export const triggersToRecreate = (
       existingModel || ({} as Model),
     );
 
-    diff.push(
-      ...(modelRecreated
-        ? []
-        : dropTriggers(definedModel, existingModel || ({} as Model))),
-      ...createTriggers(definedModel, existingModel || ({} as Model)),
-    );
+    // find triggers with the same slug and if they have different properties we need to drop and create
+    const needRecreation = Object.entries(definedModel.triggers || {}).reduce<
+      Array<string>
+    >((acc, [slug, trigger]) => {
+      const existingTrigger = existingModel?.triggers?.[slug];
+      if (
+        existingTrigger &&
+        !(JSON.stringify(trigger) === JSON.stringify(existingTrigger))
+      ) {
+        const createTrigger = createTriggerQuery(definedModel.slug, {
+          [slug]: {
+            ...trigger,
+          },
+        });
+        const dropTrigger = dropTriggerQuery(definedModel.slug, slug);
+        acc.push(dropTrigger);
+        acc.push(createTrigger);
+        return acc;
+      }
+      if (definedModel.triggers?.[slug] && !existingModel?.triggers?.[slug]) {
+        acc.push(
+          createTriggerQuery(definedModel.slug, {
+            [slug]: {
+              ...trigger,
+            },
+          }),
+        );
+      }
+      return acc;
+    }, []);
+
+    diff.push(...(modelRecreated ? [] : needRecreation));
   }
 
   return diff;
@@ -318,7 +348,9 @@ export const dropTriggers = (
   const definedTriggerKeys = Object.keys(definedModel.triggers || {});
   const existingTriggerKeys = Object.keys(existingModel.triggers || {});
 
-  const triggersToDrop = existingTriggerKeys.filter(key => !definedTriggerKeys.includes(key));
+  const triggersToDrop = existingTriggerKeys.filter(
+    (key) => !definedTriggerKeys.includes(key),
+  );
 
   for (const trigger of triggersToDrop) {
     diff.push(dropTriggerQuery(definedModel.slug, trigger));
@@ -343,10 +375,16 @@ export const createTriggers = (
   const definedTriggerKeys = Object.keys(definedModel.triggers || {});
   const existingTriggerKeys = Object.keys(existingModel.triggers || {});
 
-  const triggersToAdd = definedTriggerKeys.filter(key => !existingTriggerKeys.includes(key));
+  const triggersToAdd = definedTriggerKeys.filter(
+    (key) => !existingTriggerKeys.includes(key),
+  );
 
   for (const trigger of triggersToAdd) {
-    diff.push(createTriggerQuery(definedModel.slug, { [trigger]: definedModel.triggers[trigger] }));
+    diff.push(
+      createTriggerQuery(definedModel.slug, {
+        [trigger]: definedModel.triggers[trigger],
+      }),
+    );
   }
 
   return diff;
@@ -392,13 +430,37 @@ export const indexesToRecreate = (
       existingModel || ({} as Model),
     );
 
-    diff.push(
-      ...(modelRecreated
-        ? []
-        : dropIndexes(definedModel, existingModel || ({} as Model))),
-      ...createIndexes(definedModel, existingModel || ({} as Model)),
-    );
+    // find indexes with the same slug and if they have different properties we need to drop and create
+    const needRecreation = Object.entries(definedModel.indexes || {}).reduce<
+      Array<string>
+    >((acc, [slug, index]) => {
+      const existingIndex = existingModel?.indexes?.[slug];
+      if (existingIndex && !(JSON.stringify(index) === JSON.stringify(existingIndex))) {
+        const createIndex = createIndexQuery(definedModel.slug, {
+          [slug]: {
+            ...index,
+          },
+        });
+        const dropIndex = dropIndexQuery(definedModel.slug, slug);
+        acc.push(dropIndex);
+        acc.push(createIndex);
+        return acc;
+      }
+      if (definedModel.indexes?.[slug] && !existingModel?.indexes?.[slug]) {
+        acc.push(
+          createIndexQuery(definedModel.slug, {
+            [slug]: {
+              ...index,
+            },
+          }),
+        );
+      }
+      return acc;
+    }, []);
+
+    diff.push(...(modelRecreated ? [] : needRecreation));
   }
+
   return diff;
 };
 
@@ -415,8 +477,10 @@ export const dropIndexes = (definedModel: Model, existingModel: Model): Array<st
   const definedIndexKeys = Object.keys(definedModel.indexes || {});
   const existingIndexKeys = Object.keys(existingModel.indexes || {});
 
-  const indexesToDrop = existingIndexKeys.filter(key => !definedIndexKeys.includes(key))
- 
+  const indexesToDrop = existingIndexKeys.filter(
+    (key) => !definedIndexKeys.includes(key),
+  );
+
   for (const index of indexesToDrop) {
     diff.push(dropIndexQuery(definedModel.slug, index));
   }
@@ -440,10 +504,12 @@ export const createIndexes = (
   const definedIndexKeys = Object.keys(definedModel.indexes || {});
   const existingIndexKeys = Object.keys(existingModel.indexes || {});
 
-  const indexesToAdd = definedIndexKeys.filter(key => !existingIndexKeys.includes(key))
+  const indexesToAdd = definedIndexKeys.filter((key) => !existingIndexKeys.includes(key));
 
   for (const index of indexesToAdd) {
-    diff.push(createIndexQuery(definedModel.slug, { [index]: definedModel.indexes[index] }));
+    diff.push(
+      createIndexQuery(definedModel.slug, { [index]: definedModel.indexes[index] }),
+    );
   }
 
   return diff;
