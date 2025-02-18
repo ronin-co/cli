@@ -12,7 +12,7 @@ import {
   renameModelQuery,
 } from '@/src/utils/queries';
 import { confirm } from '@inquirer/prompts';
-import type { Model, ModelTrigger } from '@ronin/compiler';
+import type { Model } from '@ronin/compiler';
 
 /**
  * Options for migration operations.

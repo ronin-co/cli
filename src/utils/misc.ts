@@ -204,7 +204,7 @@ export const getModelDefinitions = async (customPath?: string): Promise<Array<Mo
     saveConfig({ modelsDir: definedPath });
   }
 
-  console.log("halo")
+  console.log('halo');
 
   const sortedModels = sortModels(
     Object.values(await import(definedPath ?? customPath ?? MODEL_IN_CODE_PATH)).filter(
@@ -213,7 +213,7 @@ export const getModelDefinitions = async (customPath?: string): Promise<Array<Mo
     ) as Array<Model>,
   );
 
-  console.log("sorted",sortedModels)
+  console.log('sorted', sortedModels);
 
   // Check for duplicate model slugs
   const slugCounts = new Map<string, number>();

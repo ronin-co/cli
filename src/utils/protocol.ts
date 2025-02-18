@@ -3,7 +3,7 @@ import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
 import { MIGRATIONS_PATH } from '@/src/utils/misc';
 import type { LocalPackages } from '@/src/utils/misc';
-import type { Model, Query, Statement } from '@ronin/compiler';
+import { type Model, QUERY_SYMBOLS, type Query, type Statement } from '@ronin/compiler';
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.
@@ -33,8 +33,7 @@ export class Protocol {
    */
   async convertToQueryObjects(): Promise<Protocol> {
     this._queries = this._roninQueries.map((queryString) => {
-      console.log(queryString);
-      return this.queryToObject(queryString)();
+      return this.queryToObject(queryString);
     });
 
     return this;
@@ -46,26 +45,33 @@ export class Protocol {
    * @param query - RONIN query string.
    *
    * @returns Object containing the Query and options.
+   *
    * @private
    */
-  private queryToObject = (query: string): (() => Query) => {
-    const { getSyntaxProxy } = this._packages.syntax;
-    const queryTypes = [
-      'get',
-      'set',
-      'add',
-      'remove',
-      'count',
-      'create',
-      'alter',
-      'drop',
-    ];
-    const queryProxies = queryTypes.map((type) => getSyntaxProxy({ root: type }));
+  private queryToObject = (query: string): Query => {
+    const { getSyntaxProxy, getBatchProxy } = this._packages.syntax;
 
-    const func = new Function(...queryTypes, `"use strict"; return ${query}`);
+    const results = getBatchProxy(() => {
+      const queryTypes = [
+        'get',
+        'set',
+        'add',
+        'remove',
+        'count',
+        'create',
+        'alter',
+        'drop',
+      ];
+      const queryProxies = queryTypes.map((type) => {
+        return getSyntaxProxy({ root: `${QUERY_SYMBOLS.QUERY}.${type}` });
+      });
 
-    console.log(func(...queryProxies).structure);
-    return func(...queryProxies).structure;
+      const func = new Function(...queryTypes, `"use strict"; return ${query}`);
+
+      return [func(...queryProxies)];
+    });
+
+    return results.map(({ structure }) => structure)[0];
   };
 
   /**
