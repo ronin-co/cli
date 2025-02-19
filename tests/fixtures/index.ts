@@ -268,7 +268,7 @@ export const TestE = model({
       action: 'DELETE',
       when: 'AFTER',
       // @ts-expect-error Fix in models
-      effects: (): Array<Effect> => [add.comment.with({ name: 'Test' })],
+      effects: () => [add.comment.with({ name: 'Test' })],
     },
   },
 }) as unknown as Model;

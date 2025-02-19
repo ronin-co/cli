@@ -14,7 +14,7 @@ import {
   renameModelQuery,
   setFieldQuery,
 } from '@/src/utils/queries';
-import type { ModelField, ModelTrigger } from '@ronin/compiler';
+import type { ModelField } from '@ronin/compiler';
 
 describe('queries', () => {
   test('drop model query', () => {
@@ -32,15 +32,14 @@ describe('queries', () => {
       pluralSlug: 'users',
       name: 'User',
       pluralName: 'Users',
-      fields: [
-        {
-          slug: 'username',
+      fields: {
+        username: {
           type: 'string',
           name: 'Username',
           unique: true,
           required: true,
         },
-      ],
+      },
     });
     expect(result).toBe(
       'create.model({slug:\'user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
@@ -143,7 +142,7 @@ describe('queries', () => {
         required: true,
       },
     ];
-    const triggers: ModelTrigger = {
+    const triggers = {
       test: {
         action: 'INSERT',
         when: 'BEFORE',
@@ -157,7 +156,7 @@ describe('queries', () => {
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
-      'alter.model("user").create.trigger({"slug":"test","action":"INSERT","when":"BEFORE","effects":[]})',
+      'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[],"slug":"test"})',
     ]);
   });
 
@@ -175,12 +174,13 @@ describe('queries', () => {
 
   test('add trigger query', () => {
     const result = createTriggerQuery('user', {
+      slug: 'validateEmail',
       action: 'INSERT',
       when: 'BEFORE',
       effects: [],
     });
     expect(result).toBe(
-      'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[]})',
+      'alter.model("user").create.trigger({"slug":"validateEmail","action":"INSERT","when":"BEFORE","effects":[]})',
     );
   });
 
@@ -191,10 +191,9 @@ describe('queries', () => {
 
   test('add index query', () => {
     const result = createIndexQuery('user', {
-      test: {
-        fields: [{ slug: 'email' }],
-        unique: true,
-      },
+      slug: 'test',
+      fields: [{ slug: 'email' }],
+      unique: true,
     });
 
     expect(result).toBe(

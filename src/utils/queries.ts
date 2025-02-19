@@ -37,13 +37,6 @@ export const createModelQuery = (
   properties?: Partial<Model>,
 ): string => {
   if (properties) {
-    const propertiesString = Object.entries(properties)
-      .filter(([key, value]) => value !== undefined && key !== 'fields')
-      .map(([key, value]) => {
-        return `${key}:${serialize(value)}`;
-      })
-      .join(', ');
-
     const fields = convertArrayToObject(properties.fields);
     return `create.model({slug:'${modelSlug}', fields: ${JSON.stringify(fields)}})`;
   }
@@ -162,8 +155,8 @@ export const createTempModelQuery = (
   // Rename the copied model to the original model
   queries.push(`alter.model("${tempModelSlug}").to({slug: "${modelSlug}"})`);
 
-  for (const trigger of triggers) {
-    queries.push(createTriggerQuery(modelSlug, trigger));
+  for (const [key, value] of Object.entries(triggers)) {
+    queries.push(createTriggerQuery(modelSlug, { ...value, slug: key }));
   }
 
   return queries;
@@ -280,7 +273,7 @@ export const renameFieldQuery = (modelSlug: string, from: string, to: string): s
  * @returns A string representing the query.
  */
 export const createTriggerQuery = (modelSlug: string, trigger: ModelTrigger): string => {
-  return `alter.model("${modelSlug}").create.trigger(${JSON.stringify(convertObjectToArray(trigger)[0])})`;
+  return `alter.model("${modelSlug}").create.trigger(${JSON.stringify(trigger)})`;
 };
 
 /**
@@ -316,5 +309,5 @@ export const dropIndexQuery = (modelSlug: string, indexSlug: string): string => 
  * @returns A string representing the query.
  */
 export const createIndexQuery = (modelSlug: string, index: ModelIndex): string => {
-  return `alter.model("${modelSlug}").create.index(${JSON.stringify(convertObjectToArray(index)[0])})`;
+  return `alter.model("${modelSlug}").create.index(${JSON.stringify(index)})`;
 };

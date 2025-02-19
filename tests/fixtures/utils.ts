@@ -1,6 +1,6 @@
 import { type MigrationOptions, diffModels } from '@/src/utils/migration';
 import { type LocalPackages, getLocalPackages } from '@/src/utils/misc';
-import { convertModelToArrayFields, getModels } from '@/src/utils/model';
+import { convertModelToObjectFields, getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { type Model, type Statement, Transaction } from '@ronin/compiler';
 import { type Database, Engine } from '@ronin/engine';
@@ -49,17 +49,6 @@ export const prefillDatabase = async (
 
   const rootModelTransaction = new Transaction([{ create: { model: ROOT_MODEL } }]);
 
-  /*   console.log(JSON.stringify(models, null, 2));
-  for (model in models) {
-    for (const key of Object.keys(model)) {
-      try {
-        structuredClone(model[key]);
-      } catch (err) {
-        console.error(`Failed to clone key: ${key}`, err);
-      }
-    }
-  } */
-  console.log(JSON.stringify(models, null, 2));
   const modelTransaction = new Transaction(
     models.map((model) => ({ create: { model } })),
   );
@@ -106,11 +95,12 @@ export const runMigration = async (
   const packages = await getLocalPackages();
   const models = await getModels(packages, db);
   const modelDiff = await diffModels(definedModels, models, options);
+
   const protocol = new Protocol(packages, modelDiff);
   await protocol.convertToQueryObjects();
 
   const statements = protocol.getSQLStatements(
-    models.map((model) => convertModelToArrayFields(model)),
+    models.map((model) => convertModelToObjectFields(model)),
   );
 
   await db.query(statements);

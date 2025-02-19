@@ -67,11 +67,21 @@ describe('misc', () => {
       const consoleTableSpy = spyOn(console, 'table');
       const objA: Model = {
         slug: 'test',
-        fields: [{ slug: 'name', name: 'Test', type: 'string' }],
+        fields: {
+          name: {
+            name: 'Test',
+            type: 'string',
+          },
+        },
       };
       const objB: Model = {
         slug: 'test',
-        fields: [{ slug: 'name', name: 'Test', type: 'string' }],
+        fields: {
+          name: {
+            name: 'Test',
+            type: 'string',
+          },
+        },
       };
 
       logTableDiff(objA, objB, 'Identical Objects');

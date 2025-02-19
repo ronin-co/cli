@@ -263,7 +263,7 @@ describe('apply', () => {
           });
         });
 
-        test.only('add unique field', async () => {
+        test('add unique field', async () => {
           const { models, db } = await runMigration([TestG], [TestN], {
             requiredDefault: 'RONIN_TEST_VALUE',
           });
@@ -335,6 +335,7 @@ describe('apply', () => {
             }
           }
           expect(models).toHaveLength(1);
+          console.log(models[0]?.fields);
           // @ts-expect-error This is defined!
           expect(models[0]?.fields[1]?.type).toBe('json');
           expect(rowCounts).toEqual({
@@ -510,9 +511,7 @@ describe('apply', () => {
           expect(rowCounts).toEqual({
             accounts: 1,
           });
-          // TODO: This is not correct. This will be changed in another PR when we bump
-          // to the latest ronin version.
-          expect(rows[0].email).toBe('true');
+          expect(rows[0].email).toBe(1);
         });
       });
 
@@ -571,8 +570,7 @@ describe('apply', () => {
             }
           }
           expect(models).toHaveLength(2);
-          // @ts-expect-error This is defined!
-          expect(models[1]?.fields[0]?.actions?.onDelete).toBe('CASCADE');
+          expect(models[1]?.fields.test?.actions?.onDelete).toBe('CASCADE');
           expect(rowCounts).toEqual({
             comments: 0,
             tests: 0,
@@ -696,8 +694,8 @@ describe('apply', () => {
             }
           }
           expect(models).toHaveLength(1);
-          expect(models[0]?.triggers?.[0]?.action).toBe('DELETE');
-          expect(models[0]?.triggers?.[0]?.when).toBe('AFTER');
+          expect(models[0]?.triggers?.filedTrigger?.action).toBe('DELETE');
+          expect(models[0]?.triggers?.filedTrigger?.when).toBe('AFTER');
           expect(rowCounts).toEqual({
             comments: 0,
           });

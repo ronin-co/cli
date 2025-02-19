@@ -120,7 +120,6 @@ describe('migration', () => {
       test('handles index changes', async () => {
         const modelDiff = await diffModels([TestB], [TestA]);
 
-        console.log(modelDiff);
         expect(modelDiff).toBeDefined();
         expect(modelDiff).toHaveLength(7);
       });
@@ -164,11 +163,9 @@ describe('migration', () => {
       const models = [
         {
           slug: 'test1',
-          fields: [],
         },
         {
           slug: 'test2',
-          fields: [],
         },
       ];
 

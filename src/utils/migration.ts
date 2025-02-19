@@ -162,6 +162,7 @@ export const createModels = (models: Array<Model>): Array<string> => {
   const diff: Array<string> = [];
 
   for (const model of models) {
+    // TODO: Simplify this - only pass the model object.
     diff.push(
       createModelQuery(model.slug, model.fields ? { fields: model.fields } : undefined),
     );
@@ -305,9 +306,8 @@ export const triggersToRecreate = (
         !(JSON.stringify(trigger) === JSON.stringify(existingTrigger))
       ) {
         const createTrigger = createTriggerQuery(definedModel.slug, {
-          [slug]: {
-            ...trigger,
-          },
+          slug,
+          ...trigger,
         });
         const dropTrigger = dropTriggerQuery(definedModel.slug, slug);
         acc.push(dropTrigger);
@@ -317,9 +317,8 @@ export const triggersToRecreate = (
       if (definedModel.triggers?.[slug] && !existingModel?.triggers?.[slug]) {
         acc.push(
           createTriggerQuery(definedModel.slug, {
-            [slug]: {
-              ...trigger,
-            },
+            slug,
+            ...trigger,
           }),
         );
       }
@@ -382,7 +381,8 @@ export const createTriggers = (
   for (const trigger of triggersToAdd) {
     diff.push(
       createTriggerQuery(definedModel.slug, {
-        [trigger]: definedModel.triggers[trigger],
+        slug: trigger,
+        ...definedModel.triggers[trigger],
       }),
     );
   }
@@ -437,9 +437,8 @@ export const indexesToRecreate = (
       const existingIndex = existingModel?.indexes?.[slug];
       if (existingIndex && !(JSON.stringify(index) === JSON.stringify(existingIndex))) {
         const createIndex = createIndexQuery(definedModel.slug, {
-          [slug]: {
-            ...index,
-          },
+          slug,
+          ...index,
         });
         const dropIndex = dropIndexQuery(definedModel.slug, slug);
         acc.push(dropIndex);
@@ -449,9 +448,8 @@ export const indexesToRecreate = (
       if (definedModel.indexes?.[slug] && !existingModel?.indexes?.[slug]) {
         acc.push(
           createIndexQuery(definedModel.slug, {
-            [slug]: {
-              ...index,
-            },
+            slug,
+            ...index,
           }),
         );
       }
@@ -508,7 +506,10 @@ export const createIndexes = (
 
   for (const index of indexesToAdd) {
     diff.push(
-      createIndexQuery(definedModel.slug, { [index]: definedModel.indexes[index] }),
+      createIndexQuery(definedModel.slug, {
+        slug: index,
+        ...definedModel.indexes[index],
+      }),
     );
   }
 
