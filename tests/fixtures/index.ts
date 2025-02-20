@@ -17,6 +17,7 @@ const TestAccount = model({
 
   presets: {
     over18: {
+      // @ts-expect-error This will work once the types are fixed.
       with: {
         age: {
           being: {
@@ -38,6 +39,7 @@ const TestAccount2 = model({
 
   presets: {
     over18: {
+      // @ts-expect-error This will work once the types are fixed.
       with: {
         age: {
           being: {
@@ -84,12 +86,12 @@ const TestBlog = model({
     hero: blob(),
   },
 
-  indexes: [
-    {
+  indexes: {
+    uniqueAuthorNameIndex: {
       fields: [{ slug: 'author' }, { slug: 'name' }],
       unique: true,
     },
-  ],
+  },
 }) as unknown as Model;
 
 const TestBlog2 = model({
@@ -101,12 +103,12 @@ const TestBlog2 = model({
     hero: blob(),
   },
 
-  indexes: [
-    {
+  indexes: {
+    uniqueAuthorNewNameIndex: {
       fields: [{ slug: 'authorNew' }, { slug: 'name' }],
       unique: true,
     },
-  ],
+  },
 }) as unknown as Model;
 
 const TestComments = model({
@@ -204,7 +206,12 @@ export const TestA = model({
     age: string({ required: true, unique: true }),
     active: boolean(),
   },
-  indexes: [{ fields: [{ slug: 'age' }], unique: true }],
+  indexes: {
+    uniqueAgeIndex: {
+      fields: [{ slug: 'age' }],
+      unique: true,
+    },
+  },
 }) as unknown as Model;
 
 export const TestB = model({
@@ -212,9 +219,14 @@ export const TestB = model({
   fields: {
     name: string(),
     age: number({ defaultValue: 18 }),
-    createdAt: date({ defaultValue: '02-02-2024' }),
+    createdAt: date({ defaultValue: new Date('02-02-2024') }),
   },
-  indexes: [{ fields: [{ slug: 'age' }, { slug: 'name' }], unique: true }],
+  indexes: {
+    uniqueAgeNameIndex: {
+      fields: [{ slug: 'age' }, { slug: 'name' }],
+      unique: true,
+    },
+  },
 }) as unknown as Model;
 
 export const TestC = model({
@@ -225,7 +237,12 @@ export const TestC = model({
     age: string({ required: true, unique: true }),
     active: boolean(),
   },
-  indexes: [{ fields: [{ slug: 'age' }], unique: true }],
+  indexes: {
+    uniqueAgeIndex: {
+      fields: [{ slug: 'age' }],
+      unique: true,
+    },
+  },
 }) as unknown as Model;
 
 export const TestD = model({
@@ -233,14 +250,14 @@ export const TestD = model({
   fields: {
     name: string(),
   },
-  triggers: [
-    {
+  triggers: {
+    filedTrigger: {
       action: 'INSERT',
       when: 'BEFORE',
       // @ts-expect-error Fix in models
       effects: (): Array<Effect> => [add.comment.with({ name: 'Test' })],
     },
-  ],
+  },
 }) as unknown as Model;
 
 export const TestE = model({
@@ -248,14 +265,14 @@ export const TestE = model({
   fields: {
     name: string(),
   },
-  triggers: [
-    {
+  triggers: {
+    filedTrigger: {
       action: 'DELETE',
       when: 'AFTER',
       // @ts-expect-error Fix in models
-      effects: (): Array<Effect> => [add.comment.with({ name: 'Test' })],
+      effects: () => [add.comment.with({ name: 'Test' })],
     },
-  ],
+  },
 }) as unknown as Model;
 
 export const TestF = model({
@@ -264,7 +281,12 @@ export const TestF = model({
     age: string({ required: false, unique: false }),
     active: boolean(),
   },
-  indexes: [{ fields: [{ slug: 'age' }], unique: true }],
+  indexes: {
+    uniqueAgeIndex: {
+      fields: [{ slug: 'age' }],
+      unique: true,
+    },
+  },
 }) as unknown as Model;
 
 export const TestG = model({
@@ -355,6 +377,7 @@ export const TestQ = model({
   slug: 'many',
   fields: {
     name: string(),
+    // @ts-expect-error This will work once the types are fixed.
     test: link({ target: 'test', kind: 'many', actions: { onDelete: 'CASCADE' } }),
   },
 }) as unknown as Model;
@@ -366,6 +389,7 @@ export const TestR = model({
     test: link({
       target: 'test',
       kind: 'many',
+      // @ts-expect-error This will work once the types are fixed.
       actions: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
     }),
   },
@@ -378,6 +402,7 @@ export const TestS = model({
     test: link({
       target: 'test',
       kind: 'many',
+      // @ts-expect-error This will work once the types are fixed.
       actions: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
     }),
     email: string(),

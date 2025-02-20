@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { parseArgs } from 'node:util';
 import { readConfig, saveConfig } from '@/src/utils/config';
 import { fieldsToCreate, fieldsToDrop } from '@/src/utils/field';
+import { convertModelToArrayFields } from '@/src/utils/model';
 import { spinner } from '@/src/utils/spinner';
 import { input } from '@inquirer/prompts';
 import type { Model, Result } from '@ronin/compiler';
@@ -110,18 +111,24 @@ export const logDataTable = (data: Array<DataItem>, tableName: string): void => 
  * @param tableName - Name of the table for logging.
  */
 export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): void => {
+  const a = convertModelToArrayFields(tableA);
+  const b = convertModelToArrayFields(tableB);
   // Get fields that were added and deleted between tables
-  const fieldsToAdd = fieldsToCreate(tableB.fields ?? [], tableA.fields ?? []);
-  const fieldsToDelete = fieldsToDrop(tableB.fields ?? [], tableA.fields ?? []);
+  // @ts-expect-error This will work once the types are fixed.
+  const fieldsToAdd = fieldsToCreate(b.fields ?? [], a.fields ?? []);
+  // @ts-expect-error This will work once the types are fixed.
+  const fieldsToDelete = fieldsToDrop(b.fields ?? [], a.fields ?? []);
 
   // Convert fields arrays to maps for easier lookup
   const fieldsA = Object.fromEntries(
-    (tableA.fields ?? []).map((field) => [field.slug, field]),
+    // @ts-expect-error This will work once the types are fixed.
+    (a.fields ?? []).map((field) => [field.slug, field]),
   );
 
   // Get all unique property keys from both tables
   const allKeys = new Set<string>();
-  for (const item of [...(tableB.fields ?? []), ...(tableA.fields ?? [])]) {
+  // @ts-expect-error This will work once the types are fixed.
+  for (const item of [...(b.fields ?? []), ...(a.fields ?? [])]) {
     for (const key of Object.keys(item)) {
       allKeys.add(key);
     }
@@ -130,7 +137,8 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
   // Create column headers with color formatting
   const columnHeaders = [
     // Headers for current fields (green for new fields)
-    ...(tableB.fields ?? []).map((field) => {
+    // @ts-expect-error This will work once the types are fixed.
+    ...(b.fields ?? []).map((field) => {
       const isNew = fieldsToAdd.some((f) => f.slug === field.slug);
       return isNew ? `\x1b[32m${field.slug}\x1b[0m` : field.slug;
     }),
@@ -145,7 +153,8 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
       let hasValue = false;
 
       // Add values for current fields
-      (tableB.fields ?? []).forEach((field, index) => {
+      // @ts-expect-error This will work once the types are fixed.
+      (b.fields ?? []).forEach((field, index) => {
         const oldValue = fieldsA[field.slug]?.[key as keyof typeof field];
         const newValue = field[key as keyof typeof field];
 
@@ -162,8 +171,8 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
       fieldsToDelete.forEach((field, i) => {
         const value = field[key as keyof typeof field];
         if (value !== undefined) hasValue = true;
-        row[columnHeaders[tableB.fields?.length ?? 0 + i]] =
-          `\x1b[31m\x1b[9m${value}\x1b[0m`;
+        // @ts-expect-error This will work once the types are fixed.
+        row[columnHeaders[b.fields?.length ?? 0 + i]] = `\x1b[31m\x1b[9m${value}\x1b[0m`;
       });
 
       return hasValue ? row : null;
@@ -252,7 +261,7 @@ export const sortModels = (models: Array<Model>): Array<Model> => {
   // Populate dependencies based on 'target' in fields,
   // but skip self-links
   for (const model of models) {
-    for (const field of model.fields ?? []) {
+    for (const field of Object.values(model.fields ?? [])) {
       if (field.type === 'link' && field.target && field.target !== model.slug) {
         dependencyMap.get(model.slug)?.add(field.target);
       }

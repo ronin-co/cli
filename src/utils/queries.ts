@@ -31,20 +31,9 @@ export const dropModelQuery = (modelSlug: string): string => {
  * createModelQuery('user', { pluralSlug: 'users' }) // Output: create.model({slug:'user',pluralSlug:'users'})
  * ```
  */
-export const createModelQuery = (
-  modelSlug: string,
-  properties?: Partial<Model>,
-): string => {
-  if (properties) {
-    const propertiesString = Object.entries(properties)
-      .filter(([_, value]) => value !== undefined)
-      .map(([key, value]) => {
-        return `${key}:${serialize(value)}`;
-      })
-      .join(', ');
-    return `create.model({slug:'${modelSlug}',${propertiesString}})`;
-  }
-  return `create.model({slug:'${modelSlug}'})`;
+export const createModelQuery = (model: Model): string => {
+  const { indexes, triggers, ...rest } = model;
+  return `create.model(${JSON.stringify(rest)})`;
 };
 
 /**
@@ -126,23 +115,21 @@ export const dropFieldQuery = (modelSlug: string, fieldSlug: string): string => 
  * ```
  */
 export const createTempModelQuery = (
-  modelSlug: string,
-  fields: Array<ModelField>,
-  _indexes: Array<ModelIndex>,
-  triggers: Array<ModelTrigger>,
+  model: Model,
   customQueries?: Array<string>,
   includeFields?: Array<ModelField>,
 ): Array<string> => {
+  const { slug, fields, indexes: _indexes, triggers, ...rest } = model;
   const queries: Array<string> = [];
 
-  const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`;
+  const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${slug}`;
 
   // Create a copy of the model
-  queries.push(createModelQuery(tempModelSlug, { fields }));
+  queries.push(createModelQuery({ slug: tempModelSlug, fields, ...rest }));
 
   // Move all the data to the copied model
   queries.push(
-    `add.${tempModelSlug}.with(() => get.${modelSlug}(${
+    `add.${tempModelSlug}.with(() => get.${slug}(${
       includeFields
         ? JSON.stringify({ selecting: includeFields.map((field) => field.slug) })
         : ''
@@ -154,13 +141,13 @@ export const createTempModelQuery = (
   }
 
   // Delete the original model
-  queries.push(dropModelQuery(modelSlug));
+  queries.push(dropModelQuery(slug));
 
   // Rename the copied model to the original model
-  queries.push(`alter.model("${tempModelSlug}").to({slug: "${modelSlug}"})`);
+  queries.push(`alter.model("${tempModelSlug}").to({slug: "${slug}"})`);
 
-  for (const trigger of triggers) {
-    queries.push(createTriggerQuery(modelSlug, trigger));
+  for (const [key, value] of Object.entries(triggers || {})) {
+    queries.push(createTriggerQuery(slug, { ...value, slug: key }));
   }
 
   return queries;
@@ -202,34 +189,6 @@ export const createTempColumnQuery = (
   );
 
   return queries;
-};
-
-/**
- * Serializes values for use in RONIN queries.
- *
- * @param value - The value to serialize.
- *
- * @returns A string representation of the value.
- * @internal
- */
-const serialize = (value: unknown): string => {
-  if (typeof value === 'string') {
-    // Wrap string values in single quotes
-    return `'${value}'`;
-  }
-  if (Array.isArray(value)) {
-    // Serialize each element in the array
-    return `[${value.map(serialize).join(', ')}]`;
-  }
-  if (typeof value === 'object' && value !== null) {
-    // Serialize each key-value pair in the object
-    return `{${Object.entries(value)
-      .filter(([_, v]) => v !== undefined)
-      .map(([k, v]) => `${k}:${serialize(v)}`)
-      .join(', ')}}`;
-  }
-  // For numbers, booleans, null, undefined
-  return String(value);
 };
 
 /**

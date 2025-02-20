@@ -64,8 +64,74 @@ export const getModels = async (
   const results = transaction.formatResults<Model>(rawResults, false);
   const models = 'records' in results[0] ? results[0].records : [];
 
+  // @ts-expect-error This will work once the types are fixed.
   return models.map((model) => ({
     ...model,
-    fields: model.fields?.filter((field) => !IGNORED_FIELDS.includes(field.slug)),
+    // @ts-expect-error This will work once the types are fixed.
+    fields: convertObjectToArray(model.fields)?.filter(
+      (field) => !IGNORED_FIELDS.includes(field.slug),
+    ),
   }));
+};
+
+/**
+ * Converts an object of fields into an array of field objects with slugs.
+ *
+ * @param input - Object containing field definitions.
+ *
+ * @returns Array of field objects with slugs.
+ */
+export const convertObjectToArray = <T extends Record<string, unknown>>(
+  input: T,
+): Array<{ slug: string } & T[keyof T]> => {
+  return Object.entries(input).map(([key, value]) => ({
+    slug: key,
+    // @ts-expect-error This will work once the types are fixed.
+    ...(value as T[keyof T]),
+  }));
+};
+
+/**
+ * Converts an array of field objects with slugs into an object keyed by slug.
+ *
+ * @param fields - Array of field objects with slugs.
+ *
+ * @returns Object with fields keyed by slug.
+ */
+export const convertArrayToObject = <T extends { slug: string }>(
+  fields: Array<T> | undefined,
+): Record<string, Omit<T, 'slug'>> => {
+  if (!fields) return {};
+
+  return fields.reduce<Record<string, Omit<T, 'slug'>>>((obj, field) => {
+    const { slug, ...rest } = field;
+    obj[slug] = rest;
+    return obj;
+  }, {});
+};
+
+/**
+ * Converts a model's fields from object format to array format.
+ *
+ * @param model - Model with fields in object format.
+ *
+ * @returns Model with fields converted to array format.
+ */
+export const convertModelToArrayFields = (model: Model): Model => {
+  // @ts-expect-error This will work once the types are fixed.
+  if (JSON.stringify(model) === '{}') return {};
+  // @ts-expect-error This will work once the types are fixed.
+  return { ...model, fields: convertObjectToArray(model.fields) };
+};
+
+/**
+ * Converts a model's fields from array format to object format.
+ *
+ * @param model - Model with fields in array format.
+ *
+ * @returns Model with fields converted to object format.
+ */
+export const convertModelToObjectFields = (model: Model): Model => {
+  // @ts-expect-error This will work once the types are fixed.
+  return { ...model, fields: convertArrayToObject(model.fields) };
 };

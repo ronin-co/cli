@@ -47,6 +47,7 @@ describe('apply', () => {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
+
           expect(statements).toHaveLength(4);
           expect(models).toHaveLength(1);
           expect(models[0].slug).toBe('test');
@@ -273,6 +274,7 @@ describe('apply', () => {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
+
           expect(models).toHaveLength(1);
           // @ts-expect-error This is defined!
           expect(models[0]?.fields[0]?.unique).toBe(true);
@@ -509,9 +511,9 @@ describe('apply', () => {
           expect(rowCounts).toEqual({
             accounts: 1,
           });
-          // TODO: This is not correct. This will be changed in another PR when we bump
-          // to the latest ronin version.
-          expect(rows[0].email).toBe('true');
+
+          // @ts-expect-error This is defined!
+          expect(rows[0].email).toBe(1);
         });
       });
 
@@ -570,7 +572,7 @@ describe('apply', () => {
             }
           }
           expect(models).toHaveLength(2);
-          // @ts-expect-error This is defined!
+          // @ts-expect-error This is fixed when we stop converting between arrays and objects.
           expect(models[1]?.fields[0]?.actions?.onDelete).toBe('CASCADE');
           expect(rowCounts).toEqual({
             comments: 0,
@@ -695,8 +697,8 @@ describe('apply', () => {
             }
           }
           expect(models).toHaveLength(1);
-          expect(models[0]?.triggers?.[0]?.action).toBe('DELETE');
-          expect(models[0]?.triggers?.[0]?.when).toBe('AFTER');
+          expect(models[0]?.triggers?.filedTrigger?.action).toBe('DELETE');
+          expect(models[0]?.triggers?.filedTrigger?.when).toBe('AFTER');
           expect(rowCounts).toEqual({
             comments: 0,
           });
@@ -726,7 +728,7 @@ describe('apply', () => {
 
       describe('drop', () => {
         test('simple', async () => {
-          const { models, db } = await runMigration([TestA], []);
+          const { models, db } = await runMigration([], [TestA]);
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -734,10 +736,7 @@ describe('apply', () => {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
-          expect(models).toHaveLength(1);
-          expect(rowCounts).toEqual({
-            tests: 0,
-          });
+          expect(models).toHaveLength(0);
         });
       });
     });

@@ -96,12 +96,11 @@ describe('protocol', () => {
     const models: Array<Model> = [
       {
         slug: 'account',
-        fields: [
-          {
-            slug: 'handle',
+        fields: {
+          handle: {
             type: 'string',
           },
-        ],
+        },
       },
     ];
     const protocol = await new Protocol(packages, queries).convertToQueryObjects();
@@ -110,7 +109,7 @@ describe('protocol', () => {
 
     expect(statements).toHaveLength(1);
     expect(statements[0].statement).toStrictEqual(
-      `SELECT "id", "ronin.locked", "ronin.createdAt", "ronin.createdBy", "ronin.updatedAt", "ronin.updatedBy", "handle" FROM "accounts" WHERE "handle" = 'elaine' LIMIT 1`,
+      'SELECT "id", "ronin.createdAt", "ronin.createdBy", "ronin.updatedAt", "ronin.updatedBy", "handle" FROM "accounts" WHERE "handle" = \'elaine\' LIMIT 1',
     );
   });
 

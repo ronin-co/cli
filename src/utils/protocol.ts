@@ -3,7 +3,7 @@ import path from 'node:path';
 import { formatCode } from '@/src/utils/format';
 import { MIGRATIONS_PATH } from '@/src/utils/misc';
 import type { LocalPackages } from '@/src/utils/misc';
-import type { Model, Query, Statement } from '@ronin/compiler';
+import { type Model, QUERY_SYMBOLS, type Query, type Statement } from '@ronin/compiler';
 
 /**
  * Protocol represents a set of database migration queries that can be executed in sequence.
@@ -45,10 +45,12 @@ export class Protocol {
    * @param query - RONIN query string.
    *
    * @returns Object containing the Query and options.
+   *
    * @private
    */
   private queryToObject = (query: string): Query => {
     const { getSyntaxProxy } = this._packages.syntax;
+
     const queryTypes = [
       'get',
       'set',
@@ -59,13 +61,13 @@ export class Protocol {
       'alter',
       'drop',
     ];
-    const queryProxies = queryTypes.map((type) =>
-      getSyntaxProxy({ rootProperty: type as 'drop' }),
-    );
+    const queryProxies = queryTypes.map((type) => {
+      return getSyntaxProxy({ root: `${QUERY_SYMBOLS.QUERY}.${type}` });
+    });
 
     const func = new Function(...queryTypes, `"use strict"; return ${query}`);
 
-    return func(...queryProxies).structure;
+    return func(...queryProxies)[QUERY_SYMBOLS.QUERY];
   };
 
   /**
