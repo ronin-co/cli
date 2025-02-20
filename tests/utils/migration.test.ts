@@ -12,10 +12,8 @@ import {
 } from '@/fixtures/index';
 import {
   adjustModelMeta,
-  createIndexes,
   createModels,
   diffModels,
-  dropIndexes,
   dropModels,
   indexesToRecreate,
   triggersToRecreate,
@@ -57,7 +55,7 @@ describe('migration', () => {
       const modelDiff = await diffModels([Account, Profile], [Account]);
       expect(modelDiff).toHaveLength(1);
       expect(modelDiff).toStrictEqual([
-        'create.model({slug:\'profile\', fields: {"username":{"type":"string"}}})',
+        'create.model({"slug":"profile","fields":{"username":{"type":"string"}}})',
       ]);
     });
 
@@ -188,23 +186,21 @@ describe('migration', () => {
       const models: Array<Model> = [
         {
           slug: 'test1',
-          fields: [
-            {
-              slug: 'field1',
+          fields: {
+            field1: {
               name: 'Field1',
               type: 'string',
             },
-          ],
+          },
         },
         {
           slug: 'test2',
-          fields: [
-            {
-              slug: 'field2',
+          fields: {
+            field2: {
               name: 'Field2',
               type: 'number',
             },
-          ],
+          },
         },
       ];
 
@@ -212,8 +208,8 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual([
-        'create.model({slug:\'test1\', fields: {"field1":{"name":"Field1","type":"string"}}})',
-        'create.model({slug:\'test2\', fields: {"field2":{"name":"Field2","type":"number"}}})',
+        'create.model({"slug":"test1","fields":{"field1":{"name":"Field1","type":"string"}}})',
+        'create.model({"slug":"test2","fields":{"field2":{"name":"Field2","type":"number"}}})',
       ]);
     });
 
@@ -227,7 +223,7 @@ describe('migration', () => {
       const queries = createModels(models);
 
       expect(queries).toHaveLength(1);
-      expect(queries).toStrictEqual(["create.model({slug:'test1'})"]);
+      expect(queries).toStrictEqual(['create.model({"slug":"test1"})']);
     });
 
     test('returns empty array for empty model list', () => {
@@ -261,6 +257,7 @@ describe('migration', () => {
         },
       };
 
+      // @ts-expect-error This will work once the types are fixed.
       const queries = [...indexesToRecreate([definedModel], [existingModel])];
 
       expect(queries).toHaveLength(2);
@@ -268,55 +265,6 @@ describe('migration', () => {
         'alter.model("test").drop.index("index_1")',
         'alter.model("test").create.index({"slug":"index_1","fields":[{"slug":"field1"}],"unique":true})',
       ]);
-    });
-
-    test('handles models with no indexes', () => {
-      const definedModel = {
-        slug: 'test',
-      };
-
-      const existingModel = {
-        slug: 'test',
-      };
-
-      const queries = [
-        ...dropIndexes(definedModel, existingModel),
-        ...createIndexes(definedModel, existingModel),
-      ];
-
-      expect(queries).toHaveLength(0);
-      expect(queries).toStrictEqual([]);
-    });
-
-    test('keeps matching indexes unchanged', () => {
-      const definedModel = {
-        slug: 'test',
-        indexes: [
-          {
-            fields: [{ slug: 'field1' }],
-            unique: true,
-          },
-        ],
-      };
-
-      const existingModel = {
-        slug: 'test',
-        indexes: [
-          {
-            fields: [{ slug: 'field1' }],
-            unique: true,
-            slug: 'idx',
-          },
-        ],
-      };
-
-      const queries = [
-        ...dropIndexes(definedModel, existingModel),
-        ...createIndexes(definedModel, existingModel),
-      ];
-
-      expect(queries).toHaveLength(0);
-      expect(queries).toStrictEqual([]);
     });
   });
 
@@ -372,6 +320,7 @@ describe('migration', () => {
         },
       ];
 
+      // @ts-expect-error This will work once the types are fixed.
       const queries = indexesToRecreate(definedModels, existingModels);
 
       expect(queries).toHaveLength(4);
@@ -398,6 +347,7 @@ describe('migration', () => {
 
       const existingModels: Array<Model> = [];
 
+      // @ts-expect-error This will work once the types are fixed.
       const queries = indexesToRecreate(definedModels, existingModels);
 
       expect(queries).toHaveLength(1);

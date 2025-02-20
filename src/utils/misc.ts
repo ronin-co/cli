@@ -254,7 +254,7 @@ export const sortModels = (models: Array<Model>): Array<Model> => {
   // Populate dependencies based on 'target' in fields,
   // but skip self-links
   for (const model of models) {
-    for (const field of model.fields ?? []) {
+    for (const field of Object.values(model.fields ?? [])) {
       if (field.type === 'link' && field.target && field.target !== model.slug) {
         dependencyMap.get(model.slug)?.add(field.target);
       }

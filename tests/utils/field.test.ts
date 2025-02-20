@@ -198,7 +198,7 @@ describe('fields', () => {
       });
       expect(diff).toHaveLength(5);
       expect(diff).toStrictEqual([
-        'create.model({slug:\'RONIN_TEMP_account\', fields: {"profile":{"type":"link","target":"profile"}}})',
+        'create.model({"slug":"RONIN_TEMP_account","fields":{"profile":{"type":"link","target":"profile"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'alter.model("RONIN_TEMP_account").alter.field("profile").to({slug: "newProfile"})',
         'drop.model("account")',

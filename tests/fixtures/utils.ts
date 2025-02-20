@@ -50,7 +50,7 @@ export const prefillDatabase = async (
   const rootModelTransaction = new Transaction([{ create: { model: ROOT_MODEL } }]);
 
   const modelTransaction = new Transaction(
-    models.map((model) => ({ create: { model } })),
+    models.map((model) => JSON.parse(JSON.stringify({ create: { model } }))),
   );
 
   // Create the root model and all other models.

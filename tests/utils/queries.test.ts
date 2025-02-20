@@ -14,7 +14,7 @@ import {
   renameModelQuery,
   setFieldQuery,
 } from '@/src/utils/queries';
-import type { ModelField } from '@ronin/compiler';
+import type { Model, ModelField } from '@ronin/compiler';
 
 describe('queries', () => {
   test('drop model query', () => {
@@ -23,12 +23,16 @@ describe('queries', () => {
   });
 
   test('create model query without properties', () => {
-    const result = createModelQuery('user');
-    expect(result).toBe("create.model({slug:'user'})");
+    const user: Model = {
+      slug: 'user',
+    };
+    const result = createModelQuery(user);
+    expect(result).toBe('create.model({"slug":"user"})');
   });
 
   test('create model query with properties', () => {
-    const result = createModelQuery('user', {
+    const user: Model = {
+      slug: 'user',
       pluralSlug: 'users',
       name: 'User',
       pluralName: 'Users',
@@ -40,9 +44,10 @@ describe('queries', () => {
           required: true,
         },
       },
-    });
+    };
+    const result = createModelQuery(user);
     expect(result).toBe(
-      'create.model({slug:\'user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
+      'create.model({"slug":"user","pluralSlug":"users","name":"User","pluralName":"Users","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
     );
   });
 
@@ -93,18 +98,19 @@ describe('queries', () => {
   });
 
   test('create temp model query', () => {
-    const fields: Array<ModelField> = [
-      {
-        slug: 'username',
+    const fields = {
+      username: {
         type: 'string',
         name: 'Username',
         unique: true,
         required: true,
       },
-    ];
-    const result = createTempModelQuery('user', fields, [], []);
+    };
+
+    // @ts-expect-error TODO: Fix this type.
+    const result = createTempModelQuery({ slug: 'user', fields });
     expect(result).toEqual([
-      'create.model({slug:\'RONIN_TEMP_user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
+      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
@@ -112,17 +118,19 @@ describe('queries', () => {
   });
 
   test('create temp model query with custom queries', () => {
-    const fields: Array<ModelField> = [
-      {
+    const fields = {
+      username: {
         slug: 'username',
         type: 'string',
         name: 'Username',
         unique: true,
         required: true,
       },
-    ];
+    };
+
     const customQueries: Array<string> = ['get.model("user")'];
-    const result = createTempModelQuery('user', fields, [], [], customQueries);
+    // @ts-expect-error TODO: Fix this type.
+    const result = createTempModelQuery({ slug: 'user', fields }, customQueries);
     expect(result).toEqual([
       'create.model({slug:\'RONIN_TEMP_user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
@@ -133,15 +141,15 @@ describe('queries', () => {
   });
 
   test('create temp model query with triggers', () => {
-    const fields: Array<ModelField> = [
-      {
-        slug: 'username',
+    const fields = {
+      username: {
         type: 'string',
         name: 'Username',
         unique: true,
         required: true,
       },
-    ];
+    };
+
     const triggers = {
       test: {
         action: 'INSERT',
@@ -150,7 +158,8 @@ describe('queries', () => {
       },
     };
 
-    const result = createTempModelQuery('user', fields, [], triggers);
+    // @ts-expect-error Todo fix this type.
+    const result = createTempModelQuery({ slug: 'user', fields, triggers });
     expect(result).toEqual([
       'create.model({slug:\'RONIN_TEMP_user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',

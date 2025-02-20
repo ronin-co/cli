@@ -1,5 +1,6 @@
 import type { MigrationOptions } from '@/src/utils/migration';
 import { RONIN_SCHEMA_TEMP_SUFFIX } from '@/src/utils/misc';
+import { convertArrayToObject } from '@/src/utils/model';
 import {
   createFieldQuery,
   createTempColumnQuery,
@@ -118,13 +119,15 @@ export const diffFields = async (
         if (field.from.type === 'link') {
           diff.push(
             ...createTempModelQuery(
-              modelSlug,
-              [
-                { ...field.to, slug: field.from.slug },
-                ...definedFields.filter((local) => local.slug !== field.to.slug),
-              ],
-              indexes,
-              triggers,
+              {
+                slug: modelSlug,
+                fields: convertArrayToObject([
+                  { ...field.to, slug: field.from.slug },
+                  ...definedFields.filter((local) => local.slug !== field.to.slug),
+                ]),
+                indexes: convertArrayToObject(indexes),
+                triggers: convertArrayToObject(triggers),
+              },
               [
                 renameFieldQuery(
                   `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`,
@@ -176,10 +179,12 @@ export const diffFields = async (
 
       diff.push(
         ...createTempModelQuery(
-          modelSlug,
-          updatedFields || [],
-          [],
-          [],
+          {
+            slug: modelSlug,
+            fields: convertArrayToObject(updatedFields || []),
+            indexes: convertArrayToObject(indexes),
+            triggers: convertArrayToObject(triggers),
+          },
           queries,
           existingFields,
         ),
@@ -284,7 +289,12 @@ const adjustFields = (
   indexes: Array<ModelIndex>,
   triggers: Array<ModelTrigger>,
 ): Array<string> => {
-  return createTempModelQuery(modelSlug, fields, indexes, triggers);
+  return createTempModelQuery({
+    slug: modelSlug,
+    fields: convertArrayToObject(fields),
+    indexes,
+    triggers: convertArrayToObject(triggers),
+  });
 };
 
 /**
@@ -338,20 +348,20 @@ export const createFields = async (
         );
 
         return createTempModelQuery(
-          modelSlug,
-          updatedFields || [],
-          [],
-          [],
+          {
+            slug: modelSlug,
+            fields: convertArrayToObject(updatedFields || []),
+          },
           queries,
           existingFields,
         );
       }
 
       return createTempModelQuery(
-        modelSlug,
-        definedFields || [],
-        [],
-        [],
+        {
+          slug: modelSlug,
+          fields: convertArrayToObject(definedFields || []),
+        },
         [],
         existingFields,
       );
@@ -419,7 +429,14 @@ const deleteFields = (
   const diff: Array<string> = [];
   for (const fieldToDrop of fieldsToDrop) {
     if (fieldToDrop.unique) {
-      return createTempModelQuery(modelSlug, fields, [], [], [], fields);
+      return createTempModelQuery(
+        {
+          slug: modelSlug,
+          fields: convertArrayToObject(fields),
+        },
+        [],
+        fields,
+      );
     }
     diff.push(dropFieldQuery(modelSlug, fieldToDrop.slug));
   }

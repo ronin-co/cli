@@ -1,7 +1,7 @@
 import type { parseArgs } from 'node:util';
 import { diffFields, fieldsToAdjust } from '@/src/utils/field';
 import { type BaseFlags, areArraysEqual } from '@/src/utils/misc';
-import { convertModelToArrayFields } from '@/src/utils/model';
+import { convertArrayToObject, convertModelToArrayFields } from '@/src/utils/model';
 import {
   createIndexQuery,
   createModelQuery,
@@ -89,7 +89,15 @@ export const diffModels = async (
 
   diff.push(...adjustModelMetaQueries);
   diff.push(...dropModels(modelsToBeDropped));
-  diff.push(...createModels(modelsToBeAdded));
+
+  diff.push(
+    ...createModels(
+      modelsToBeAdded.map((m) => ({
+        ...m,
+        fields: convertArrayToObject(m.fields),
+      })),
+    ),
+  );
   diff.push(...(await adjustModels(definedModels, existingModels, options)));
   diff.push(...recreateIndexes);
   diff.push(...recreateTriggers);
@@ -160,12 +168,8 @@ export const dropModels = (models: Array<Model>): Array<string> => {
  */
 export const createModels = (models: Array<Model>): Array<string> => {
   const diff: Array<string> = [];
-
   for (const model of models) {
-    // TODO: Simplify this - only pass the model object.
-    diff.push(
-      createModelQuery(model.slug, model.fields ? { fields: model.fields } : undefined),
-    );
+    diff.push(createModelQuery(model));
   }
 
   return diff;
@@ -332,65 +336,6 @@ export const triggersToRecreate = (
 };
 
 /**
- * Generates queries to drop triggers from a model.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns An array of trigger deletion queries as code strings.
- */
-export const dropTriggers = (
-  definedModel: Model,
-  existingModel: Model,
-): Array<string> => {
-  const diff: Array<string> = [];
-  const definedTriggerKeys = Object.keys(definedModel.triggers || {});
-  const existingTriggerKeys = Object.keys(existingModel.triggers || {});
-
-  const triggersToDrop = existingTriggerKeys.filter(
-    (key) => !definedTriggerKeys.includes(key),
-  );
-
-  for (const trigger of triggersToDrop) {
-    diff.push(dropTriggerQuery(definedModel.slug, trigger));
-  }
-
-  return diff;
-};
-
-/**
- * Generates queries to create triggers for a model.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns An array of trigger creation queries as code strings.
- */
-export const createTriggers = (
-  definedModel: Model,
-  existingModel: Model,
-): Array<string> => {
-  const diff: Array<string> = [];
-  const definedTriggerKeys = Object.keys(definedModel.triggers || {});
-  const existingTriggerKeys = Object.keys(existingModel.triggers || {});
-
-  const triggersToAdd = definedTriggerKeys.filter(
-    (key) => !existingTriggerKeys.includes(key),
-  );
-
-  for (const trigger of triggersToAdd) {
-    diff.push(
-      createTriggerQuery(definedModel.slug, {
-        slug: trigger,
-        ...definedModel.triggers[trigger],
-      }),
-    );
-  }
-
-  return diff;
-};
-
-/**
  * Checks if a model needs to be recreated due to field changes.
  *
  * @param definedModel - The model defined locally.
@@ -457,60 +402,6 @@ export const indexesToRecreate = (
     }, []);
 
     diff.push(...(modelRecreated ? [] : needRecreation));
-  }
-
-  return diff;
-};
-
-/**
- * Generates queries to drop indexes from a model.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns An array of index deletion queries as code strings.
- */
-export const dropIndexes = (definedModel: Model, existingModel: Model): Array<string> => {
-  const diff: Array<string> = [];
-  const definedIndexKeys = Object.keys(definedModel.indexes || {});
-  const existingIndexKeys = Object.keys(existingModel.indexes || {});
-
-  const indexesToDrop = existingIndexKeys.filter(
-    (key) => !definedIndexKeys.includes(key),
-  );
-
-  for (const index of indexesToDrop) {
-    diff.push(dropIndexQuery(definedModel.slug, index));
-  }
-
-  return diff;
-};
-
-/**
- * Generates queries to create indexes for a model.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns An array of index creation queries as code strings.
- */
-export const createIndexes = (
-  definedModel: Model,
-  existingModel: Model,
-): Array<string> => {
-  const diff: Array<string> = [];
-  const definedIndexKeys = Object.keys(definedModel.indexes || {});
-  const existingIndexKeys = Object.keys(existingModel.indexes || {});
-
-  const indexesToAdd = definedIndexKeys.filter((key) => !existingIndexKeys.includes(key));
-
-  for (const index of indexesToAdd) {
-    diff.push(
-      createIndexQuery(definedModel.slug, {
-        slug: index,
-        ...definedModel.indexes[index],
-      }),
-    );
   }
 
   return diff;
