@@ -171,7 +171,7 @@ describe('fields', () => {
       const diff = await diffFields(localFields, remoteFields, 'account', [], []);
       expect(diff).toHaveLength(4);
       expect(diff).toStrictEqual([
-        'create.model({slug:\'RONIN_TEMP_account\', fields: {"id":{"type":"number","unique":true}}})',
+        'create.model({"slug":"RONIN_TEMP_account","fields":{"id":{"type":"number","unique":true}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',

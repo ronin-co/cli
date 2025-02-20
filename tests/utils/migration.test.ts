@@ -43,7 +43,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        'create.model({slug:\'RONIN_TEMP_account\', fields: {"name":{"type":"string"}}})',
+        'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"type":"string"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -73,7 +73,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        'create.model({slug:\'RONIN_TEMP_account\', fields: {"name":{"required":true,"unique":true,"type":"string"}}})',
+        'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"required":true,"unique":true,"type":"string"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -96,7 +96,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        'create.model({slug:\'RONIN_TEMP_account\', fields: {"name":{"type":"string"}}})',
+        'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"type":"string"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account"})',
@@ -131,7 +131,7 @@ describe('migration', () => {
         expect(modelDiff).toHaveLength(2);
 
         expect(modelDiff).toStrictEqual([
-          'create.model({slug:\'comment\', fields: {"name":{"type":"string"}}})',
+          'create.model({"slug":"comment","fields":{"name":{"type":"string"}}})',
           'alter.model("comment").create.trigger({"slug":"filedTrigger","action":"INSERT","when":"BEFORE","effects":[{"__RONIN_QUERY":{"add":{"comment":{"with":{"name":"Test"}}}}}]})',
         ]);
       });

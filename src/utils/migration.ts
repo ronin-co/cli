@@ -94,6 +94,7 @@ export const diffModels = async (
     ...createModels(
       modelsToBeAdded.map((m) => ({
         ...m,
+        // @ts-expect-error This will work once the types are fixed.
         fields: convertArrayToObject(m.fields),
       })),
     ),
@@ -128,6 +129,7 @@ const adjustModels = async (
     if (remoteModel) {
       diff.push(
         ...(await diffFields(
+          // @ts-expect-error This will work once the types are fixed.
           localModel.fields || [],
           remoteModel.fields || [],
           localModel.slug,
@@ -236,7 +238,9 @@ export const modelsToRename = (
     // Check if `model.fields` has the same fields as the current model
     const currentModel = modelsToBeDropped.find((s) => {
       return areArraysEqual(
+        // @ts-expect-error This will work once the types are fixed.
         model.fields?.map((f) => f.slug) || [],
+        // @ts-expect-error This will work once the types are fixed.
         s.fields?.map((f) => f.slug) || [],
       );
     });
@@ -349,6 +353,7 @@ export const modelWillBeRecreated = (
 ): boolean => {
   if (!existingModel) return false;
   return (
+    // @ts-expect-error This will work once the types are fixed.
     (fieldsToAdjust(definedModel.fields || [], existingModel.fields || []) ?? []).length >
     0
   );

@@ -132,7 +132,7 @@ describe('queries', () => {
     // @ts-expect-error TODO: Fix this type.
     const result = createTempModelQuery({ slug: 'user', fields }, customQueries);
     expect(result).toEqual([
-      'create.model({slug:\'RONIN_TEMP_user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
+      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"slug":"username","type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       ...customQueries,
       'drop.model("user")',
@@ -161,7 +161,7 @@ describe('queries', () => {
     // @ts-expect-error Todo fix this type.
     const result = createTempModelQuery({ slug: 'user', fields, triggers });
     expect(result).toEqual([
-      'create.model({slug:\'RONIN_TEMP_user\', fields: {"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
+      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',

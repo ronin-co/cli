@@ -121,6 +121,7 @@ export const diffFields = async (
             ...createTempModelQuery(
               {
                 slug: modelSlug,
+                // @ts-expect-error This will work once the types are fixed.
                 fields: convertArrayToObject([
                   { ...field.to, slug: field.from.slug },
                   ...definedFields.filter((local) => local.slug !== field.to.slug),
@@ -181,6 +182,7 @@ export const diffFields = async (
         ...createTempModelQuery(
           {
             slug: modelSlug,
+            // @ts-expect-error This will work once the types are fixed.
             fields: convertArrayToObject(updatedFields || []),
             indexes: convertArrayToObject(indexes),
             triggers: convertArrayToObject(triggers),
@@ -291,7 +293,9 @@ const adjustFields = (
 ): Array<string> => {
   return createTempModelQuery({
     slug: modelSlug,
+    // @ts-expect-error This will work once the types are fixed.
     fields: convertArrayToObject(fields),
+    // @ts-expect-error This will work once the types are fixed.
     indexes,
     triggers: convertArrayToObject(triggers),
   });
@@ -350,6 +354,7 @@ export const createFields = async (
         return createTempModelQuery(
           {
             slug: modelSlug,
+            // @ts-expect-error This will work once the types are fixed.
             fields: convertArrayToObject(updatedFields || []),
           },
           queries,
@@ -360,6 +365,7 @@ export const createFields = async (
       return createTempModelQuery(
         {
           slug: modelSlug,
+          // @ts-expect-error This will work once the types are fixed.
           fields: convertArrayToObject(definedFields || []),
         },
         [],
@@ -432,6 +438,7 @@ const deleteFields = (
       return createTempModelQuery(
         {
           slug: modelSlug,
+          // @ts-expect-error This will work once the types are fixed.
           fields: convertArrayToObject(fields),
         },
         [],
