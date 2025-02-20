@@ -304,7 +304,9 @@ export const triggersToRecreate = (
       existingModel || ({} as Model),
     );
 
-    // find triggers with the same slug and if they have different properties we need to drop and create
+    // For each trigger in the defined model, check if a trigger with the same slug exists
+    // in the database. If it does and its properties differ, drop the existing trigger and
+    // create a new one with the updated properties.
     const needRecreation = Object.entries(definedModel.triggers || {}).reduce<
       Array<string>
     >((acc, [slug, trigger]) => {
@@ -380,7 +382,9 @@ export const indexesToRecreate = (
       existingModel || ({} as Model),
     );
 
-    // find indexes with the same slug and if they have different properties we need to drop and create
+    // For each index in the defined model, check if an index with the same slug exists
+    // in the database. If it does and its properties differ, drop the existing index and
+    // create a new one with the updated properties.
     const needRecreation = Object.entries(definedModel.indexes || {}).reduce<
       Array<string>
     >((acc, [slug, index]) => {

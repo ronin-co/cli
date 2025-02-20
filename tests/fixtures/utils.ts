@@ -89,7 +89,6 @@ export const runMigration = async (
   statements: Array<Statement>;
   modelDiff: Array<string>;
 }> => {
-  // We need to convert the models.fields: Object -> Array
   const db = await queryEphemeralDatabase(existingModels, insertStatements);
 
   const packages = await getLocalPackages();
