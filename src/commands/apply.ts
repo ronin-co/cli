@@ -3,7 +3,7 @@ import path from 'node:path';
 import { initializeDatabase } from '@/src/utils/database';
 import type { MigrationFlags } from '@/src/utils/migration';
 import { MIGRATIONS_PATH, getLocalPackages } from '@/src/utils/misc';
-import { getModels } from '@/src/utils/model';
+import { convertArrayToObject, getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner as ora } from '@/src/utils/spinner';
@@ -51,7 +51,13 @@ export default async (
       }));
 
     const protocol = await new Protocol(packages).load(migrationPrompt);
-    const statements = protocol.getSQLStatements(existingModels);
+    const statements = protocol.getSQLStatements(
+      existingModels.map((model) => ({
+        ...model,
+        // @ts-expect-error This will work once the types are fixed.
+        fields: convertArrayToObject(model.fields),
+      })),
+    );
 
     // Create the migrations directory if it doesn't exist.
     if (!fs.existsSync(MIGRATIONS_PATH)) {
