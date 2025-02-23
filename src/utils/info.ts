@@ -30,6 +30,7 @@ export const printHelp = (): Promise<void> => {
       -h, --help                          Shows this help message
       -v, --version                       Shows the version of the CLI that is currently installed
       -d, --debug                         Shows additional debugging information
+      -c, --choose                        Choose the migration to apply
   `;
   console.log(text);
   process.exit(0);
