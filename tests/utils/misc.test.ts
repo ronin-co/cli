@@ -13,6 +13,7 @@ import {
 } from '@/src/utils/misc';
 
 import { Account, CONSTANTS, TestA, TestB } from '@/fixtures/index';
+import { convertModelToArrayFields } from '@/src/utils/model';
 import type { Model } from '@ronin/compiler';
 
 describe('misc', () => {
@@ -66,11 +67,21 @@ describe('misc', () => {
       const consoleTableSpy = spyOn(console, 'table');
       const objA: Model = {
         slug: 'test',
-        fields: [{ slug: 'name', name: 'Test', type: 'string' }],
+        fields: {
+          name: {
+            name: 'Test',
+            type: 'string',
+          },
+        },
       };
       const objB: Model = {
         slug: 'test',
-        fields: [{ slug: 'name', name: 'Test', type: 'string' }],
+        fields: {
+          name: {
+            name: 'Test',
+            type: 'string',
+          },
+        },
       };
 
       logTableDiff(objA, objB, 'Identical Objects');
@@ -147,16 +158,20 @@ describe('misc', () => {
 
     test('should return models in code definitions - one model', async () => {
       mock.module('@/src/utils/misc', () => {
-        return { getModelDefinitions: (): Array<Model> => [Account] };
+        return {
+          getModelDefinitions: (): Array<Model> => [convertModelToArrayFields(Account)],
+        };
       });
 
       const models = await getModelDefinitions();
+
       expect(models).toEqual([
         {
           slug: 'account',
           pluralSlug: 'accounts',
           fields: [
             {
+              // @ts-expect-error This will work once the types are fixed.
               slug: 'name',
               type: 'string',
             },
@@ -204,29 +219,26 @@ describe('areArraysEqual', () => {
     test('should sort models with dependencies', () => {
       const modelA: Model = {
         slug: 'modelA',
-        fields: [],
       };
 
       const modelB: Model = {
         slug: 'modelB',
-        fields: [
-          {
-            slug: 'linkToA',
+        fields: {
+          linkToA: {
             type: 'link',
             target: 'modelA',
           },
-        ],
+        },
       };
 
       const modelC: Model = {
         slug: 'modelC',
-        fields: [
-          {
-            slug: 'linkToB',
+        fields: {
+          linkToB: {
             type: 'link',
             target: 'modelB',
           },
-        ],
+        },
       };
 
       const unsortedModels = [modelC, modelB, modelA];
@@ -240,13 +252,12 @@ describe('areArraysEqual', () => {
     test('should handle self-referential links', () => {
       const modelWithSelfLink: Model = {
         slug: 'employee',
-        fields: [
-          {
-            slug: 'manager',
+        fields: {
+          manager: {
             type: 'link',
             target: 'employee', // Self reference
           },
-        ],
+        },
       };
 
       const sortedModels = sortModels([modelWithSelfLink]);
@@ -256,24 +267,22 @@ describe('areArraysEqual', () => {
     test('should throw error on circular dependencies', () => {
       const modelA: Model = {
         slug: 'modelA',
-        fields: [
-          {
-            slug: 'linkToB',
+        fields: {
+          linkToB: {
             type: 'link',
             target: 'modelB',
           },
-        ],
+        },
       };
 
       const modelB: Model = {
         slug: 'modelB',
-        fields: [
-          {
-            slug: 'linkToA',
+        fields: {
+          linkToA: {
             type: 'link',
             target: 'modelA',
           },
-        ],
+        },
       };
 
       expect(() => sortModels([modelA, modelB])).toThrow(
@@ -284,12 +293,10 @@ describe('areArraysEqual', () => {
     test('should handle models with no dependencies', () => {
       const modelA: Model = {
         slug: 'modelA',
-        fields: [],
       };
 
       const modelB: Model = {
         slug: 'modelB',
-        fields: [],
       };
 
       const sortedModels = sortModels([modelA, modelB]);
@@ -302,13 +309,12 @@ describe('areArraysEqual', () => {
     test('should throw error if dependency target not found', () => {
       const modelA: Model = {
         slug: 'modelA',
-        fields: [
-          {
-            slug: 'linkToMissing',
+        fields: {
+          linkToMissing: {
             type: 'link',
             target: 'nonexistentModel',
           },
-        ],
+        },
       };
 
       // The visit function will try to process 'nonexistentModel' but won't find it

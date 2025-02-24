@@ -14,7 +14,7 @@ import {
   renameModelQuery,
   setFieldQuery,
 } from '@/src/utils/queries';
-import type { ModelField, ModelTrigger } from '@ronin/compiler';
+import type { Model, ModelField } from '@ronin/compiler';
 
 describe('queries', () => {
   test('drop model query', () => {
@@ -23,27 +23,31 @@ describe('queries', () => {
   });
 
   test('create model query without properties', () => {
-    const result = createModelQuery('user');
-    expect(result).toBe("create.model({slug:'user'})");
+    const user: Model = {
+      slug: 'user',
+    };
+    const result = createModelQuery(user);
+    expect(result).toBe('create.model({"slug":"user"})');
   });
 
   test('create model query with properties', () => {
-    const result = createModelQuery('user', {
+    const user: Model = {
+      slug: 'user',
       pluralSlug: 'users',
       name: 'User',
       pluralName: 'Users',
-      fields: [
-        {
-          slug: 'username',
+      fields: {
+        username: {
           type: 'string',
           name: 'Username',
           unique: true,
           required: true,
         },
-      ],
-    });
+      },
+    };
+    const result = createModelQuery(user);
     expect(result).toBe(
-      "create.model({slug:'user',pluralSlug:'users', name:'User', pluralName:'Users', fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
+      'create.model({"slug":"user","pluralSlug":"users","name":"User","pluralName":"Users","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
     );
   });
 
@@ -94,18 +98,19 @@ describe('queries', () => {
   });
 
   test('create temp model query', () => {
-    const fields: Array<ModelField> = [
-      {
-        slug: 'username',
+    const fields = {
+      username: {
         type: 'string',
         name: 'Username',
         unique: true,
         required: true,
       },
-    ];
+    };
+
+    // @ts-expect-error TODO: Fix this type.
     const result = createTempModelQuery({ slug: 'user', fields });
     expect(result).toEqual([
-      "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
+      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
@@ -113,19 +118,21 @@ describe('queries', () => {
   });
 
   test('create temp model query with custom queries', () => {
-    const fields: Array<ModelField> = [
-      {
+    const fields = {
+      username: {
         slug: 'username',
         type: 'string',
         name: 'Username',
         unique: true,
         required: true,
       },
-    ];
+    };
+
     const customQueries: Array<string> = ['get.model("user")'];
+    // @ts-expect-error TODO: Fix this type.
     const result = createTempModelQuery({ slug: 'user', fields }, customQueries);
     expect(result).toEqual([
-      "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
+      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"slug":"username","type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       ...customQueries,
       'drop.model("user")',
@@ -134,29 +141,31 @@ describe('queries', () => {
   });
 
   test('create temp model query with triggers', () => {
-    const fields: Array<ModelField> = [
-      {
-        slug: 'username',
+    const fields = {
+      username: {
         type: 'string',
         name: 'Username',
         unique: true,
         required: true,
       },
-    ];
-    const triggers: Array<ModelTrigger> = [
-      {
+    };
+
+    const triggers = {
+      test: {
         action: 'INSERT',
         when: 'BEFORE',
         effects: [],
       },
-    ];
+    };
+
+    // @ts-expect-error Todo fix this type.
     const result = createTempModelQuery({ slug: 'user', fields, triggers });
     expect(result).toEqual([
-      "create.model({slug:'RONIN_TEMP_user',fields:[{slug:'username', type:'string', name:'Username', unique:true, required:true}]})",
+      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user"})',
-      'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[]})',
+      'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[],"slug":"test"})',
     ]);
   });
 
@@ -174,12 +183,13 @@ describe('queries', () => {
 
   test('add trigger query', () => {
     const result = createTriggerQuery('user', {
+      slug: 'validateEmail',
       action: 'INSERT',
       when: 'BEFORE',
       effects: [],
     });
     expect(result).toBe(
-      'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[]})',
+      'alter.model("user").create.trigger({"slug":"validateEmail","action":"INSERT","when":"BEFORE","effects":[]})',
     );
   });
 
@@ -190,12 +200,13 @@ describe('queries', () => {
 
   test('add index query', () => {
     const result = createIndexQuery('user', {
+      slug: 'test',
       fields: [{ slug: 'email' }],
       unique: true,
     });
 
     expect(result).toBe(
-      'alter.model("user").create.index({"fields":[{"slug":"email"}],"unique":true})',
+      'alter.model("user").create.index({"slug":"test","fields":[{"slug":"email"}],"unique":true})',
     );
   });
 

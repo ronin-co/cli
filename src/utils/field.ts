@@ -1,5 +1,6 @@
 import type { MigrationOptions } from '@/src/utils/migration';
 import { RONIN_SCHEMA_TEMP_SUFFIX } from '@/src/utils/misc';
+import { convertArrayToObject } from '@/src/utils/model';
 import {
   createFieldQuery,
   createTempColumnQuery,
@@ -120,12 +121,13 @@ export const diffFields = async (
             ...createTempModelQuery(
               {
                 slug: modelSlug,
-                fields: [
+                // @ts-expect-error This will work once the types are fixed.
+                fields: convertArrayToObject([
                   { ...field.to, slug: field.from.slug },
                   ...definedFields.filter((local) => local.slug !== field.to.slug),
-                ],
-                triggers,
-                indexes,
+                ]),
+                indexes: convertArrayToObject(indexes),
+                triggers: convertArrayToObject(triggers),
               },
               [
                 renameFieldQuery(
@@ -180,9 +182,10 @@ export const diffFields = async (
         ...createTempModelQuery(
           {
             slug: modelSlug,
-            fields: updatedFields || [],
-            indexes,
-            triggers,
+            // @ts-expect-error This will work once the types are fixed.
+            fields: convertArrayToObject(updatedFields || []),
+            indexes: convertArrayToObject(indexes),
+            triggers: convertArrayToObject(triggers),
           },
           queries,
           existingFields,
@@ -288,7 +291,14 @@ const adjustFields = (
   indexes: Array<ModelIndex>,
   triggers: Array<ModelTrigger>,
 ): Array<string> => {
-  return createTempModelQuery({ slug: modelSlug, fields, indexes, triggers });
+  return createTempModelQuery({
+    slug: modelSlug,
+    // @ts-expect-error This will work once the types are fixed.
+    fields: convertArrayToObject(fields),
+    // @ts-expect-error This will work once the types are fixed.
+    indexes,
+    triggers: convertArrayToObject(triggers),
+  });
 };
 
 /**
@@ -344,7 +354,8 @@ export const createFields = async (
         return createTempModelQuery(
           {
             slug: modelSlug,
-            fields: updatedFields || [],
+            // @ts-expect-error This will work once the types are fixed.
+            fields: convertArrayToObject(updatedFields || []),
           },
           queries,
           existingFields,
@@ -354,7 +365,8 @@ export const createFields = async (
       return createTempModelQuery(
         {
           slug: modelSlug,
-          fields: definedFields || [],
+          // @ts-expect-error This will work once the types are fixed.
+          fields: convertArrayToObject(definedFields || []),
         },
         [],
         existingFields,
@@ -426,7 +438,8 @@ const deleteFields = (
       return createTempModelQuery(
         {
           slug: modelSlug,
-          fields,
+          // @ts-expect-error This will work once the types are fixed.
+          fields: convertArrayToObject(fields),
         },
         [],
         fields,

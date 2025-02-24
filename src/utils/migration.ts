@@ -1,6 +1,7 @@
 import type { parseArgs } from 'node:util';
 import { diffFields, fieldsToAdjust } from '@/src/utils/field';
 import { type BaseFlags, areArraysEqual } from '@/src/utils/misc';
+import { convertArrayToObject, convertModelToArrayFields } from '@/src/utils/model';
 import {
   createIndexQuery,
   createModelQuery,
@@ -47,10 +48,17 @@ export const IGNORED_FIELDS = [
  * @returns An array of migration steps (as code strings).
  */
 export const diffModels = async (
-  definedModels: Array<Model>,
-  existingModels: Array<Model>,
+  definedModelsWithFieldObject: Array<Model>,
+  existingModelsWithFieldObject: Array<Model>,
   options?: MigrationOptions,
 ): Promise<Array<string>> => {
+  const definedModels = definedModelsWithFieldObject.map((model) =>
+    convertModelToArrayFields(model),
+  );
+  const existingModels = existingModelsWithFieldObject.map((model) =>
+    convertModelToArrayFields(model),
+  );
+
   const diff: Array<string> = [];
 
   const adjustModelMetaQueries = adjustModelMeta(definedModels, existingModels);
@@ -82,7 +90,16 @@ export const diffModels = async (
 
   diff.push(...adjustModelMetaQueries);
   diff.push(...dropModels(modelsToBeDropped));
-  diff.push(...createModels(modelsToBeAdded));
+
+  diff.push(
+    ...createModels(
+      modelsToBeAdded.map((m) => ({
+        ...m,
+        // @ts-expect-error This will work once the types are fixed.
+        fields: convertArrayToObject(m.fields),
+      })),
+    ),
+  );
   diff.push(...(await adjustModels(definedModels, existingModels, options)));
   diff.push(...recreateIndexes);
   diff.push(...recreateTriggers);
@@ -113,6 +130,7 @@ const adjustModels = async (
     if (remoteModel) {
       diff.push(
         ...(await diffFields(
+          // @ts-expect-error This will work once the types are fixed.
           localModel.fields || [],
           remoteModel.fields || [],
           localModel.slug,
@@ -153,11 +171,8 @@ export const dropModels = (models: Array<Model>): Array<string> => {
  */
 export const createModels = (models: Array<Model>): Array<string> => {
   const diff: Array<string> = [];
-
   for (const model of models) {
-    diff.push(
-      createModelQuery(model.slug, model.fields ? { fields: model.fields } : undefined),
-    );
+    diff.push(createModelQuery(model));
   }
 
   return diff;
@@ -224,7 +239,9 @@ export const modelsToRename = (
     // Check if `model.fields` has the same fields as the current model
     const currentModel = modelsToBeDropped.find((s) => {
       return areArraysEqual(
+        // @ts-expect-error This will work once the types are fixed.
         model.fields?.map((f) => f.slug) || [],
+        // @ts-expect-error This will work once the types are fixed.
         s.fields?.map((f) => f.slug) || [],
       );
     });
@@ -293,87 +310,38 @@ export const triggersToRecreate = (
       existingModel || ({} as Model),
     );
 
-    diff.push(
-      ...(modelRecreated
-        ? []
-        : dropTriggers(definedModel, existingModel || ({} as Model))),
-      ...createTriggers(definedModel, existingModel || ({} as Model)),
-    );
-  }
+    // For each trigger in the defined model, check if a trigger with the same slug exists
+    // in the database. If it does and its properties differ, drop the existing trigger and
+    // create a new one with the updated properties.
+    const needRecreation = Object.entries(definedModel.triggers || {}).reduce<
+      Array<string>
+    >((acc, [slug, trigger]) => {
+      const existingTrigger = existingModel?.triggers?.[slug];
+      if (
+        existingTrigger &&
+        !(JSON.stringify(trigger) === JSON.stringify(existingTrigger))
+      ) {
+        const createTrigger = createTriggerQuery(definedModel.slug, {
+          slug,
+          ...trigger,
+        });
+        const dropTrigger = dropTriggerQuery(definedModel.slug, slug);
+        acc.push(dropTrigger);
+        acc.push(createTrigger);
+        return acc;
+      }
+      if (definedModel.triggers?.[slug] && !existingModel?.triggers?.[slug]) {
+        acc.push(
+          createTriggerQuery(definedModel.slug, {
+            slug,
+            ...trigger,
+          }),
+        );
+      }
+      return acc;
+    }, []);
 
-  return diff;
-};
-
-/**
- * Generates queries to drop triggers from a model.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns An array of trigger deletion queries as code strings.
- */
-export const dropTriggers = (
-  definedModel: Model,
-  existingModel: Model,
-): Array<string> => {
-  const diff: Array<string> = [];
-  const definedTriggers = definedModel.triggers || [];
-  const existingTriggers = existingModel.triggers || [];
-
-  // Find every trigger that exists but not in defined
-  const triggersToDrop =
-    existingTriggers.filter(
-      (i) =>
-        !definedTriggers.some(
-          (d) =>
-            d.fields &&
-            i.fields &&
-            d.fields.length === i.fields.length &&
-            d.fields.every(
-              (f, idx) => JSON.stringify(f) === JSON.stringify(i.fields?.[idx]),
-            ),
-        ),
-    ) || [];
-
-  for (const trigger of triggersToDrop) {
-    diff.push(dropTriggerQuery(definedModel.slug, trigger.slug || 'no slug'));
-  }
-
-  return diff;
-};
-
-/**
- * Generates queries to create triggers for a model.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns An array of trigger creation queries as code strings.
- */
-export const createTriggers = (
-  definedModel: Model,
-  existingModel: Model,
-): Array<string> => {
-  const diff: Array<string> = [];
-  const definedTriggers = definedModel.triggers || [];
-  const existingTriggers = existingModel.triggers || [];
-
-  // Find every trigger that is defined but not in `existingModel`
-  const triggersToAdd = definedTriggers.filter(
-    (i) =>
-      !existingTriggers.some(
-        (e) =>
-          e?.fields &&
-          i.fields &&
-          e.fields.length === i.fields.length &&
-          e.fields.every(
-            (f, idx) => JSON.stringify(f) === JSON.stringify(i.fields?.[idx]),
-          ),
-      ),
-  );
-
-  for (const trigger of triggersToAdd) {
-    diff.push(createTriggerQuery(definedModel.slug, trigger));
+    diff.push(...(modelRecreated ? [] : needRecreation));
   }
 
   return diff;
@@ -393,6 +361,7 @@ export const modelWillBeRecreated = (
 ): boolean => {
   if (!existingModel) return false;
   return (
+    // @ts-expect-error This will work once the types are fixed.
     (fieldsToAdjust(definedModel.fields || [], existingModel.fields || []) ?? []).length >
     0
   );
@@ -419,82 +388,35 @@ export const indexesToRecreate = (
       existingModel || ({} as Model),
     );
 
-    diff.push(
-      ...(modelRecreated
-        ? []
-        : dropIndexes(definedModel, existingModel || ({} as Model))),
-      ...createIndexes(definedModel, existingModel || ({} as Model)),
-    );
-  }
-  return diff;
-};
+    // For each index in the defined model, check if an index with the same slug exists
+    // in the database. If it does and its properties differ, drop the existing index and
+    // create a new one with the updated properties.
+    const needRecreation = Object.entries(definedModel.indexes || {}).reduce<
+      Array<string>
+    >((acc, [slug, index]) => {
+      const existingIndex = existingModel?.indexes?.[slug];
+      if (existingIndex && !(JSON.stringify(index) === JSON.stringify(existingIndex))) {
+        const createIndex = createIndexQuery(definedModel.slug, {
+          slug,
+          ...index,
+        });
+        const dropIndex = dropIndexQuery(definedModel.slug, slug);
+        acc.push(dropIndex);
+        acc.push(createIndex);
+        return acc;
+      }
+      if (definedModel.indexes?.[slug] && !existingModel?.indexes?.[slug]) {
+        acc.push(
+          createIndexQuery(definedModel.slug, {
+            slug,
+            ...index,
+          }),
+        );
+      }
+      return acc;
+    }, []);
 
-/**
- * Generates queries to drop indexes from a model.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns An array of index deletion queries as code strings.
- */
-export const dropIndexes = (definedModel: Model, existingModel: Model): Array<string> => {
-  const diff: Array<string> = [];
-  const definedIndexes = definedModel.indexes || [];
-
-  // Find every index that exists but not in defined
-  const indexesToDrop =
-    existingModel?.indexes?.filter(
-      (i) =>
-        !definedIndexes.some(
-          (d) =>
-            d.fields &&
-            i.fields &&
-            d.fields.length === i.fields.length &&
-            d.unique === i.unique &&
-            d.fields.every(
-              (f, idx) => JSON.stringify(f) === JSON.stringify(i.fields[idx]),
-            ),
-        ),
-    ) || [];
-
-  for (const index of indexesToDrop) {
-    diff.push(dropIndexQuery(definedModel.slug, index.slug || 'no slug'));
-  }
-
-  return diff;
-};
-
-/**
- * Generates queries to create indexes for a model.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns An array of index creation queries as code strings.
- */
-export const createIndexes = (
-  definedModel: Model,
-  existingModel: Model,
-): Array<string> => {
-  const diff: Array<string> = [];
-  const definedIndexes = definedModel.indexes || [];
-  const existingIndexes = existingModel.indexes || [];
-
-  // Find every index that is defined but not in `existingIndexes`
-  const indexesToAdd = definedIndexes.filter(
-    (i) =>
-      !existingIndexes.some(
-        (e) =>
-          e.fields &&
-          i.fields &&
-          e.fields.length === i.fields.length &&
-          e.unique === i.unique &&
-          e.fields.every((f, idx) => JSON.stringify(f) === JSON.stringify(i.fields[idx])),
-      ),
-  );
-
-  for (const index of indexesToAdd) {
-    diff.push(createIndexQuery(definedModel.slug, index));
+    diff.push(...(modelRecreated ? [] : needRecreation));
   }
 
   return diff;
