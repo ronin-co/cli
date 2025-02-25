@@ -130,6 +130,8 @@ export const diffFields = async (
                 triggers: convertArrayToObject(triggers),
               },
               {
+                name: options?.name,
+                pluralName: options?.pluralName,
                 customQueries: [
                   renameFieldQuery(
                     `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`,
@@ -163,7 +165,7 @@ export const diffFields = async (
       createFieldsQueries.find((q) => q.includes(RONIN_SCHEMA_TEMP_SUFFIX))
     )
   ) {
-    diff.push(...deleteFields(fieldsToDelete, modelSlug, definedFields));
+    diff.push(...deleteFields(fieldsToDelete, modelSlug, definedFields, options));
   }
 
   for (const field of queriesForAdjustment || []) {
@@ -173,7 +175,12 @@ export const diffFields = async (
     // and rename the temporary one.
     const existingField = existingFields.find((f) => f.slug === field.slug);
     if (field.unique || existingField?.unique) {
-      diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
+      diff.push(
+        ...adjustFields(modelSlug, definedFields, indexes, triggers, {
+          name: options?.name,
+          pluralName: options?.pluralName,
+        }),
+      );
     } else if (field.required && !field.defaultValue) {
       const { definedFields: updatedFields, queries } = await handleRequiredField(
         modelSlug,
@@ -192,13 +199,20 @@ export const diffFields = async (
             triggers: convertArrayToObject(triggers),
           },
           {
+            name: options?.name,
+            pluralName: options?.pluralName,
             customQueries: queries,
             includeFields: existingFields,
           },
         ),
       );
     } else if (field.type === 'link' && field.kind === 'many') {
-      diff.push(...adjustFields(modelSlug, definedFields, indexes, triggers));
+      diff.push(
+        ...adjustFields(modelSlug, definedFields, indexes, triggers, {
+          name: options?.name,
+          pluralName: options?.pluralName,
+        }),
+      );
     } else {
       diff.push(...createTempColumnQuery(modelSlug, field, indexes, triggers));
     }
@@ -296,15 +310,19 @@ const adjustFields = (
   fields: Array<ModelField>,
   indexes: Array<ModelIndex>,
   triggers: Array<ModelTrigger>,
+  options?: MigrationOptions,
 ): Array<string> => {
-  return createTempModelQuery({
-    slug: modelSlug,
-    // @ts-expect-error This will work once the types are fixed.
-    fields: convertArrayToObject(fields),
-    // @ts-expect-error This will work once the types are fixed.
-    indexes,
-    triggers: convertArrayToObject(triggers),
-  });
+  return createTempModelQuery(
+    {
+      slug: modelSlug,
+      // @ts-expect-error This will work once the types are fixed.
+      fields: convertArrayToObject(fields),
+      // @ts-expect-error This will work once the types are fixed.
+      indexes,
+      triggers: convertArrayToObject(triggers),
+    },
+    options,
+  );
 };
 
 /**
@@ -367,6 +385,8 @@ export const createFields = async (
           {
             customQueries: queries,
             includeFields: existingFields,
+            name: options?.name,
+            pluralName: options?.pluralName,
           },
         );
       }
@@ -379,6 +399,8 @@ export const createFields = async (
         },
         {
           includeFields: existingFields,
+          name: options?.name,
+          pluralName: options?.pluralName,
         },
       );
     }
@@ -459,6 +481,7 @@ const deleteFields = (
   fieldsToDrop: Array<ModelField>,
   modelSlug: string,
   fields: Array<ModelField>,
+  options?: MigrationOptions,
 ): Array<string> => {
   const diff: Array<string> = [];
   for (const fieldToDrop of fieldsToDrop) {
@@ -471,6 +494,8 @@ const deleteFields = (
         },
         {
           includeFields: fields,
+          name: options?.name,
+          pluralName: options?.pluralName,
         },
       );
     }

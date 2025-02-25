@@ -107,13 +107,16 @@ describe('queries', () => {
       },
     };
 
-    // @ts-expect-error TODO: Fix this type.
-    const result = createTempModelQuery({ slug: 'user', fields });
+    const result = createTempModelQuery(
+      // @ts-expect-error TODO: Fix this type.
+      { slug: 'user', fields },
+      { name: 'User', pluralName: 'Users' },
+    );
     expect(result).toEqual([
       'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
-      'alter.model("RONIN_TEMP_user").to({slug: "user"})',
+      'alter.model("RONIN_TEMP_user").to({slug: "user", name: "User", pluralName: "Users"})',
     ]);
   });
 
@@ -129,14 +132,17 @@ describe('queries', () => {
     };
 
     const customQueries: Array<string> = ['get.model("user")'];
-    // @ts-expect-error TODO: Fix this type.
-    const result = createTempModelQuery({ slug: 'user', fields }, { customQueries });
+    const result = createTempModelQuery(
+      // @ts-expect-error TODO: Fix this type.
+      { slug: 'user', fields },
+      { customQueries, name: 'User', pluralName: 'Users' },
+    );
     expect(result).toEqual([
       'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"slug":"username","type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       ...customQueries,
       'drop.model("user")',
-      'alter.model("RONIN_TEMP_user").to({slug: "user"})',
+      'alter.model("RONIN_TEMP_user").to({slug: "user", name: "User", pluralName: "Users"})',
     ]);
   });
 
@@ -158,13 +164,19 @@ describe('queries', () => {
       },
     };
 
-    // @ts-expect-error Todo fix this type.
-    const result = createTempModelQuery({ slug: 'user', fields, triggers });
+    const result = createTempModelQuery(
+      // @ts-expect-error Todo fix this type.
+      { slug: 'user', fields, triggers },
+      {
+        name: 'User',
+        pluralName: 'Users',
+      },
+    );
     expect(result).toEqual([
       'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       'drop.model("user")',
-      'alter.model("RONIN_TEMP_user").to({slug: "user"})',
+      'alter.model("RONIN_TEMP_user").to({slug: "user", name: "User", pluralName: "Users"})',
       'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[],"slug":"test"})',
     ]);
   });

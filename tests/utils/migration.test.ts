@@ -39,14 +39,19 @@ describe('migration', () => {
 
     test('generates migration steps when renaming model slug', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account], [Account2], { rename: true });
+      const modelDiff = await diffModels([Account], [Account2], {
+        rename: true,
+        name: 'Account',
+        pluralName: 'Accounts',
+      });
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
         'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"type":"string"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
-        'alter.model("RONIN_TEMP_account").to({slug: "account"})',
+        // The names are undefined because the existing model never got run through the compiler.
+        'alter.model("RONIN_TEMP_account").to({slug: "account", name: "undefined", pluralName: "undefined"})',
       ]);
     });
 
@@ -76,33 +81,42 @@ describe('migration', () => {
         'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"required":true,"unique":true,"type":"string"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
-        'alter.model("RONIN_TEMP_account").to({slug: "account"})',
+        // The names are undefined because the existing model never got run through the compiler.
+        'alter.model("RONIN_TEMP_account").to({slug: "account", name: "undefined", pluralName: "undefined"})',
       ]);
     });
 
     test('generates migration steps when meta model properties change', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([TestC], [TestA]);
+      const modelDiff = await diffModels([TestC], [TestA], {
+        name: 'ThisIsACoolModel',
+        pluralName: 'ThisIsACoolModels',
+      });
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
         'create.model({"slug":"RONIN_TEMP_test","fields":{"age":{"required":true,"unique":true,"type":"string"},"active":{"type":"boolean"}},"name":"ThisIsACoolModel","idPrefix":"TICM"})',
         'add.RONIN_TEMP_test.with(() => get.test())',
         'drop.model("test")',
-        'alter.model("RONIN_TEMP_test").to({slug: "test"})',
+        // The names are undefined because the existing model never got run through the compiler.
+        'alter.model("RONIN_TEMP_test").to({slug: "test", name: "undefined", pluralName: "undefined"})',
       ]);
     });
 
     test('generates migration steps when field definitions differ', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account], [Account2]);
+      const modelDiff = await diffModels([Account], [Account2], {
+        name: 'Account',
+        pluralName: 'Accounts',
+      });
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
         'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"type":"string"}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
-        'alter.model("RONIN_TEMP_account").to({slug: "account"})',
+        // The names are undefined because the existing model never got run through the compiler.
+        'alter.model("RONIN_TEMP_account").to({slug: "account", name: "undefined", pluralName: "undefined"})',
       ]);
     });
 
@@ -379,11 +393,13 @@ describe('migration', () => {
         {
           slug: 'test1',
           name: 'Old Name 1',
+          pluralName: 'Old Plural Name 1',
           idPrefix: 'OLD1',
         },
         {
           slug: 'test2',
           name: 'Test Model 2', // Same name
+          pluralName: 'Old Plural Name 2',
           idPrefix: 'OLD2',
         },
       ];
@@ -395,11 +411,11 @@ describe('migration', () => {
         'create.model({"slug":"RONIN_TEMP_test1","fields":{},"name":"Test Model 1","idPrefix":"TM1"})',
         'add.RONIN_TEMP_test1.with(() => get.test1())',
         'drop.model("test1")',
-        'alter.model("RONIN_TEMP_test1").to({slug: "test1"})',
+        'alter.model("RONIN_TEMP_test1").to({slug: "test1", name: "Old Name 1", pluralName: "Old Plural Name 1"})',
         'create.model({"slug":"RONIN_TEMP_test2","fields":{},"name":"Test Model 2","idPrefix":"TM2"})',
         'add.RONIN_TEMP_test2.with(() => get.test2())',
         'drop.model("test2")',
-        'alter.model("RONIN_TEMP_test2").to({slug: "test2"})',
+        'alter.model("RONIN_TEMP_test2").to({slug: "test2", name: "Test Model 2", pluralName: "Old Plural Name 2"})',
       ]);
     });
 
