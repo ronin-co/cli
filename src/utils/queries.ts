@@ -119,6 +119,8 @@ export const createTempModelQuery = (
   options?: {
     customQueries?: Array<string>;
     includeFields?: Array<ModelField>;
+    name?: string;
+    pluralName?: string;
   },
 ): Array<string> => {
   const { slug, fields, indexes: _indexes, triggers, ...rest } = model;
@@ -146,7 +148,9 @@ export const createTempModelQuery = (
   queries.push(dropModelQuery(slug));
 
   // Rename the copied model to the original model
-  queries.push(`alter.model("${tempModelSlug}").to({slug: "${slug}"})`);
+  queries.push(
+    `alter.model("${tempModelSlug}").to({slug: "${slug}", name: "${options?.name}", pluralName: "${options?.pluralName}"})`,
+  );
 
   for (const [key, value] of Object.entries(triggers || {})) {
     queries.push(createTriggerQuery(slug, { ...value, slug: key }));

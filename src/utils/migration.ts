@@ -10,6 +10,7 @@ import {
   createIndexQuery,
   createModelQuery,
   createTempModelQuery,
+  createTempModelQuery,
   createTriggerQuery,
   dropIndexQuery,
   dropModelQuery,
@@ -25,6 +26,8 @@ import type { Model } from '@ronin/compiler';
 export type MigrationOptions = {
   rename?: boolean;
   requiredDefault?: boolean | string;
+  name?: string;
+  pluralName?: string;
 };
 
 /**
@@ -127,7 +130,6 @@ const adjustModels = async (
   options?: MigrationOptions,
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
-
   // Adjust models
   for (const localModel of definedModels) {
     const remoteModel = existingModels.find((r) => r.slug === localModel.slug);
@@ -140,7 +142,7 @@ const adjustModels = async (
           localModel.slug,
           localModel.indexes || [],
           localModel.triggers || [],
-          options,
+          { ...options, name: remoteModel.name, pluralName: remoteModel.pluralName },
         )),
       );
     }
@@ -282,7 +284,12 @@ export const adjustModelMeta = (
       if (model.idPrefix && model.idPrefix !== currentModel.idPrefix) {
         // If the prefix changes we need to recreate the model.
         // All records inserted will use the new prefix. All old ids are not updated.
-        newModels.push(...createTempModelQuery(convertModelToObjectFields(model)));
+        newModels.push(
+          ...createTempModelQuery(convertModelToObjectFields(model), {
+            name: currentModel.name,
+            pluralName: currentModel.pluralName,
+          }),
+        );
       } else if (model.name && model.name !== currentModel.name) {
         // Otherwise, just update the name.
         newModels.push(`alter.model("${model.slug}").to({name: "${model.name}"})`);

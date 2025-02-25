@@ -168,13 +168,16 @@ describe('fields', () => {
           unique: false,
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], []);
+      const diff = await diffFields(localFields, remoteFields, 'account', [], [], {
+        name: 'Account',
+        pluralName: 'Accounts',
+      });
       expect(diff).toHaveLength(4);
       expect(diff).toStrictEqual([
         'create.model({"slug":"RONIN_TEMP_account","fields":{"id":{"type":"number","unique":true}}})',
         'add.RONIN_TEMP_account.with(() => get.account())',
         'drop.model("account")',
-        'alter.model("RONIN_TEMP_account").to({slug: "account"})',
+        'alter.model("RONIN_TEMP_account").to({slug: "account", name: "Account", pluralName: "Accounts"})',
       ]);
     });
 
@@ -194,6 +197,8 @@ describe('fields', () => {
         },
       ];
       const diff = await diffFields(localFields, remoteFields, 'account', [], [], {
+        name: 'Account',
+        pluralName: 'Accounts',
         rename: true,
       });
       expect(diff).toHaveLength(5);
@@ -202,7 +207,7 @@ describe('fields', () => {
         'add.RONIN_TEMP_account.with(() => get.account())',
         'alter.model("RONIN_TEMP_account").alter.field("profile").to({slug: "newProfile"})',
         'drop.model("account")',
-        'alter.model("RONIN_TEMP_account").to({slug: "account"})',
+        'alter.model("RONIN_TEMP_account").to({slug: "account", name: "Account", pluralName: "Accounts"})',
       ]);
     });
 
