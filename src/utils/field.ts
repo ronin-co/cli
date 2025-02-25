@@ -129,13 +129,15 @@ export const diffFields = async (
                 indexes: convertArrayToObject(indexes),
                 triggers: convertArrayToObject(triggers),
               },
-              [
-                renameFieldQuery(
-                  `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`,
-                  field.from.slug,
-                  field.to.slug,
-                ),
-              ],
+              {
+                customQueries: [
+                  renameFieldQuery(
+                    `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`,
+                    field.from.slug,
+                    field.to.slug,
+                  ),
+                ],
+              },
             ),
           );
         } else {
@@ -187,8 +189,10 @@ export const diffFields = async (
             indexes: convertArrayToObject(indexes),
             triggers: convertArrayToObject(triggers),
           },
-          queries,
-          existingFields,
+          {
+            customQueries: queries,
+            includeFields: existingFields,
+          },
         ),
       );
     } else if (field.type === 'link' && field.kind === 'many') {
@@ -357,8 +361,10 @@ export const createFields = async (
             // @ts-expect-error This will work once the types are fixed.
             fields: convertArrayToObject(updatedFields || []),
           },
-          queries,
-          existingFields,
+          {
+            customQueries: queries,
+            includeFields: existingFields,
+          },
         );
       }
 
@@ -368,8 +374,9 @@ export const createFields = async (
           // @ts-expect-error This will work once the types are fixed.
           fields: convertArrayToObject(definedFields || []),
         },
-        [],
-        existingFields,
+        {
+          includeFields: existingFields,
+        },
       );
     }
     // Handle required fields by prompting for default value since SQLite doesn't allow
@@ -441,8 +448,9 @@ const deleteFields = (
           // @ts-expect-error This will work once the types are fixed.
           fields: convertArrayToObject(fields),
         },
-        [],
-        fields,
+        {
+          includeFields: fields,
+        },
       );
     }
     diff.push(dropFieldQuery(modelSlug, fieldToDrop.slug));

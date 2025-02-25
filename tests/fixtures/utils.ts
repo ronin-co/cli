@@ -159,6 +159,7 @@ export const getTableRows = async (
       inlineParams: true,
     },
   );
+
   const result = await db.query(transaction.statements);
   return result[0].rows;
 };

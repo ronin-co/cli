@@ -37,18 +37,22 @@ export default async (
     // Get all filenames of migrations in the migrations directory.
     const migrations = fs.readdirSync(MIGRATIONS_PATH);
 
-    const migrationPrompt =
-      migrationFilePath ??
-      (await select({
-        message: 'Which migration do you want to apply?',
-        choices: migrations
-          // Sort in reverse lexical order
-          .sort((a, b) => b.localeCompare(a))
-          .map((migration) => ({
-            name: migration,
-            value: path.join(MIGRATIONS_PATH, migration),
-          })),
-      }));
+    let migrationPrompt: string | undefined;
+
+    if (!flags.apply) {
+      migrationPrompt =
+        migrationFilePath ??
+        (await select({
+          message: 'Which migration do you want to apply?',
+          choices: migrations
+            // Sort in reverse lexical order
+            .sort((a, b) => b.localeCompare(a))
+            .map((migration) => ({
+              name: migration,
+              value: path.join(MIGRATIONS_PATH, migration),
+            })),
+        }));
+    }
 
     const protocol = await new Protocol(packages).load(migrationPrompt);
     const statements = protocol.getSQLStatements(

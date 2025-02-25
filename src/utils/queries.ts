@@ -116,8 +116,10 @@ export const dropFieldQuery = (modelSlug: string, fieldSlug: string): string => 
  */
 export const createTempModelQuery = (
   model: Model,
-  customQueries?: Array<string>,
-  includeFields?: Array<ModelField>,
+  options?: {
+    customQueries?: Array<string>;
+    includeFields?: Array<ModelField>;
+  },
 ): Array<string> => {
   const { slug, fields, indexes: _indexes, triggers, ...rest } = model;
   const queries: Array<string> = [];
@@ -130,14 +132,14 @@ export const createTempModelQuery = (
   // Move all the data to the copied model
   queries.push(
     `add.${tempModelSlug}.with(() => get.${slug}(${
-      includeFields
-        ? JSON.stringify({ selecting: includeFields.map((field) => field.slug) })
+      options?.includeFields
+        ? JSON.stringify({ selecting: options.includeFields.map((field) => field.slug) })
         : ''
     }))`,
   );
 
-  if (customQueries) {
-    queries.push(...customQueries);
+  if (options?.customQueries) {
+    queries.push(...options.customQueries);
   }
 
   // Delete the original model

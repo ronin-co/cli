@@ -42,7 +42,7 @@
     "resolve-from": "5.0.0"
   },
   "devDependencies": {
-    "ronin": "6.2.16",
+    "ronin": "6.2.22",
     "@biomejs/biome": "1.9.4",
     "@types/bun": "1.2.1",
     "@types/ini": "4.1.1",
