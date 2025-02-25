@@ -32,7 +32,7 @@ import {
 import { getRowCount, getSQLTables, getTableRows, runMigration } from '@/fixtures/utils';
 import { getLocalPackages } from '@/src/utils/misc';
 import type { Model } from 'ronin/schema';
-import { model, string } from 'ronin/schema';
+import { model, number, random, string } from 'ronin/schema';
 const packages = await getLocalPackages();
 const { Transaction } = packages.compiler;
 
@@ -348,6 +348,48 @@ describe('apply', () => {
             tests: 0,
           });
         });
+
+        test('add field with expression as default value', async () => {
+          const ModelA = model({
+            slug: 'a',
+            fields: {
+              name: string(),
+            },
+          }) as unknown as Model;
+
+          const ModelB = model({
+            slug: 'a',
+            fields: {
+              name: string(),
+              age: number().defaultValue(() => random()),
+            },
+          }) as unknown as Model;
+
+          // @ts-expect-error This works once the types are fixed.
+          const { models, db, modelDiff } = await runMigration([ModelB], [ModelA], {
+            requiredDefault: 'RONIN_TEST_VALUE',
+          });
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+
+          expect(modelDiff[0]).toContain(
+            'create.model({"slug":"RONIN_TEMP_a","fields":{"name":{"type":"string"},"age":{"type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}}}})',
+          );
+
+          expect(models).toHaveLength(1);
+          // @ts-expect-error This is defined!
+          expect(models[0]?.fields[1].defaultValue).toEqual({
+            __RONIN_EXPRESSION: 'random()',
+          });
+          expect(rowCounts).toEqual({
+            as: 0,
+          });
+        });
       });
 
       describe('drop', () => {
@@ -424,6 +466,49 @@ describe('apply', () => {
           expect(models).toHaveLength(1);
           expect(rowCounts).toEqual({
             tests: 0,
+          });
+        });
+
+        test('update field with expression as default value', async () => {
+          const ModelA = model({
+            slug: 'a',
+            fields: {
+              name: string(),
+              age: number().defaultValue(() => 25),
+            },
+          }) as unknown as Model;
+
+          const ModelB = model({
+            slug: 'a',
+            fields: {
+              name: string(),
+              age: number().defaultValue(() => random()),
+            },
+          }) as unknown as Model;
+
+          // @ts-expect-error This works once the types are fixed.
+          const { models, db, modelDiff } = await runMigration([ModelB], [ModelA], {
+            requiredDefault: 'RONIN_TEST_VALUE',
+          });
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+
+          expect(modelDiff[0]).toContain(
+            'alter.model(\'a\').create.field({"slug":"RONIN_TEMP_age","type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}})',
+          );
+
+          expect(models).toHaveLength(1);
+          // @ts-expect-error This is defined!
+          expect(models[0]?.fields[1].defaultValue).toEqual({
+            __RONIN_EXPRESSION: 'random()',
+          });
+          expect(rowCounts).toEqual({
+            as: 0,
           });
         });
       });
@@ -503,6 +588,7 @@ describe('apply', () => {
           expect(rowCounts).toEqual({
             accounts: 1,
           });
+
           expect(rows[0].email).toBe('RONIN_TEST_VALUE');
         });
 
@@ -522,14 +608,16 @@ describe('apply', () => {
             inlineParams: true,
           });
 
-          const { models, db } = await runMigration(
+          const { models, db, modelDiff } = await runMigration(
             [AccountWithRequiredDefault],
             [Account],
             { rename: false, requiredDefault: 'RONIN_TEST_VALUE' },
             transaction.statements.map((statement) => statement),
           );
 
-          const rows = await getTableRows(db, Account3);
+          await db.query(transaction.statements);
+
+          const rows = await getTableRows(db, AccountWithRequiredDefault);
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -537,9 +625,12 @@ describe('apply', () => {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
+
+          expect(modelDiff).toHaveLength(1);
           expect(rowCounts).toEqual({
-            accounts: 1,
+            accounts: 2,
           });
+
           expect(rows[0].email).toBe('RONIN_TEST_VALUE_REQUIRED_DEFAULT');
         });
 

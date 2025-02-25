@@ -122,7 +122,7 @@ export const runMigration = async (
  * @returns The number of records in the table.
  */
 export const getRowCount = async (db: Database, modelSlug: string): Promise<number> => {
-  const res = await db.query([`SELECT COUNT(*) FROM ${modelSlug};`]);
+  const res = await db.query([`SELECT COUNT(*) FROM "${modelSlug}";`]);
   return res[0].rows[0]['COUNT(*)'];
 };
 
