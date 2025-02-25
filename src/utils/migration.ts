@@ -22,10 +22,10 @@ import type { Model } from '@ronin/compiler';
 /**
  * Options for migration operations.
  */
-export type MigrationOptions = {
+export interface MigrationOptions {
   rename?: boolean;
   requiredDefault?: boolean | string;
-};
+}
 
 /**
  * Fields to ignore.

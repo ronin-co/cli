@@ -147,10 +147,12 @@ export const diffFields = async (
     }
   }
 
+
   const createFieldsQueries = await createFields(
     fieldsToAdd,
     modelSlug,
     definedFields,
+    existingFields,
     options,
   );
 
@@ -334,6 +336,7 @@ export const createFields = async (
   fields: Array<ModelField>,
   modelSlug: string,
   definedFields?: Array<ModelField>,
+  existingFields?: Array<ModelField>,
   options?: MigrationOptions,
 ): Promise<Array<string>> => {
   const diff: Array<string> = [];
@@ -379,6 +382,7 @@ export const createFields = async (
         },
       );
     }
+
     // Handle required fields by prompting for default value since SQLite doesn't allow
     // adding NOT NULL columns without defaults.
     if (fieldToAdd.required && !fieldToAdd.defaultValue) {
@@ -403,9 +407,26 @@ export const createFields = async (
       );
       return diff;
     }
+
+    // If the field contains an expression as default value, we need to create a temporary
+    // model with the existing fields and the new field. This is because SQLite doesn't
+    // support expressions as default values.
+    if (fieldToAdd.defaultValue && typeof fieldToAdd.defaultValue === 'object') {
+      diff.push(
+        ...createTempModelQuery(
+          {
+            slug: modelSlug,
+            // @ts-expect-error This will work once the types are fixed.
+            fields: convertArrayToObject(definedFields),
+          },
+          { includeFields: existingFields },
+        ),
+      );
+      return diff;
+    }
+
     diff.push(createFieldQuery(modelSlug, fieldToAdd));
   }
-
   return diff;
 };
 
