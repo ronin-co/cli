@@ -31,7 +31,7 @@ import {
 } from '@/fixtures/index';
 import { getRowCount, getSQLTables, getTableRows, runMigration } from '@/fixtures/utils';
 import { getLocalPackages } from '@/src/utils/misc';
-import type { Model } from '@ronin/syntax/schema';
+import type { Model } from 'ronin/schema';
 import { model, string } from 'ronin/schema';
 const packages = await getLocalPackages();
 const { Transaction } = packages.compiler;
@@ -52,6 +52,8 @@ describe('apply', () => {
 
           expect(statements).toHaveLength(4);
           expect(models).toHaveLength(1);
+          expect(models[0].name).toBe('Test');
+          expect(models[0].pluralName).toBe('Tests');
           expect(models[0].slug).toBe('test');
           expect(rowCounts).toEqual({
             tests: 0,
@@ -69,6 +71,8 @@ describe('apply', () => {
           }
           expect(statements).toHaveLength(4);
           expect(models).toHaveLength(1);
+          expect(models[0].name).toBe('Test');
+          expect(models[0].pluralName).toBe('Tests');
           expect(models[0].slug).toBe('test');
           expect(rowCounts).toEqual({
             tests: 0,
@@ -86,6 +90,8 @@ describe('apply', () => {
           }
           expect(models).toHaveLength(2);
           expect(models[0].triggers).toBeDefined();
+          expect(models[0].name).toBe('ThisIsACoolModel');
+          expect(models[0].pluralName).toBe('Tests');
           expect(rowCounts).toEqual({
             tests: 0,
             comments: 0,
@@ -103,6 +109,10 @@ describe('apply', () => {
           }
           expect(statements.length).toEqual(4);
           expect(models).toHaveLength(2);
+          expect(models[0].name).toBe('Account');
+          expect(models[0].pluralName).toBe('Accounts');
+          expect(models[1].name).toBe('Profile');
+          expect(models[1].pluralName).toBe('Profiles');
           expect(rowCounts).toEqual({
             accounts: 0,
             profiles: 0,
@@ -201,7 +211,7 @@ describe('apply', () => {
           }
 
           expect(models).toHaveLength(1);
-          expect(models[0].name).toBe('ThisIsACoolModel');
+          expect(models[0].name).toBe('Test');
           expect(rowCounts).toEqual({
             tests: 0,
           });
@@ -292,6 +302,8 @@ describe('apply', () => {
           const rows = await getTableRows(db, models[0]);
 
           expect(models[0].slug).toBe('test');
+          expect(models[0].name).toBe('Test');
+          expect(models[0].pluralName).toBe('Tests');
           expect(rows[0].id).toContain('corny_');
           expect(rows[1].id).toContain('test_');
         });
