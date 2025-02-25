@@ -27,7 +27,7 @@ export interface MigrationOptions {
   requiredDefault?: boolean | string;
   name?: string;
   pluralName?: string;
-};
+}
 
 /**
  * Fields to ignore.

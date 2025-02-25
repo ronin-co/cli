@@ -149,7 +149,6 @@ export const diffFields = async (
     }
   }
 
-
   const createFieldsQueries = await createFields(
     fieldsToAdd,
     modelSlug,
