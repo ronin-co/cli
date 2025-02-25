@@ -430,8 +430,7 @@ export const createFields = async (
     }
 
     // If the field contains an expression as default value, we need to create a temporary
-    // model with the existing fields and the new field. This is because SQLite doesn't
-    // support expressions as default values.
+    // model with the existing fields and the new field.
     if (fieldToAdd.defaultValue && typeof fieldToAdd.defaultValue === 'object') {
       diff.push(
         ...createTempModelQuery(
