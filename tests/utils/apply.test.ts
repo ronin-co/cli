@@ -191,7 +191,7 @@ describe('apply', () => {
           });
         });
 
-        test.only('meta properties', async () => {
+        test('meta properties', async () => {
           const { models, db, modelDiff, statements } = await runMigration(
             [TestC],
             [TestA],
@@ -287,19 +287,17 @@ describe('apply', () => {
             inlineParams: true,
           });
 
-          const { modelDiff, db, statements, models } = await runMigration(
+          const { db, models } = await runMigration(
             [definedModel],
             [existingModel],
             {},
             transaction.statements.map((statement) => statement),
           );
 
-          console.log(models);
+          const rows = await getTableRows(db, models[0]);
+          console.log(rows);
 
           await db.query(transaction.statements);
-
-          const rows = await getTableRows(db, definedModel);
-          console.log(rows);
 
           expect(rows[0].id).toContain('corny_');
           expect(rows[1].id).toContain('test_');

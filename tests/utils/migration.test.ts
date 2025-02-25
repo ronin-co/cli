@@ -392,11 +392,11 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(8);
       expect(queries).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_test1',name:'Test Model 1', idPrefix:'TM1'})",
+        'create.model({"slug":"RONIN_TEMP_test1","name":"Test Model 1","idPrefix":"TM1"})',
         'add.RONIN_TEMP_test1.with(() => get.test1())',
         'drop.model("test1")',
         'alter.model("RONIN_TEMP_test1").to({slug: "test1"})',
-        "create.model({slug:'RONIN_TEMP_test2',name:'Test Model 2', idPrefix:'TM2'})",
+        'create.model({"slug":"RONIN_TEMP_test2","name":"Test Model 2","idPrefix":"TM2"})',
         'add.RONIN_TEMP_test2.with(() => get.test2())',
         'drop.model("test2")',
         'alter.model("RONIN_TEMP_test2").to({slug: "test2"})',
