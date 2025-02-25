@@ -30,7 +30,6 @@ import {
   TestU,
 } from '@/fixtures/index';
 import { getRowCount, getSQLTables, getTableRows, runMigration } from '@/fixtures/utils';
-import { formatSqliteStatement } from '@/src/utils/format';
 import { getLocalPackages } from '@/src/utils/misc';
 import type { Model } from '@ronin/syntax/schema';
 import { model, string } from 'ronin/schema';
@@ -192,10 +191,7 @@ describe('apply', () => {
         });
 
         test('meta properties', async () => {
-          const { models, db, modelDiff, statements } = await runMigration(
-            [TestC],
-            [TestA],
-          );
+          const { models, db } = await runMigration([TestC], [TestA]);
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -203,11 +199,7 @@ describe('apply', () => {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
-          console.log(modelDiff);
-          for (const statement of statements) {
-            console.log(formatSqliteStatement(statement.statement));
-          }
-          console.log(JSON.stringify(models, null, 2));
+
           expect(models).toHaveLength(1);
           expect(models[0].name).toBe('ThisIsACoolModel');
           expect(rowCounts).toEqual({
@@ -255,7 +247,7 @@ describe('apply', () => {
       });
 
       describe('update', () => {
-        test.only('id prefix', async () => {
+        test('id prefix', async () => {
           const definedModel = model({
             slug: 'test',
             idPrefix: 'test',
@@ -283,22 +275,23 @@ describe('apply', () => {
           };
 
           const transaction = new Transaction([insert], {
+            // @ts-expect-error This works once the types are fixed.
             models: [definedModel, existingModel],
             inlineParams: true,
           });
 
           const { db, models } = await runMigration(
+            // @ts-expect-error This works once the types are fixed.
             [definedModel],
             [existingModel],
             {},
             transaction.statements.map((statement) => statement),
           );
 
-          const rows = await getTableRows(db, models[0]);
-          console.log(rows);
-
           await db.query(transaction.statements);
+          const rows = await getTableRows(db, models[0]);
 
+          expect(models[0].slug).toBe('test');
           expect(rows[0].id).toContain('corny_');
           expect(rows[1].id).toContain('test_');
         });

@@ -86,7 +86,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        "create.model({slug:'RONIN_TEMP_test',fields:[{slug:'age', required:true, unique:true, type:'string'}, {slug:'active', type:'boolean'}], name:'ThisIsACoolModel', idPrefix:'TICM'})",
+        'create.model({"slug":"RONIN_TEMP_test","fields":{"age":{"required":true,"unique":true,"type":"string"},"active":{"type":"boolean"}},"name":"ThisIsACoolModel","idPrefix":"TICM"})',
         'add.RONIN_TEMP_test.with(() => get.test())',
         'drop.model("test")',
         'alter.model("RONIN_TEMP_test").to({slug: "test"})',
@@ -392,11 +392,11 @@ describe('migration', () => {
 
       expect(queries).toHaveLength(8);
       expect(queries).toStrictEqual([
-        'create.model({"slug":"RONIN_TEMP_test1","name":"Test Model 1","idPrefix":"TM1"})',
+        'create.model({"slug":"RONIN_TEMP_test1","fields":{},"name":"Test Model 1","idPrefix":"TM1"})',
         'add.RONIN_TEMP_test1.with(() => get.test1())',
         'drop.model("test1")',
         'alter.model("RONIN_TEMP_test1").to({slug: "test1"})',
-        'create.model({"slug":"RONIN_TEMP_test2","name":"Test Model 2","idPrefix":"TM2"})',
+        'create.model({"slug":"RONIN_TEMP_test2","fields":{},"name":"Test Model 2","idPrefix":"TM2"})',
         'add.RONIN_TEMP_test2.with(() => get.test2())',
         'drop.model("test2")',
         'alter.model("RONIN_TEMP_test2").to({slug: "test2"})',
@@ -427,7 +427,7 @@ describe('migration', () => {
       ];
 
       const queries = adjustModelMeta(definedModels, existingModels);
-      console.log(queries);
+
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual(['alter.model("test1").to({name: "Test Model 1"})']);
     });

@@ -56,7 +56,6 @@ export const prefillDatabase = async (
   // Create the root model and all other models.
   await db.query([...rootModelTransaction.statements, ...modelTransaction.statements]);
 
-  console.log(insertStatements);
   // Insert records into the database.
   await db.query(insertStatements);
 };
@@ -160,9 +159,7 @@ export const getTableRows = async (
       inlineParams: true,
     },
   );
-  const dbContents = await db.getContents();
-  Bun.write('db.sqlite', dbContents);
+
   const result = await db.query(transaction.statements);
-  console.log(result[0].rows);
   return result[0].rows;
 };

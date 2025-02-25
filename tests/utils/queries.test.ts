@@ -130,7 +130,7 @@ describe('queries', () => {
 
     const customQueries: Array<string> = ['get.model("user")'];
     // @ts-expect-error TODO: Fix this type.
-    const result = createTempModelQuery({ slug: 'user', fields }, customQueries);
+    const result = createTempModelQuery({ slug: 'user', fields }, { customQueries });
     expect(result).toEqual([
       'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"slug":"username","type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',

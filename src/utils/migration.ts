@@ -1,7 +1,11 @@
 import type { parseArgs } from 'node:util';
 import { diffFields, fieldsToAdjust } from '@/src/utils/field';
 import { type BaseFlags, areArraysEqual } from '@/src/utils/misc';
-import { convertArrayToObject, convertModelToArrayFields } from '@/src/utils/model';
+import {
+  convertArrayToObject,
+  convertModelToArrayFields,
+  convertModelToObjectFields,
+} from '@/src/utils/model';
 import {
   createIndexQuery,
   createModelQuery,
@@ -278,7 +282,7 @@ export const adjustModelMeta = (
       if (model.idPrefix && model.idPrefix !== currentModel.idPrefix) {
         // If the prefix changes we need to recreate the model.
         // All records inserted will use the new prefix. All old ids are not updated.
-        newModels.push(...createTempModelQuery(model));
+        newModels.push(...createTempModelQuery(convertModelToObjectFields(model)));
       } else if (model.name && model.name !== currentModel.name) {
         // Otherwise, just update the name.
         newModels.push(`alter.model("${model.slug}").to({name: "${model.name}"})`);
