@@ -32,7 +32,7 @@ import {
 import { getRowCount, getSQLTables, getTableRows, runMigration } from '@/fixtures/utils';
 import { getLocalPackages } from '@/src/utils/misc';
 import type { Model } from 'ronin/schema';
-import { model, string } from 'ronin/schema';
+import { model, number, random, string } from 'ronin/schema';
 const packages = await getLocalPackages();
 const { Transaction } = packages.compiler;
 
