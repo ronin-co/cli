@@ -10,7 +10,6 @@ import {
   createIndexQuery,
   createModelQuery,
   createTempModelQuery,
-  createTempModelQuery,
   createTriggerQuery,
   dropIndexQuery,
   dropModelQuery,
