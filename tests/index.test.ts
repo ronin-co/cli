@@ -58,7 +58,7 @@ describe('CLI', () => {
 
   describe('misc', () => {
     test('should break arg parse', async () => {
-      process.argv = ['node', 'ronin', '--invalid-flag'];
+      process.argv = ['bun', 'ronin', '--invalid-flag'];
       const exitSpy = spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('process.exit called');
       });
@@ -72,7 +72,7 @@ describe('CLI', () => {
     });
 
     test('should handle SIGINT gracefully', async () => {
-      process.argv = ['node', 'ronin'];
+      process.argv = ['bun', 'ronin'];
       const exitSpy = spyOn(process, 'exit').mockImplementation(() => 'Exited' as never);
 
       try {
@@ -85,7 +85,7 @@ describe('CLI', () => {
     });
 
     test('should handle SIGTERM gracefully', async () => {
-      process.argv = ['node', 'ronin'];
+      process.argv = ['bun', 'ronin'];
       const exitSpy = spyOn(process, 'exit').mockImplementation(() => 'Exited' as never);
 
       try {
@@ -98,7 +98,7 @@ describe('CLI', () => {
     });
 
     test('should exit when running in non-interactive shell without app token', async () => {
-      process.argv = ['node', 'ronin'];
+      process.argv = ['bun', 'ronin'];
       process.stdout.isTTY = false;
       const exitSpy = spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('process.exit called');
@@ -115,7 +115,7 @@ describe('CLI', () => {
 
   describe('help', () => {
     test('should print help when --help flag is provided', async () => {
-      process.argv = ['node', 'ronin', '--help'];
+      process.argv = ['bun', 'ronin', '--help'];
       const helpSpy = spyOn(infoModule, 'printHelp');
 
       await run({ version: '1.0.0' });
@@ -125,7 +125,7 @@ describe('CLI', () => {
     });
 
     test('should print version when --version flag is provided', async () => {
-      process.argv = ['node', 'ronin', '--version'];
+      process.argv = ['bun', 'ronin', '--version'];
       const versionSpy = spyOn(infoModule, 'printVersion');
 
       await run({ version: '1.0.0' });
@@ -135,7 +135,7 @@ describe('CLI', () => {
     });
 
     test('should print help when no command is provided', async () => {
-      process.argv = ['node', 'ronin'];
+      process.argv = ['bun', 'ronin'];
       const helpSpy = spyOn(infoModule, 'printHelp');
 
       await run({ version: '1.0.0' });
@@ -148,7 +148,7 @@ describe('CLI', () => {
   describe('starter', () => {
     describe('login', () => {
       test('should login when no token is provided', async () => {
-        process.argv = ['node', 'ronin', 'login'];
+        process.argv = ['bun', 'ronin', 'login'];
         const mockPort = 12345;
 
         spyOn(getPort, 'default').mockResolvedValue(mockPort);
@@ -205,7 +205,7 @@ describe('CLI', () => {
 
       test('should login when a token is provided', async () => {
         process.env.RONIN_TOKEN = 'Peaches';
-        process.argv = ['node', 'ronin', 'login'];
+        process.argv = ['bun', 'ronin', 'login'];
 
         // Mock file operations
         spyOn(fs.promises, 'writeFile').mockResolvedValue();
@@ -228,7 +228,7 @@ describe('CLI', () => {
 
     describe('init', () => {
       test('should fail if no space handle is provided', async () => {
-        process.argv = ['node', 'ronin', 'init'];
+        process.argv = ['bun', 'ronin', 'init'];
 
         try {
           await run({ version: '1.0.0' });
@@ -243,7 +243,7 @@ describe('CLI', () => {
       });
 
       test('should fail if no package.json is found', async () => {
-        process.argv = ['node', 'ronin', 'init', 'my-space'];
+        process.argv = ['bun', 'ronin', 'init', 'my-space'];
         spyOn(fs.promises, 'access').mockImplementation(() => Promise.reject());
 
         try {
@@ -256,7 +256,7 @@ describe('CLI', () => {
       });
 
       const setupInitTest = (hasBun = true) => {
-        process.argv = ['node', 'ronin', 'init', 'test-space'];
+        process.argv = ['bun', 'ronin', 'init', 'test-space'];
 
         // Mock file existence checks
         spyOn(fs.promises, 'access').mockImplementation((path) => {
@@ -321,7 +321,7 @@ describe('CLI', () => {
       });
 
       test('diff and apply', async () => {
-        process.argv = ['node', 'ronin', 'diff', '--apply'];
+        process.argv = ['bun', 'ronin', 'diff', '--apply'];
 
         // Mock space selection and models
         spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
@@ -399,7 +399,7 @@ describe('CLI', () => {
 
     describe('diff', () => {
       test('should fail if no schema file is provided', async () => {
-        process.argv = ['node', 'ronin', 'diff'];
+        process.argv = ['bun', 'ronin', 'diff'];
         spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
 
         await run({ version: '1.0.0' });
@@ -413,7 +413,7 @@ describe('CLI', () => {
       });
 
       test('no changes detected', async () => {
-        process.argv = ['node', 'ronin', 'diff', '--debug'];
+        process.argv = ['bun', 'ronin', 'diff', '--debug'];
         spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
 
         // Mock identical models (no changes)
@@ -442,7 +442,7 @@ describe('CLI', () => {
       });
 
       test('changes detected', async () => {
-        process.argv = ['node', 'ronin', 'diff', '--sql'];
+        process.argv = ['bun', 'ronin', 'diff', '--sql'];
         setupMigrationTest();
 
         await run({ version: '1.0.0' });
@@ -454,7 +454,7 @@ describe('CLI', () => {
       });
 
       test('diff with apply flag', async () => {
-        process.argv = ['node', 'ronin', 'diff', '--apply'];
+        process.argv = ['bun', 'ronin', 'diff', '--apply'];
         setupMigrationTest();
 
         // Mock fetch
@@ -473,7 +473,7 @@ describe('CLI', () => {
       });
 
       test('diff with local flag', async () => {
-        process.argv = ['node', 'ronin', 'diff', '--local'];
+        process.argv = ['bun', 'ronin', 'diff', '--local'];
         setupMigrationTest();
 
         await run({ version: '1.0.0' });
@@ -485,7 +485,7 @@ describe('CLI', () => {
       });
 
       test('diff with multiple flags', async () => {
-        process.argv = ['node', 'ronin', 'diff', '--local', '--apply'];
+        process.argv = ['bun', 'ronin', 'diff', '--local', '--apply'];
         setupMigrationTest();
 
         // Mock fetch
@@ -506,7 +506,7 @@ describe('CLI', () => {
 
     describe('apply', () => {
       test('no access to requested space', async () => {
-        process.argv = ['node', 'ronin', 'apply'];
+        process.argv = ['bun', 'ronin', 'apply'];
         spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
 
         await run({ version: '1.0.0' });
@@ -518,7 +518,7 @@ describe('CLI', () => {
       });
 
       test('apply migration', async () => {
-        process.argv = ['node', 'ronin', 'apply'];
+        process.argv = ['bun', 'ronin', 'apply'];
 
         spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
         spyOn(modelModule, 'getModels').mockResolvedValue([
@@ -548,7 +548,7 @@ describe('CLI', () => {
       });
 
       test('should handle network errors when applying migration', async () => {
-        process.argv = ['node', 'ronin', 'apply'];
+        process.argv = ['bun', 'ronin', 'apply'];
 
         spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
         spyOn(global, 'fetch').mockImplementation(() => {
@@ -564,7 +564,7 @@ describe('CLI', () => {
       });
 
       test('apply with local flag', async () => {
-        process.argv = ['node', 'ronin', 'apply', '--local'];
+        process.argv = ['bun', 'ronin', 'apply', '--local'];
 
         spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
         spyOn(modelModule, 'getModels').mockResolvedValue([
@@ -594,7 +594,7 @@ describe('CLI', () => {
       });
 
       test('try to apply with non-existent migration file', async () => {
-        process.argv = ['node', 'ronin', 'apply'];
+        process.argv = ['bun', 'ronin', 'apply'];
 
         spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
         spyOn(fs, 'existsSync').mockReturnValue(false);
