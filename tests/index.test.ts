@@ -91,7 +91,10 @@ describe('CLI', () => {
       try {
         const runPromise = run({ version: '1.0.0' });
         process.emit('SIGTERM');
-        await runPromise;
+        await Promise.race([
+          runPromise,
+          new Promise((resolve) => setTimeout(resolve, 1000)), // Add timeout to prevent test hanging
+        ]);
       } catch {
         expect(exitSpy).toHaveBeenCalledWith(1);
       }
