@@ -138,9 +138,9 @@ describe('CLI', () => {
       await run({ version: '1.0.0' });
 
       expect(helpSpy).toHaveBeenCalled();
-      expect(
-        stdoutSpy.mock.calls.some((call) => call[0].includes(expectedHelpText)),
-      ).toBe(true);
+      expect(stdoutSpy.mock.calls.some((call) => call[0] === expectedHelpText)).toBe(
+        true,
+      );
     });
 
     test('should print version when --version flag is provided', async () => {
@@ -148,24 +148,20 @@ describe('CLI', () => {
       const versionSpy = spyOn(infoModule, 'printVersion');
 
       await run({ version: '1.0.0' });
-      console.error(stdoutSpy.mock.calls);
 
       expect(stdoutSpy.mock.calls[0][0]).toBe('1.0.0');
       expect(versionSpy).toHaveBeenCalledWith('1.0.0');
     });
-
     test('should print help when no command is provided', async () => {
       process.argv = ['bun', 'ronin'];
       const helpSpy = spyOn(infoModule, 'printHelp');
 
       await run({ version: '1.0.0' });
 
-      console.error(stdoutSpy.mock.calls);
-
       expect(helpSpy).toHaveBeenCalled();
-      expect(
-        stdoutSpy.mock.calls.some((call) => call[0].includes(expectedHelpText)),
-      ).toBe(true);
+      expect(stdoutSpy.mock.calls.some((call) => call[0] === expectedHelpText)).toBe(
+        true,
+      );
     });
   });
 
@@ -766,8 +762,6 @@ describe('CLI', () => {
         ]);
 
         await run({ version: '1.0.0' });
-
-        console.error(stderrSpy.mock.calls);
 
         expect(
           stderrSpy.mock.calls.some(
