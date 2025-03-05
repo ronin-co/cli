@@ -148,6 +148,7 @@ describe('CLI', () => {
       const versionSpy = spyOn(infoModule, 'printVersion');
 
       await run({ version: '1.0.0' });
+      console.error(stdoutSpy.mock.calls);
 
       expect(stdoutSpy.mock.calls[0][0]).toBe('1.0.0');
       expect(versionSpy).toHaveBeenCalledWith('1.0.0');
@@ -158,6 +159,8 @@ describe('CLI', () => {
       const helpSpy = spyOn(infoModule, 'printHelp');
 
       await run({ version: '1.0.0' });
+
+      console.error(stdoutSpy.mock.calls);
 
       expect(helpSpy).toHaveBeenCalled();
       expect(
