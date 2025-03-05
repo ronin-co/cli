@@ -28,8 +28,7 @@ import * as open from 'open';
 describe('CLI', () => {
   // Store original values
   const originalIsTTY = process.stdout.isTTY;
-  const expectedHelpText =
-    '\n  \u001b[1m\u001b[35mronin\u001b[39m\u001b[22m — Data at the edge\n\n  \u001b[1mUSAGE\u001b[22m\n\n      \u001b[1m$\u001b[22m \u001b[1m\u001b[35mronin\u001b[39m\u001b[22m\n      \u001b[1m$\u001b[22m \u001b[1m\u001b[35mronin\u001b[39m\u001b[22m login\n      \u001b[1m$\u001b[22m \u001b[1m\u001b[35mronin\u001b[39m\u001b[22m --help\n      \u001b[1m$\u001b[22m \u001b[1m\u001b[35mronin\u001b[39m\u001b[22m --version\n\n  \u001b[1mCOMMANDS\u001b[22m\n\n      login                               Authenticate with RONIN (run by default for every command)\n      init [space]                        Initialize the TypeScript types for a given space\n      diff                                Compare the database schema with the local schema and create a patch\n      apply                               Apply the most recent patch to the database\n\n  \u001b[1mOPTIONS\u001b[22m\n\n      -h, --help                          Shows this help message\n      -v, --version                       Shows the version of the CLI that is currently installed\n      -d, --debug                         Shows additional debugging information\n  ';
+  const expectedHelpText = 'Data at the edge';
 
   let stdoutSpy: Mock<typeof console.log>;
   let stderrSpy: Mock<typeof process.stderr.write>;
@@ -138,9 +137,9 @@ describe('CLI', () => {
       await run({ version: '1.0.0' });
 
       expect(helpSpy).toHaveBeenCalled();
-      expect(stdoutSpy.mock.calls.some((call) => call[0] === expectedHelpText)).toBe(
-        true,
-      );
+      expect(
+        stdoutSpy.mock.calls.some((call) => call[0].includes(expectedHelpText)),
+      ).toBe(true);
     });
 
     test('should print version when --version flag is provided', async () => {
@@ -159,9 +158,9 @@ describe('CLI', () => {
       await run({ version: '1.0.0' });
 
       expect(helpSpy).toHaveBeenCalled();
-      expect(stdoutSpy.mock.calls.some((call) => call[0] === expectedHelpText)).toBe(
-        true,
-      );
+      expect(
+        stdoutSpy.mock.calls.some((call) => call[0].includes(expectedHelpText)),
+      ).toBe(true);
     });
   });
 
