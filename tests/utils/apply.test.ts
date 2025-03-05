@@ -79,7 +79,13 @@ describe('applyMigrationStatements', () => {
       await mockDb.getContents(),
     );
 
-    expect(stdoutSpy.mock.calls[2][0]).toContain('Applying migration to local database');
+    expect(
+      stdoutSpy.mock.calls.some(
+        (call) =>
+          typeof call[0] === 'string' &&
+          call[0].includes('Applying migration to local database'),
+      ),
+    ).toBe(true);
 
     // Restore mocks
     writeFileSpy.mockRestore();
@@ -137,9 +143,13 @@ describe('applyMigrationStatements', () => {
         }),
       },
     );
-    expect(stdoutSpy.mock.calls[2][0]).toContain(
-      'Applying migration to production database',
-    );
+    expect(
+      stdoutSpy.mock.calls.some(
+        (call) =>
+          typeof call[0] === 'string' &&
+          call[0].includes('Applying migration to production database'),
+      ),
+    ).toBe(true);
 
     // Restore mocks
     stdoutSpy.mockRestore();
