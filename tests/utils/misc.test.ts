@@ -1,4 +1,13 @@
-import { afterEach, describe, expect, mock, spyOn, test } from 'bun:test';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  mock,
+  spyOn,
+  test,
+} from 'bun:test';
 
 import fs from 'node:fs';
 import {
@@ -12,15 +21,25 @@ import {
   sortModels,
 } from '@/src/utils/misc';
 
+import { stderr } from 'node:process';
 import { Account, CONSTANTS, TestA, TestB } from '@/fixtures/index';
 import { convertModelToArrayFields } from '@/src/utils/model';
 import type { Model } from '@ronin/compiler';
 
 describe('misc', () => {
+  beforeEach(() => {
+    // Don't log anything to the console in the tests.
+    spyOn(console, 'log').mockImplementation(() => {});
+    spyOn(console, 'table').mockImplementation(() => {});
+    // @ts-expect-error This is a mock
+    spyOn(stderr, 'write').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('log data table', () => {
-    afterEach(() => {
-      mock.restore();
-    });
     test('should log data table', () => {
       const consoleLogSpy = spyOn(console, 'log');
       const consoleTableSpy = spyOn(console, 'table');

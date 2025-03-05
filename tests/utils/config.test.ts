@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, mock, test } from 'bun:test';
+import { afterEach, describe, expect, jest, mock, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { readConfig, resetConfig, saveConfig } from '@/src/utils/config';
@@ -15,12 +15,15 @@ describe('config', () => {
     if (fs.existsSync(configDir)) {
       fs.rmdirSync(configDir);
     }
+
+    jest.clearAllMocks();
   });
 
   describe('saveConfig', () => {
     test('should save new config', () => {
-      const config = { space: 'test-space' };
+      const config = { space: 'test-space', modelsDir: 'schema/index.ts' };
       saveConfig(config);
+
       expect(JSON.parse(fs.readFileSync(configPath, 'utf-8'))).toEqual(config);
     });
 

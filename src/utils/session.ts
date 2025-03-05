@@ -48,7 +48,7 @@ export const getSession = async (): Promise<Session | null> => {
   return null;
 };
 
-const readConfigFile = async <T>(
+export const readConfigFile = async <T>(
   filePath: string,
   name: string,
   parser: (config: string) => T,
