@@ -38,6 +38,11 @@ export default async (
     const migrations = fs.readdirSync(MIGRATIONS_PATH);
 
     let migrationPrompt: string | undefined;
+    if (migrations.length === 0) {
+      throw new Error(
+        'No migration files found. Run `ronin diff` to create a migration.',
+      );
+    }
 
     if (!flags.apply) {
       migrationPrompt =
@@ -95,7 +100,7 @@ export default async (
 /**
  * Applies migration statements to the database.
  */
-const applyMigrationStatements = async (
+export const applyMigrationStatements = async (
   appTokenOrSessionToken: string | undefined,
   flags: MigrationFlags,
   db: Database,

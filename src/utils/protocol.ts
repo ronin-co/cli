@@ -114,6 +114,7 @@ export default () => [
       })();
 
     const filePath = path.resolve(this._protocolDir, targetFile);
+
     if (!fs.existsSync(filePath)) {
       throw new Error(`Migration protocol file ${filePath} does not exist`);
     }
