@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execa } from 'execa';
+import { $ } from 'bun';
 
 describe('CLI Integration Tests', () => {
   let tempDir: string;
@@ -35,31 +35,27 @@ describe('CLI Integration Tests', () => {
   });
 
   test('should show help text when run without arguments', async () => {
-    const { stdout, exitCode } = await execa('bun', [CLI_PATH], {
-      reject: false,
-    });
+    const { stdout, exitCode } = await $`bun ${CLI_PATH}`.nothrow().quiet();
 
     expect(exitCode).toBe(0);
-    expect(stdout).toContain('Data at the edge');
+    expect(stdout.toString()).toContain('Data at the edge');
   });
 
   test('should show version when run with --version flag', async () => {
-    const { stdout, exitCode } = await execa('bun', [CLI_PATH, '--version'], {
-      reject: false,
-    });
+    const { stdout, exitCode } = await $`bun ${CLI_PATH} --version`.nothrow().quiet();
 
     expect(exitCode).toBe(0);
-    expect(stdout).toMatch(/\d+\.\d+\.\d+/); // Matches semver format
+    expect(stdout.toString()).toMatch(/\d+\.\d+\.\d+/); // Matches semver format
   });
 
   test('should fail init command without space handle', async () => {
-    const { stderr, exitCode } = await execa('bun', [CLI_PATH, 'init'], {
-      reject: false,
-      env: { RONIN_TOKEN: 'test-token' },
-    });
+    const { stderr, exitCode } = await $`RONIN_TOKEN=test-token bun ${CLI_PATH} init`
+      .nothrow()
+      .quiet();
 
     expect(exitCode).toBe(1);
-    expect(stderr).toContain('Please provide a space handle');
+    expect(stderr.toString()).toContain('Please provide a space handle like this:');
+    expect(stderr.toString()).toContain('$ ronin init my-space');
   });
 
   // Test with an environment token to avoid browser authentication
@@ -73,15 +69,13 @@ describe('CLI Integration Tests', () => {
     await fs.promises.writeFile(path.join(tempDir, '.gitignore'), 'node_modules\n');
 
     // This test might need to mock HTTP calls or use a test token
-    const { stderr, exitCode } = await execa('bun', [CLI_PATH, 'init', 'test-space'], {
-      reject: false,
-      env: { RONIN_TOKEN: 'test-token' },
-    });
+    const { stderr, exitCode } =
+      await $`RONIN_TOKEN=test-token bun ${CLI_PATH} init test-space`.nothrow().quiet();
 
     // For now, we expect this to fail in CI without proper test credentials
     // In real integration tests, you would use real credentials or a sandbox environment
     expect(exitCode).toBe(1);
-    expect(stderr).toContain('You are not a member of the "test-space" space');
+    expect(stderr.toString()).toContain('You are not a member of the "test-space" space');
   });
 
   test('should create a migration file with diff command', async () => {
@@ -115,12 +109,10 @@ describe('CLI Integration Tests', () => {
     );
 
     // This test would need to be expanded with proper API mocking
-    const { stderr, exitCode } = await execa('bun', [CLI_PATH, 'diff', '--local'], {
-      reject: false,
-      env: { RONIN_TOKEN: 'test-token' },
-    });
+    const { stderr, exitCode } =
+      await $`RONIN_TOKEN=test-token bun ${CLI_PATH} diff --local`.nothrow().quiet();
 
     expect(exitCode).toBe(0);
-    expect(stderr).toContain('Successfully generated migration protocol file');
+    expect(stderr.toString()).toContain('Successfully generated migration protocol file');
   });
 });
