@@ -39,7 +39,9 @@ export default async (
 
     let migrationPrompt: string | undefined;
     if (migrations.length === 0) {
-      throw new Error('No migration files found. Run `ronin diff` to create a migration.');
+      throw new Error(
+        'No migration files found. Run `ronin diff` to create a migration.',
+      );
     }
 
     if (!flags.apply) {
