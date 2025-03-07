@@ -772,7 +772,9 @@ describe('CLI', () => {
           stderrSpy.mock.calls.some(
             (call) =>
               typeof call[0] === 'string' &&
-              call[0].includes('No migration files found - Run `ronin diff`'),
+              call[0].includes(
+                'No migration files found. Run `ronin diff` to create a migration.',
+              ),
           ),
         ).toBe(true);
       });
