@@ -153,6 +153,7 @@ describe('CLI', () => {
       expect(stdoutSpy.mock.calls[0][0]).toBe('1.0.0');
       expect(versionSpy).toHaveBeenCalledWith('1.0.0');
     });
+
     test('should print help when no command is provided', async () => {
       process.argv = ['bun', 'ronin'];
       const helpSpy = spyOn(infoModule, 'printHelp');

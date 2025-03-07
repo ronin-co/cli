@@ -1,4 +1,5 @@
 import { create } from 'ronin';
+
 export default () => [
   create.model({
     slug: 'user',
