@@ -28,7 +28,7 @@ import type { Model } from '@ronin/compiler';
 
 describe('misc', () => {
   beforeEach(() => {
-    // Don't log anything to the console in the tests.
+    // Don't log anything to the console in the tests
     spyOn(console, 'log').mockImplementation(() => {});
     spyOn(console, 'table').mockImplementation(() => {});
     // @ts-expect-error This is a mock

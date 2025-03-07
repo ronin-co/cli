@@ -90,7 +90,8 @@ describe('CLI', () => {
         process.emit('SIGINT');
         await Promise.race([
           runPromise,
-          new Promise((resolve) => setTimeout(resolve, 1000)), // Add timeout to prevent test hanging
+          // Add timeout to prevent test hanging
+          new Promise((resolve) => setTimeout(resolve, 1000)),
         ]);
       } catch {
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -106,7 +107,8 @@ describe('CLI', () => {
         process.emit('SIGTERM');
         await Promise.race([
           runPromise,
-          new Promise((resolve) => setTimeout(resolve, 1000)), // Add timeout to prevent test hanging
+          // Add timeout to prevent test hanging
+          new Promise((resolve) => setTimeout(resolve, 1000)),
         ]);
       } catch {
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -301,7 +303,6 @@ describe('CLI', () => {
       const setupInitTest = (hasBun = true) => {
         process.argv = ['bun', 'ronin', 'init', 'test-space'];
 
-        // Mock file existence checks
         spyOn(fs.promises, 'access').mockImplementation((path) => {
           if (
             path.toString().includes('package.json') ||
@@ -326,7 +327,6 @@ describe('CLI', () => {
         spyOn(fs.promises, 'appendFile').mockResolvedValue();
         spyOn(fs.promises, 'writeFile').mockResolvedValue();
 
-        // Mock exec
         spyOn(initModule, 'exec').mockImplementation(
           // @ts-expect-error This is a mock
           () => () => Promise.resolve({ stdout: '', stderr: '' }),
@@ -485,7 +485,6 @@ describe('CLI', () => {
         process.argv = ['bun', 'ronin', 'diff', '--debug'];
         spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
 
-        // Mock identical models (no changes)
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
@@ -596,7 +595,6 @@ describe('CLI', () => {
         process.argv = ['bun', 'ronin', 'diff', '--local', '--apply'];
         setupMigrationTest();
 
-        // Mock fetch
         spyOn(global, 'fetch').mockResolvedValue({
           ok: true,
           json: () => Promise.resolve({}),

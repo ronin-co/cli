@@ -34,6 +34,7 @@ export default async (positionals: Array<string>): Promise<void> => {
   try {
     // Add `.ronin` to `.gitignore` if `.gitignore` exists but doesn't contain `.ronin`.
     const gitignoreExists = await exists('.gitignore');
+
     if (gitignoreExists) {
       const gitignorePath = path.join(process.cwd(), '.gitignore');
       const gitignoreContents = await fs.readFile(gitignorePath, 'utf-8');
@@ -52,6 +53,7 @@ export default async (positionals: Array<string>): Promise<void> => {
     // Add the types package to the project's TypeScript config if one exists
     const tsConfigPath = path.join(process.cwd(), 'tsconfig.json');
     const tsConfigExists = await exists('tsconfig.json');
+
     if (!tsConfigExists) return;
 
     const contents = await fs.readFile(tsConfigPath, 'utf-8');

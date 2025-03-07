@@ -42,7 +42,6 @@ const { Transaction } = packages.compiler;
 
 describe('applyMigrationStatements', () => {
   test('should apply migration to local database', async () => {
-    // Mock dependencies
     const mockDb = {
       query: mock(() => Promise.resolve()),
       getContents: mock(() => Promise.resolve(Buffer.from('mock-db-contents'))),
@@ -54,13 +53,10 @@ describe('applyMigrationStatements', () => {
     const mockFlags = { local: true, help: false, version: false, debug: false };
     const mockSlug = 'test-space';
 
-    // Spy on fs.writeFileSync
     const writeFileSpy = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
 
-    // Spy on ora
     const stdoutSpy = spyOn(process.stderr, 'write');
 
-    // Call the function
     await applyMigrationStatements(
       'mock-token',
       mockFlags,
@@ -69,7 +65,6 @@ describe('applyMigrationStatements', () => {
       mockSlug,
     );
 
-    // Verify the function behavior
     expect(mockDb.query).toHaveBeenCalledWith(
       mockStatements.map(({ statement }) => statement),
     );
@@ -87,13 +82,11 @@ describe('applyMigrationStatements', () => {
       ),
     ).toBe(true);
 
-    // Restore mocks
     writeFileSpy.mockRestore();
     stdoutSpy.mockRestore();
   });
 
   test('should apply migration to production database', async () => {
-    // Mock dependencies
     const mockDb = {
       query: mock(() => Promise.resolve()),
       getContents: mock(() => Promise.resolve(Buffer.from('mock-db-contents'))),
@@ -106,7 +99,6 @@ describe('applyMigrationStatements', () => {
     const mockSlug = 'test-space';
     const mockToken = 'mock-token';
 
-    // Mock fetch response
     global.fetch = mock(() =>
       Promise.resolve({
         ok: true,
@@ -114,10 +106,8 @@ describe('applyMigrationStatements', () => {
       } as Response),
     );
 
-    // Spy on ora
     const stdoutSpy = spyOn(process.stderr, 'write');
 
-    // Call the function
     await applyMigrationStatements(
       mockToken,
       mockFlags,
@@ -126,7 +116,6 @@ describe('applyMigrationStatements', () => {
       mockSlug,
     );
 
-    // Verify the function behavior
     expect(global.fetch).toHaveBeenCalledWith(
       `https://data.ronin.co/?data-selector=${mockSlug}`,
       {
@@ -151,12 +140,10 @@ describe('applyMigrationStatements', () => {
       ),
     ).toBe(true);
 
-    // Restore mocks
     stdoutSpy.mockRestore();
   });
 
   test('should throw error when production API returns error', async () => {
-    // Mock dependencies
     const mockDb = {
       query: mock(() => Promise.resolve()),
       getContents: mock(() => Promise.resolve(Buffer.from('mock-db-contents'))),
@@ -172,7 +159,6 @@ describe('applyMigrationStatements', () => {
     const mockToken = 'mock-token';
     const errorMessage = 'Database error occurred';
 
-    // Mock fetch response with error
     global.fetch = mock(() =>
       Promise.resolve({
         ok: false,
@@ -180,7 +166,6 @@ describe('applyMigrationStatements', () => {
       } as Response),
     );
 
-    // Call the function and expect it to throw
     await expect(
       applyMigrationStatements(
         mockToken,
@@ -193,7 +178,6 @@ describe('applyMigrationStatements', () => {
   });
 
   test('should handle network failures when applying to production', async () => {
-    // Mock dependencies
     const mockDb = {
       query: mock(() => Promise.resolve()),
       getContents: mock(() => Promise.resolve(Buffer.from('mock-db-contents'))),
@@ -203,10 +187,8 @@ describe('applyMigrationStatements', () => {
     const mockSlug = 'test-space';
     const mockToken = 'mock-token';
 
-    // Mock fetch to throw network error
     global.fetch = mock(() => Promise.reject(new Error('Network error')));
 
-    // Call and expect the function to throw
     await expect(
       applyMigrationStatements(
         mockToken,

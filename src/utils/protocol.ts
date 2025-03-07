@@ -138,7 +138,6 @@ export default () => [
    */
   save = (fileName: string): Protocol => {
     const migrationContent = this.createMigrationProtocol();
-
     const directoryPath = path.resolve(this._protocolDir);
 
     fs.mkdirSync(directoryPath, { recursive: true });

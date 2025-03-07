@@ -35,6 +35,7 @@ export const run = async (config: { version: string }): Promise<void> => {
     if (err instanceof Error) {
       spinner.fail(err.message);
     }
+
     process.exit(1);
   }
 

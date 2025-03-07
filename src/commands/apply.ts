@@ -110,6 +110,7 @@ export const applyMigrationStatements = async (
 
     await db.query(statements.map(({ statement }) => statement));
     fs.writeFileSync('.ronin/db.sqlite', await db.getContents());
+
     return;
   }
 
