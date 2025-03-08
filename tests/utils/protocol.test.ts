@@ -155,9 +155,7 @@ describe('protocol', () => {
 
     // Check the content of the first call to writeFileSync
     const mixedFileContent = mixedWriteFileSpy.mock.calls[0][1] as string;
-    expect(mixedFileContent).toContain(
-      'import { count, create, get, set } from "ronin";',
-    );
+    expect(mixedFileContent).toContain('import { create, get, set } from "ronin";');
     expect(mixedFileContent).not.toContain('alter');
     expect(mixedFileContent).not.toContain('drop');
   });

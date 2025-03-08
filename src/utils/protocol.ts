@@ -89,7 +89,7 @@ export class Protocol {
       'count',
     ];
     const usedQueryTypes = queryTypes.filter((type) =>
-      this._roninQueries.some((query) => query.includes(`${type}.`)),
+      this._roninQueries.some((query) => query.startsWith(`${type}.`)),
     );
 
     // Only import the query types that are actually used
