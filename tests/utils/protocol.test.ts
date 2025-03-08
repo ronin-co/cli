@@ -124,13 +124,13 @@ describe('protocol', () => {
     ];
     const createProtocol = new Protocol(packages, createQueries);
 
-    // Mock fs.mkdirSync and fs.writeFileSync
+    // Mock `fs.mkdirSync` and `fs.writeFileSync`
     spyOn(fs, 'mkdirSync').mockImplementation(() => {});
     const writeFileSpy = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
 
     createProtocol.save(fileName);
 
-    // Check the content of the first call to writeFileSync
+    // Check the content of the first call to `fs.writeFileSync`
     const createFileContent = writeFileSpy.mock.calls[0][1] as string;
     expect(createFileContent).toContain('import { create } from "ronin";');
     expect(createFileContent).not.toContain('get');
@@ -153,7 +153,7 @@ describe('protocol', () => {
 
     mixedProtocol.save(fileName);
 
-    // Check the content of the first call to writeFileSync
+    // Check the content of the first call to `fs.writeFileSync`
     const mixedFileContent = mixedWriteFileSpy.mock.calls[0][1] as string;
     expect(mixedFileContent).toContain('import { create, get, set } from "ronin";');
     expect(mixedFileContent).not.toContain('alter');
