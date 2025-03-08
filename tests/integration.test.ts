@@ -112,6 +112,7 @@ describe('CLI Integration Tests', () => {
     const { stderr, exitCode } =
       await $`RONIN_TOKEN=test-token bun ${CLI_PATH} diff --local`.nothrow().quiet();
 
+    console.log(stderr.toString());
     expect(exitCode).toBe(0);
     expect(stderr.toString()).toContain('Successfully generated migration protocol file');
   });
