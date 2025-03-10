@@ -72,7 +72,6 @@ describe('CLI Integration Tests', () => {
     expect(stderr.toString()).toContain('$ ronin init my-space');
   });
 
-  // Test with an environment token to avoid browser authentication
   test('should initialize a project', async () => {
     // Mock necessary files for a successful init
     await fs.promises.writeFile(
@@ -86,8 +85,6 @@ describe('CLI Integration Tests', () => {
     const { stderr, exitCode } =
       await $`RONIN_TOKEN=test-token bun ${CLI_PATH} init test-space`.nothrow().quiet();
 
-    // For now, we expect this to fail in CI without proper test credentials
-    // In real integration tests, you would use real credentials or a sandbox environment
     expect(exitCode).toBe(1);
     expect(stderr.toString()).toContain('You are not a member of the "test-space" space');
   });
@@ -137,12 +134,13 @@ describe('CLI Integration Tests', () => {
       ),
     );
 
-    // This test would need to be expanded with proper API mocking
-    const { stderr, exitCode } =
+    const { stderr, stdout, exitCode } =
       await $`RONIN_TOKEN=test-token bun ${CLI_PATH} diff --local`.nothrow().quiet();
 
-    console.log(stderr.toString());
-    expect(exitCode).toBe(0);
+    console.error(stderr.toString());
+    console.error(stdout.toString());
+
     expect(stderr.toString()).toContain('Successfully generated migration protocol file');
+    expect(exitCode).toBe(0);
   });
 });
