@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, mock, spyOn, test } from 'bun:test';
+import fs from 'node:fs';
 import {
   Account,
   Account3,
@@ -30,11 +31,175 @@ import {
   TestU,
 } from '@/fixtures/index';
 import { getRowCount, getSQLTables, getTableRows, runMigration } from '@/fixtures/utils';
+import { applyMigrationStatements } from '@/src/commands/apply';
+import type { MigrationFlags } from '@/src/utils/migration';
 import { getLocalPackages } from '@/src/utils/misc';
+import type { Database } from '@ronin/engine';
 import type { Model } from 'ronin/schema';
 import { model, number, random, string } from 'ronin/schema';
 const packages = await getLocalPackages();
 const { Transaction } = packages.compiler;
+
+describe('applyMigrationStatements', () => {
+  test('should apply migration to local database', async () => {
+    const mockDb = {
+      query: mock(() => Promise.resolve()),
+      getContents: mock(() => Promise.resolve(Buffer.from('mock-db-contents'))),
+    };
+    const mockStatements = [
+      { statement: 'CREATE TABLE test (id INTEGER PRIMARY KEY)' },
+      { statement: 'INSERT INTO test VALUES (1)' },
+    ];
+    const mockFlags = { local: true, help: false, version: false, debug: false };
+    const mockSlug = 'test-space';
+
+    const writeFileSpy = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+
+    const stdoutSpy = spyOn(process.stderr, 'write');
+
+    await applyMigrationStatements(
+      'mock-token',
+      mockFlags,
+      mockDb as unknown as Database,
+      mockStatements,
+      mockSlug,
+    );
+
+    expect(mockDb.query).toHaveBeenCalledWith(
+      mockStatements.map(({ statement }) => statement),
+    );
+    expect(mockDb.getContents).toHaveBeenCalled();
+    expect(writeFileSpy).toHaveBeenCalledWith(
+      '.ronin/db.sqlite',
+      await mockDb.getContents(),
+    );
+
+    expect(
+      stdoutSpy.mock.calls.some(
+        (call) =>
+          typeof call[0] === 'string' &&
+          call[0].includes('Applying migration to local database'),
+      ),
+    ).toBe(true);
+
+    writeFileSpy.mockRestore();
+    stdoutSpy.mockRestore();
+  });
+
+  test('should apply migration to production database', async () => {
+    const mockDb = {
+      query: mock(() => Promise.resolve()),
+      getContents: mock(() => Promise.resolve(Buffer.from('mock-db-contents'))),
+    };
+    const mockStatements = [
+      { statement: 'CREATE TABLE test (id INTEGER PRIMARY KEY)' },
+      { statement: 'INSERT INTO test VALUES (1)' },
+    ];
+    const mockFlags = { local: false, help: false, version: false, debug: false };
+    const mockSlug = 'test-space';
+    const mockToken = 'mock-token';
+
+    global.fetch = mock(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response),
+    );
+
+    const stdoutSpy = spyOn(process.stderr, 'write');
+
+    await applyMigrationStatements(
+      mockToken,
+      mockFlags,
+      mockDb as unknown as Database,
+      mockStatements,
+      mockSlug,
+    );
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      `https://data.ronin.co/?data-selector=${mockSlug}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${mockToken}`,
+        },
+        body: JSON.stringify({
+          nativeQueries: mockStatements.map((query) => ({
+            query: query.statement,
+            mode: 'write',
+          })),
+        }),
+      },
+    );
+    expect(
+      stdoutSpy.mock.calls.some(
+        (call) =>
+          typeof call[0] === 'string' &&
+          call[0].includes('Applying migration to production database'),
+      ),
+    ).toBe(true);
+
+    stdoutSpy.mockRestore();
+  });
+
+  test('should throw error when production API returns error', async () => {
+    const mockDb = {
+      query: mock(() => Promise.resolve()),
+      getContents: mock(() => Promise.resolve(Buffer.from('mock-db-contents'))),
+    };
+    const mockStatements = [{ statement: 'CREATE TABLE test (id INTEGER PRIMARY KEY)' }];
+    const mockFlags: MigrationFlags = {
+      local: false,
+      help: false,
+      version: false,
+      debug: false,
+    };
+    const mockSlug = 'test-space';
+    const mockToken = 'mock-token';
+    const errorMessage = 'Database error occurred';
+
+    global.fetch = mock(() =>
+      Promise.resolve({
+        ok: false,
+        json: () => Promise.resolve({ error: { message: errorMessage } }),
+      } as Response),
+    );
+
+    await expect(
+      applyMigrationStatements(
+        mockToken,
+        mockFlags,
+        mockDb as unknown as Database,
+        mockStatements,
+        mockSlug,
+      ),
+    ).rejects.toThrow(errorMessage);
+  });
+
+  test('should handle network failures when applying to production', async () => {
+    const mockDb = {
+      query: mock(() => Promise.resolve()),
+      getContents: mock(() => Promise.resolve(Buffer.from('mock-db-contents'))),
+    };
+    const mockStatements = [{ statement: 'CREATE TABLE test (id INTEGER PRIMARY KEY)' }];
+    const mockFlags = { local: false, help: false, version: false, debug: false };
+    const mockSlug = 'test-space';
+    const mockToken = 'mock-token';
+
+    global.fetch = mock(() => Promise.reject(new Error('Network error')));
+
+    await expect(
+      applyMigrationStatements(
+        mockToken,
+        mockFlags,
+        mockDb as unknown as Database,
+        mockStatements,
+        mockSlug,
+      ),
+    ).rejects.toThrow('Network error');
+  });
+});
 
 describe('apply', () => {
   describe('model', () => {

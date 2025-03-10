@@ -77,7 +77,29 @@ export class Protocol {
    * @private
    */
   private createMigrationProtocol = (): string => {
-    return `import { add, alter, create, drop, get, set } from 'ronin';
+    // Analyze which query types are actually used in the queries
+    const queryTypes = [
+      'add',
+      'alter',
+      'create',
+      'drop',
+      'get',
+      'set',
+      'remove',
+      'count',
+    ];
+    const usedQueryTypes = queryTypes.filter((type) =>
+      this._roninQueries.some((query) => query.startsWith(`${type}.`)),
+    );
+
+    // Only import the query types that are actually used
+    const imports =
+      usedQueryTypes.length > 0
+        ? `import { ${usedQueryTypes.join(', ')} } from 'ronin';`
+        : '';
+
+    return `${imports}
+    
 export default () => [
   ${this._roninQueries.map((query) => ` ${query}`).join(',\n')}
 ];`;
@@ -114,6 +136,7 @@ export default () => [
       })();
 
     const filePath = path.resolve(this._protocolDir, targetFile);
+
     if (!fs.existsSync(filePath)) {
       throw new Error(`Migration protocol file ${filePath} does not exist`);
     }

@@ -20,7 +20,7 @@ import { spinner } from '@/src/utils/spinner';
  *
  * @returns Nothing.
  */
-const run = async (config: { version: string }): Promise<void> => {
+export const run = async (config: { version: string }): Promise<void> => {
   let flags: BaseFlags;
   let positionals: Array<string>;
 
@@ -34,8 +34,6 @@ const run = async (config: { version: string }): Promise<void> => {
   } catch (err) {
     if (err instanceof Error) {
       spinner.fail(err.message);
-    } else {
-      throw err;
     }
 
     process.exit(1);
