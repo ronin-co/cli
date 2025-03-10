@@ -37,12 +37,18 @@ describe('CLI Integration Tests', () => {
   test('should show help text when run without arguments', async () => {
     const { stdout, exitCode } = await $`bun ${CLI_PATH}`.nothrow().quiet();
 
+    // Set environment variables for non-interactive testing
+    process.env.RONIN_TOKEN = 'test-token';
+
     expect(exitCode).toBe(0);
     expect(stdout.toString()).toContain('Data at the edge');
   });
 
   test('should show version when run with --version flag', async () => {
     const { stdout, exitCode } = await $`bun ${CLI_PATH} --version`.nothrow().quiet();
+
+    // Set environment variables for non-interactive testing
+    process.env.RONIN_TOKEN = 'test-token';
 
     expect(exitCode).toBe(0);
     expect(stdout.toString()).toMatch(/\d+\.\d+\.\d+/); // Matches semver format
