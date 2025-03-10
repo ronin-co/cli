@@ -35,20 +35,28 @@ describe('CLI Integration Tests', () => {
   });
 
   test('should show help text when run without arguments', async () => {
-    const { stdout, exitCode } = await $`bun ${CLI_PATH}`.nothrow().quiet();
-
     // Set environment variables for non-interactive testing
     process.env.RONIN_TOKEN = 'test-token';
+
+    const { stdout, stderr, exitCode } = await $`bun ${CLI_PATH}`.nothrow().quiet();
+
+    console.log(stderr.toString());
+    console.log(stdout.toString());
 
     expect(exitCode).toBe(0);
     expect(stdout.toString()).toContain('Data at the edge');
   });
 
   test('should show version when run with --version flag', async () => {
-    const { stdout, exitCode } = await $`bun ${CLI_PATH} --version`.nothrow().quiet();
-
     // Set environment variables for non-interactive testing
     process.env.RONIN_TOKEN = 'test-token';
+
+    const { stdout, stderr, exitCode } = await $`bun ${CLI_PATH} --version`
+      .nothrow()
+      .quiet();
+
+    console.log(stderr.toString());
+    console.log(stdout.toString());
 
     expect(exitCode).toBe(0);
     expect(stdout.toString()).toMatch(/\d+\.\d+\.\d+/); // Matches semver format
@@ -112,6 +120,21 @@ describe('CLI Integration Tests', () => {
     await fs.promises.writeFile(
       path.join(tempDir, '.ronin/config.json'),
       JSON.stringify({ space: 'test-space' }, null, 2),
+    );
+
+    // Create package.json with ronin dependency
+    await fs.promises.writeFile(
+      path.join(tempDir, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'test-project',
+          dependencies: {
+            ronin: 'latest',
+          },
+        },
+        null,
+        2,
+      ),
     );
 
     // This test would need to be expanded with proper API mocking
