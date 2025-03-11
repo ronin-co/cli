@@ -42,11 +42,11 @@
     "resolve-from": "5.0.0"
   },
   "devDependencies": {
-    "ronin": "6.2.22",
     "@biomejs/biome": "1.9.4",
     "@types/bun": "1.2.1",
     "@types/ini": "4.1.1",
     "bun-bagel": "1.1.0",
+    "ronin": "6.2.22",
     "tsup": "8.3.6",
     "typescript": "5.7.3"
   }
