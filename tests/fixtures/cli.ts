@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
 import { version } from '@/src/../package.json';
-import runCLI from '../../dist/index.js';
+import { run } from '../../src';
 
-runCLI({ version });
+run({ version });
