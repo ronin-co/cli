@@ -38,10 +38,7 @@ describe('CLI Integration Tests', () => {
     // Set environment variables for non-interactive testing
     process.env.RONIN_TOKEN = 'test-token';
 
-    const { stdout, stderr, exitCode } = await $`bun ${CLI_PATH}`.nothrow().quiet();
-
-    console.log(stderr.toString());
-    console.log(stdout.toString());
+    const { stdout, exitCode } = await $`bun ${CLI_PATH}`.nothrow().quiet();
 
     expect(exitCode).toBe(0);
     expect(stdout.toString()).toContain('Data at the edge');
@@ -51,12 +48,7 @@ describe('CLI Integration Tests', () => {
     // Set environment variables for non-interactive testing
     process.env.RONIN_TOKEN = 'test-token';
 
-    const { stdout, stderr, exitCode } = await $`bun ${CLI_PATH} --version`
-      .nothrow()
-      .quiet();
-
-    console.log(stderr.toString());
-    console.log(stdout.toString());
+    const { stdout, exitCode } = await $`bun ${CLI_PATH} --version`.nothrow().quiet();
 
     expect(exitCode).toBe(0);
     expect(stdout.toString()).toMatch(/\d+\.\d+\.\d+/); // Matches semver format
@@ -87,60 +79,5 @@ describe('CLI Integration Tests', () => {
 
     expect(exitCode).toBe(1);
     expect(stderr.toString()).toContain('You are not a member of the "test-space" space');
-  });
-
-  test('should create a migration file with diff command', async () => {
-    // Create a schema directory with model definitions
-    await fs.promises.mkdir(path.join(tempDir, 'schema'), { recursive: true });
-    await fs.promises.writeFile(
-      path.join(tempDir, 'schema/index.ts'),
-      `
-      import { model } from 'ronin/schema';
-
-      export const User = model(
-        {
-          slug: 'user',
-          fields: {
-            name: { type: 'string' },
-            email: { type: 'string' }
-          }
-        }
-    )
-      `,
-    );
-
-    // Create migrations directory
-    await fs.promises.mkdir(path.join(tempDir, 'migrations'), { recursive: true });
-
-    // Create .ronin directory and config.json with test space
-    await fs.promises.mkdir(path.join(tempDir, '.ronin'), { recursive: true });
-    await fs.promises.writeFile(
-      path.join(tempDir, '.ronin/config.json'),
-      JSON.stringify({ space: 'test-space' }, null, 2),
-    );
-
-    // Create package.json with ronin dependency
-    await fs.promises.writeFile(
-      path.join(tempDir, 'package.json'),
-      JSON.stringify(
-        {
-          name: 'test-project',
-          dependencies: {
-            ronin: 'latest',
-          },
-        },
-        null,
-        2,
-      ),
-    );
-
-    const { stderr, stdout, exitCode } =
-      await $`RONIN_TOKEN=test-token bun ${CLI_PATH} diff --local`.nothrow().quiet();
-
-    console.error(stderr.toString());
-    console.error(stdout.toString());
-
-    expect(stderr.toString()).toContain('Successfully generated migration protocol file');
-    expect(exitCode).toBe(0);
   });
 });

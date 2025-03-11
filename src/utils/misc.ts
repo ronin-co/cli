@@ -409,6 +409,8 @@ const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
 > => {
   const roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
 
+  console.error('roninSyntaxPath', roninSyntaxPath);
+
   if (!roninSyntaxPath) {
     throw new Error(
       'The "ronin" package must be installed in your project in order to create migrations.',
