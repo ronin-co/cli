@@ -11,6 +11,9 @@ import type * as CompilerPackage from '@ronin/compiler';
 import type * as SyntaxPackage from '@ronin/syntax/queries';
 import resolveFrom from 'resolve-from';
 
+/** List of now allowed model slugs. */
+const NOT_ALLOWED_MODEL_SLUGS = ['', 'model'];
+
 /** Represents a data item for logging */
 interface DataItem {
   slug?: string;
@@ -231,6 +234,15 @@ export const getModelDefinitions = async (customPath?: string): Promise<Array<Mo
       );
       process.exit(1);
     }
+  }
+
+  const notAllowedModel = sortedModels.find((model) =>
+    NOT_ALLOWED_MODEL_SLUGS.includes(model.slug),
+  );
+
+  if (notAllowedModel) {
+    spinner.fail(`The root model cannot have a slug of "${notAllowedModel.slug}".`);
+    process.exit(1);
   }
 
   return sortedModels;
