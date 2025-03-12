@@ -168,12 +168,8 @@ describe('misc', () => {
         expect(error.message).toBe('process.exit called');
       }
 
-      expect(ora.mock.calls).toEqual(
-        expect.arrayContaining([
-          expect.arrayContaining([
-            expect.stringContaining('The root model cannot have a slug of'),
-          ]),
-        ]),
+      expect(ora).toHaveBeenCalledWith(
+        expect.stringContaining('The root model cannot have a slug of'),
       );
     });
 
