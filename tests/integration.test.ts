@@ -35,9 +35,6 @@ describe('CLI Integration Tests', () => {
   });
 
   test('should show help text when run without arguments', async () => {
-    // Set environment variables for non-interactive testing
-    process.env.RONIN_TOKEN = 'test-token';
-
     const { stdout, exitCode } = await $`bun ${CLI_PATH}`.nothrow().quiet();
 
     expect(exitCode).toBe(0);
@@ -45,9 +42,6 @@ describe('CLI Integration Tests', () => {
   });
 
   test('should show version when run with --version flag', async () => {
-    // Set environment variables for non-interactive testing
-    process.env.RONIN_TOKEN = 'test-token';
-
     const { stdout, exitCode } = await $`bun ${CLI_PATH} --version`.nothrow().quiet();
 
     expect(exitCode).toBe(0);
@@ -55,16 +49,14 @@ describe('CLI Integration Tests', () => {
   });
 
   test('should fail init command without space handle', async () => {
-    const { stderr, exitCode } = await $`RONIN_TOKEN=test-token bun ${CLI_PATH} init`
-      .nothrow()
-      .quiet();
+    const { stderr, exitCode } = await $`bun ${CLI_PATH} init`.nothrow().quiet();
 
     expect(exitCode).toBe(1);
     expect(stderr.toString()).toContain('Please provide a space handle like this:');
     expect(stderr.toString()).toContain('$ ronin init my-space');
   });
 
-  test('should initialize a project', async () => {
+  test('should fail to initialize a project', async () => {
     // Mock necessary files for a successful init
     await fs.promises.writeFile(
       path.join(tempDir, 'tsconfig.json'),
@@ -74,8 +66,9 @@ describe('CLI Integration Tests', () => {
     await fs.promises.writeFile(path.join(tempDir, '.gitignore'), 'node_modules\n');
 
     // This test might need to mock HTTP calls or use a test token
-    const { stderr, exitCode } =
-      await $`RONIN_TOKEN=test-token bun ${CLI_PATH} init test-space`.nothrow().quiet();
+    const { stderr, exitCode } = await $`bun ${CLI_PATH} init test-space`
+      .nothrow()
+      .quiet();
 
     expect(exitCode).toBe(1);
     expect(stderr.toString()).toContain('You are not a member of the "test-space" space');
