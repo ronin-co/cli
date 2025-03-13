@@ -236,12 +236,10 @@ export const getModelDefinitions = async (customPath?: string): Promise<Array<Mo
     }
   }
 
-  const notAllowedModel = sortedModels.find((model) =>
-    NOT_ALLOWED_MODEL_SLUGS.includes(model.slug),
-  );
+  const notAllowedModel = sortedModels.find((model) => model.slug === '');
 
   if (notAllowedModel) {
-    spinner.fail(`The root model cannot have a slug of "${notAllowedModel.slug}".`);
+    spinner.fail('The `slug` attribute of models must not be empty.');
     process.exit(1);
   }
 

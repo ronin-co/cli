@@ -150,8 +150,8 @@ describe('misc', () => {
 
       mock.module(MODEL_IN_CODE_PATH, () => {
         return {
-          ROOT_MODEL: {
-            slug: 'model',
+          Account: {
+            slug: '',
           },
         };
       });
@@ -169,7 +169,7 @@ describe('misc', () => {
       }
 
       expect(ora).toHaveBeenCalledWith(
-        expect.stringContaining('The root model cannot have a slug of'),
+        expect.stringContaining('The `slug` attribute of models must not be empty.'),
       );
     });
 
