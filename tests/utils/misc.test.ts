@@ -141,6 +141,38 @@ describe('misc', () => {
       expect(models).toStrictEqual([]);
     });
 
+    test('should fail to get model definitions because of invalid model slug', async () => {
+      spyOn(process, 'exit').mockImplementation(() => {
+        throw new Error('process.exit called');
+      });
+
+      const ora = spyOn(stderr, 'write');
+
+      mock.module(MODEL_IN_CODE_PATH, () => {
+        return {
+          Account: {
+            slug: '',
+          },
+        };
+      });
+
+      const existsSync = spyOn(fs, 'existsSync');
+      existsSync.mockReturnValue(true);
+      existsSync.mockClear();
+
+      try {
+        await getModelDefinitions();
+      } catch (err) {
+        const error = err as Error;
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toBe('process.exit called');
+      }
+
+      expect(ora).toHaveBeenCalledWith(
+        expect.stringContaining('The `slug` attribute of models must not be empty.'),
+      );
+    });
+
     test('should return models in code definitions and ignore constants - empty', async () => {
       mock.module(MODEL_IN_CODE_PATH, () => {
         return { CONSTANTS };

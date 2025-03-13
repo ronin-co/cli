@@ -233,6 +233,13 @@ export const getModelDefinitions = async (customPath?: string): Promise<Array<Mo
     }
   }
 
+  const notAllowedModel = sortedModels.find((model) => model.slug === '');
+
+  if (notAllowedModel) {
+    spinner.fail('The `slug` attribute of models must not be empty.');
+    process.exit(1);
+  }
+
   return sortedModels;
 };
 
