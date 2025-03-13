@@ -11,9 +11,6 @@ import type * as CompilerPackage from '@ronin/compiler';
 import type * as SyntaxPackage from '@ronin/syntax/queries';
 import resolveFrom from 'resolve-from';
 
-/** List of not allowed model slugs. */
-const NOT_ALLOWED_MODEL_SLUGS = ['', 'model'];
-
 /** Represents a data item for logging */
 interface DataItem {
   slug?: string;
