@@ -477,7 +477,11 @@ describe('CLI', () => {
           stderrSpy.mock.calls.some(
             (call) =>
               typeof call[0] === 'string' &&
-              call[0].includes("Cannot find module 'schema/index.ts'"),
+              // Bun's error message format changed between versions - it can use either single
+              // or double quotes around module paths in "Cannot find module" errors, so we need
+              // to check for both variants to make our tests resilient to Bun version changes.
+              (call[0].includes("Cannot find module 'schema/index.ts'") ||
+                call[0].includes('Cannot find module "schema/index.ts"')),
           ),
         ).toBe(true);
       });
