@@ -339,6 +339,7 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
+            // @ts-expect-error This is a mock.
             fields: [{ type: 'string', slug: 'name' }],
           },
         ]);
