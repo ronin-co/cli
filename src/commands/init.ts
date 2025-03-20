@@ -6,6 +6,8 @@ import json5 from 'json5';
 import ora from 'ora';
 
 import { exists } from '@/src/utils/file';
+import { MIGRATIONS_PATH, MODEL_IN_CODE_PATH, getLocalPackages } from '@/src/utils/misc';
+import { getModels } from '@/src/utils/model';
 
 export const exec = util.promisify(childProcess.exec);
 
@@ -43,11 +45,25 @@ export default async (positionals: Array<string>): Promise<void> => {
       }
     }
 
-    // Install the types package using the preferred package manager
-    if (packageManager === 'bun') {
-      await exec(`bun add @ronin-types/${spaceHandle} --dev`);
+    const packages = await getLocalPackages();
+    const doModelsExist = (await getModels(packages)).length > 0;
+
+    if (doModelsExist) {
+      // Install the types package using the preferred package manager.
+      if (packageManager === 'bun') {
+        await exec(`bun add @ronin-types/${spaceHandle} --dev`);
+      } else {
+        await exec(`npm install @ronin-types/${spaceHandle} --save-dev`);
+      }
     } else {
-      await exec(`npm install @ronin-types/${spaceHandle} --save-dev`);
+      // Create ronin directories.
+      await fs.mkdir(MIGRATIONS_PATH, { recursive: true });
+
+      // Create a `schema/index.ts` file.
+      await fs.writeFile(
+        MODEL_IN_CODE_PATH,
+        '// This file is the starting point to define your models in code.\n',
+      );
     }
 
     // Add the types package to the project's TypeScript config if one exists

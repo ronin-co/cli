@@ -59,23 +59,4 @@ describe('CLI Integration Tests', () => {
     expect(stderr.toString()).toContain('Please provide a space handle like this:');
     expect(stderr.toString()).toContain('$ ronin init my-space');
   });
-
-  test('should fail to initialize a project', async () => {
-    // Mock necessary files for a successful init
-    await fs.promises.writeFile(
-      path.join(tempDir, 'tsconfig.json'),
-      JSON.stringify({ compilerOptions: { types: [] } }, null, 2),
-    );
-
-    await fs.promises.writeFile(path.join(tempDir, '.gitignore'), 'node_modules\n');
-
-    const { stderr, exitCode } = await $`RONIN_TOKEN=test bun ${CLI_PATH} init test-space`
-      .nothrow()
-      .quiet();
-
-    expect(exitCode).toBe(1);
-    expect(stderr.toString()).toContain(
-      'You are not a member of the "test-space" space or the space doesn\'t exist.',
-    );
-  });
 });

@@ -23,7 +23,7 @@ import type { Row } from '@ronin/engine/types';
  */
 export const getModels = async (
   packages: LocalPackages,
-  db: Database,
+  db?: Database,
   token?: string,
   space?: string,
   isLocal = true,
@@ -33,7 +33,7 @@ export const getModels = async (
 
   let rawResults: Array<Array<Row>>;
 
-  if (isLocal) {
+  if (isLocal && db) {
     rawResults = (await db.query(transaction.statements)).map((r) => r.rows);
   } else {
     try {
