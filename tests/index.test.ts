@@ -335,12 +335,26 @@ describe('CLI', () => {
         );
       };
 
-      test('should successfully initialize a project with Bun', async () => {
+      test('should successfully initialize a project with Bun when models exist', async () => {
+        spyOn(modelModule, 'getModels').mockResolvedValue([
+          {
+            slug: 'user',
+            fields: [{ type: 'string', slug: 'name' }],
+          },
+        ]);
+
         setupInitTest(true);
         await run({ version: '1.0.0' });
         expect(initModule.exec).toHaveBeenCalledWith(
           'bun add @ronin-types/test-space --dev',
         );
+      });
+
+      test('should successfully initialize a project with Bun when no models exist', async () => {
+        spyOn(modelModule, 'getModels').mockResolvedValue([]);
+
+        setupInitTest(true);
+        await run({ version: '1.0.0' });
 
         // Verify that writeFile was called for schema/index.ts.
         expect(fs.promises.writeFile).toHaveBeenCalledWith(
@@ -352,6 +366,14 @@ describe('CLI', () => {
       });
 
       test('should successfully initialize a project with npm', async () => {
+        spyOn(modelModule, 'getModels').mockResolvedValue([
+          {
+            slug: 'user',
+            // @ts-expect-error This is a mock
+            fields: [{ type: 'string', slug: 'name' }],
+          },
+        ]);
+
         setupInitTest(false);
         await run({ version: '1.0.0' });
         expect(initModule.exec).toHaveBeenCalledWith(
@@ -360,6 +382,14 @@ describe('CLI', () => {
       });
 
       test('should fail to initialize a project with unauthorized access', async () => {
+        spyOn(modelModule, 'getModels').mockResolvedValue([
+          {
+            slug: 'user',
+            // @ts-expect-error This is a mock
+            fields: [{ type: 'string', slug: 'name' }],
+          },
+        ]);
+
         setupInitTest();
 
         // Mock exec to throw unauthorized error
