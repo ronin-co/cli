@@ -51,6 +51,7 @@ describe('CLI', () => {
     spyOn(fs, 'readdirSync').mockReturnValue(['migration-0001.ts', 'migration-0002.ts']);
     spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     spyOn(fs, 'mkdirSync').mockImplementation(() => {});
+    spyOn(fs.promises, 'writeFile').mockResolvedValue();
   });
 
   afterEach(() => {
@@ -301,7 +302,7 @@ describe('CLI', () => {
         }
       });
 
-      const setupInitTest = (hasBun = true) => {
+      const setupInitTest = (hasBun = true): void => {
         process.argv = ['bun', 'ronin', 'init', 'test-space'];
 
         spyOn(fs.promises, 'access').mockImplementation((path) => {
@@ -339,6 +340,14 @@ describe('CLI', () => {
         await run({ version: '1.0.0' });
         expect(initModule.exec).toHaveBeenCalledWith(
           'bun add @ronin-types/test-space --dev',
+        );
+
+        // Verify that writeFile was called for schema/index.ts.
+        expect(fs.promises.writeFile).toHaveBeenCalledWith(
+          expect.stringContaining('schema/index.ts'),
+          expect.stringContaining(
+            '// This file is the starting point to define your models in code.',
+          ),
         );
       });
 

@@ -6,6 +6,7 @@ import json5 from 'json5';
 import ora from 'ora';
 
 import { exists } from '@/src/utils/file';
+import { MIGRATIONS_PATH, MODEL_IN_CODE_PATH } from '@/src/utils/misc';
 
 export const exec = util.promisify(childProcess.exec);
 
@@ -25,6 +26,15 @@ export default async (positionals: Array<string>): Promise<void> => {
     );
     process.exit(1);
   }
+
+  // Create ronin directories.
+  await fs.mkdir(MIGRATIONS_PATH, { recursive: true });
+
+  // Create a `schema/index.ts` file.
+  await fs.writeFile(
+    MODEL_IN_CODE_PATH,
+    '// This file is the starting point to define your models in code.\n',
+  );
 
   const packageManager = (await exists('bun.lockb')) ? 'bun' : 'npm';
   const packageManagerName = packageManager === 'bun' ? 'Bun' : 'npm';
