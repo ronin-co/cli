@@ -49,7 +49,7 @@ export default async (positionals: Array<string>): Promise<void> => {
     const doModelsExist = (await getModels(packages)).length > 0;
 
     if (doModelsExist) {
-      // Install the types package using the preferred package manager
+      // Install the types package using the preferred package manager.
       if (packageManager === 'bun') {
         await exec(`bun add @ronin-types/${spaceHandle} --dev`);
       } else {

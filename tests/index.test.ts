@@ -46,8 +46,8 @@ describe('CLI', () => {
       });
     });
 
-    // Prevent actually reading/writing files
-    // @ts-expect-error This is a mock
+    // Prevent actually reading/writing files.
+    // @ts-expect-error This is a mock.
     spyOn(fs, 'readdirSync').mockReturnValue(['migration-0001.ts', 'migration-0002.ts']);
     spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     spyOn(fs, 'mkdirSync').mockImplementation(() => {});
@@ -317,8 +317,8 @@ describe('CLI', () => {
           return Promise.reject(new Error('File not found'));
         });
 
-        // Mock file operations
-        // @ts-expect-error This is a mock
+        // Mock file operations.
+        // @ts-expect-error This is a mock.
         spyOn(fs.promises, 'readFile').mockImplementation((path) => {
           if (path.toString().includes('.gitignore'))
             return Promise.resolve('node_modules\n');
@@ -330,7 +330,7 @@ describe('CLI', () => {
         spyOn(fs.promises, 'writeFile').mockResolvedValue();
 
         spyOn(initModule, 'exec').mockImplementation(
-          // @ts-expect-error This is a mock
+          // @ts-expect-error This is a mock.
           () => () => Promise.resolve({ stdout: '', stderr: '' }),
         );
       };
@@ -370,7 +370,7 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock
+            // @ts-expect-error This is a mock.
             fields: [{ type: 'string', slug: 'name' }],
           },
         ]);
@@ -386,7 +386,7 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock
+            // @ts-expect-error This is a mock.
             fields: [{ type: 'string', slug: 'name' }],
           },
         ]);
@@ -416,7 +416,7 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock
+            // @ts-expect-error This is a mock.
             fields: [{ type: 'string', slug: 'name' }],
           },
         ]);
@@ -476,7 +476,7 @@ describe('CLI', () => {
       spyOn(modelModule, 'getModels').mockResolvedValue([
         {
           slug: 'user',
-          // @ts-expect-error This is a mock
+          // @ts-expect-error This is a mock.
           fields: convertObjectToArray({
             name: { type: 'string' },
           }),
@@ -699,7 +699,7 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock
+            // @ts-expect-error This is a mock.
             fields: convertObjectToArray({
               name: { type: 'string' },
             }),
@@ -743,7 +743,7 @@ describe('CLI', () => {
         await run({ version: '1.0.0' });
 
         expect(
-          // @ts-expect-error This is a mock
+          // @ts-expect-error This is a mock.
           stderrSpy.mock.calls.some((call) => call[0].includes('Network error')),
         ).toBe(true);
       });
@@ -755,7 +755,7 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock
+            // @ts-expect-error This is a mock.
             fields: convertObjectToArray({
               name: { type: 'string' },
             }),
@@ -798,7 +798,7 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock
+            // @ts-expect-error This is a mock.
             fields: [{ type: 'string', slug: 'name' }],
           },
         ]);
