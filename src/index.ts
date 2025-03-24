@@ -5,6 +5,7 @@ import apply from '@/src/commands/apply';
 import diff from '@/src/commands/diff';
 import initializeProject from '@/src/commands/init';
 import logIn from '@/src/commands/login';
+import generateTypes from '@/src/commands/types';
 import { printHelp, printVersion } from '@/src/utils/info';
 import { MIGRATION_FLAGS } from '@/src/utils/migration';
 import { BASE_FLAGS, type BaseFlags } from '@/src/utils/misc';
@@ -97,6 +98,9 @@ export const run = async (config: { version: string }): Promise<void> => {
 
     return apply(appToken, session?.token, flags, migrationFilePath);
   }
+
+  // `types` sub command
+  if (normalizedPositionals.includes('types')) return generateTypes();
 
   // If no matching flags or commands were found, render the help, since we don't want to
   // use the main `ronin` command for anything yet.
