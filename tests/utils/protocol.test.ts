@@ -1,10 +1,14 @@
-import { describe, expect, jest, spyOn, test } from 'bun:test';
+import { afterEach, describe, expect, jest, spyOn, test } from 'bun:test';
 import fs, { type PathOrFileDescriptor } from 'node:fs';
 import { getLocalPackages } from '@/src/utils/misc';
 import { Protocol } from '@/src/utils/protocol';
 import type { Model, Statement } from '@ronin/compiler';
 
 describe('protocol', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   test('should initialize with empty queries when none are provided', async () => {
     const packages = await getLocalPackages();
 
@@ -158,6 +162,26 @@ describe('protocol', () => {
     expect(mixedFileContent).toContain('import { create, get, set } from "ronin";');
     expect(mixedFileContent).not.toContain('alter');
     expect(mixedFileContent).not.toContain('drop');
+  });
+
+  test('migration file should only import used query types with subqueries', async () => {
+    const packages = await getLocalPackages();
+    const fileName = 'migration_imports_test';
+
+    const createQueries = [
+      "create.model({slug: 'model1'})",
+      "create.model({slug: 'model2'})",
+      "add.model({slug: 'model1'}).with(() => get.model({slug: 'model2'}))",
+    ];
+    const createProtocol = new Protocol(packages, createQueries);
+
+    spyOn(fs, 'mkdirSync').mockImplementation(() => {});
+    const writeFileSpy = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+
+    createProtocol.save(fileName);
+
+    const createFileContent = writeFileSpy.mock.calls[0][1] as string;
+    expect(createFileContent).toContain('import { add, create, get } from "ronin";');
   });
 
   test('load specific migration file', async () => {

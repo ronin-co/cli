@@ -88,14 +88,28 @@ export class Protocol {
       'remove',
       'count',
     ];
-    const usedQueryTypes = queryTypes.filter((type) =>
-      this._roninQueries.some((query) => query.startsWith(`${type}.`)),
-    );
+    const usedQueryTypes = new Set<string>();
+
+    for (const query of this._roninQueries) {
+      for (const type of queryTypes) {
+        if (query.startsWith(`${type}.`)) {
+          usedQueryTypes.add(type);
+        }
+
+        // We also need to check if a query type is used inside another query.
+        // For example: `add.model({slug: 'model1'}).with(() => get.model({slug: 'model2'}))`.
+        if (query.includes(` ${type}.`)) {
+          usedQueryTypes.add(type);
+        }
+      }
+    }
+
+    const usedQueryTypesArray = Array.from(usedQueryTypes);
 
     // Only import the query types that are actually used
     const imports =
-      usedQueryTypes.length > 0
-        ? `import { ${usedQueryTypes.join(', ')} } from 'ronin';`
+      usedQueryTypesArray.length > 0
+        ? `import { ${usedQueryTypesArray.join(', ')} } from 'ronin';`
         : '';
 
     return `${imports}
