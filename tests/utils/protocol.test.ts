@@ -168,7 +168,6 @@ describe('protocol', () => {
     const packages = await getLocalPackages();
     const fileName = 'migration_imports_test';
 
-    // Test with only create queries
     const createQueries = [
       "create.model({slug: 'model1'})",
       "create.model({slug: 'model2'})",
@@ -176,13 +175,11 @@ describe('protocol', () => {
     ];
     const createProtocol = new Protocol(packages, createQueries);
 
-    // Mock `fs.mkdirSync` and `fs.writeFileSync`
     spyOn(fs, 'mkdirSync').mockImplementation(() => {});
     const writeFileSpy = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
 
     createProtocol.save(fileName);
 
-    // Check the content of the first call to `fs.writeFileSync`
     const createFileContent = writeFileSpy.mock.calls[0][1] as string;
     expect(createFileContent).toContain('import { add, create, get } from "ronin";');
   });
