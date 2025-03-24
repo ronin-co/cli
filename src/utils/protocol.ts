@@ -96,8 +96,8 @@ export class Protocol {
           usedQueryTypes.add(type);
         }
 
-        // We also need to check if for example a `get` query is used inside a `add` query.
-        // For example: `add.profiles.with(() => get.user({ "selecting": ["name"] }))`.
+        // We also need to check if a query type is used inside another query.
+        // For example: `add.model({slug: 'model1'}).with(() => get.model({slug: 'model2'}))`.
         if (query.includes(` ${type}.`)) {
           usedQueryTypes.add(type);
         }
