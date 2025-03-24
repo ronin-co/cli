@@ -1,6 +1,6 @@
 {
   "name": "@ronin/cli",
-  "version": "0.2.43",
+  "version": "0.2.44",
   "type": "module",
   "description": "The command-line interface for RONIN.",
   "publishConfig": {
