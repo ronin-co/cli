@@ -40,6 +40,8 @@ describe('CLI', () => {
     stderrSpy = spyOn(process.stderr, 'write').mockImplementation(() => true);
     exitSpy = spyOn(process, 'exit').mockImplementation(() => undefined as never);
     spyOn(console, 'table').mockImplementation(() => {});
+    // @ts-expect-error This is a mock.
+    spyOn(fs.promises, 'appendFile').mockImplementation(() => {});
     spyOn(sessionModule, 'getSession').mockImplementation(() => {
       return Promise.resolve({
         token: 'Bulgur',
@@ -52,6 +54,20 @@ describe('CLI', () => {
     spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     spyOn(fs, 'mkdirSync').mockImplementation(() => {});
     spyOn(fs.promises, 'writeFile').mockResolvedValue();
+
+    // Mock reading `.npmrc` and `bunfig.toml` as empty files
+    // @ts-expect-error This is a mock.
+    spyOn(fs.promises, 'readFile').mockImplementation((filePath) => {
+      if (typeof filePath === 'string') {
+        if (filePath.includes('.npmrc')) return Promise.resolve('');
+        if (filePath.includes('bunfig.toml')) return Promise.resolve('');
+        if (filePath.toString().includes('.gitignore'))
+          return Promise.resolve('node_modules\n');
+        if (filePath.toString().includes('tsconfig.json'))
+          return Promise.resolve('{"compilerOptions":{"types":[]}}');
+      }
+      return Promise.resolve('{"token": "Bulgur"}');
+    });
   });
 
   afterEach(() => {
