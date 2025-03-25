@@ -6,8 +6,8 @@ import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner as ora } from '@/src/utils/spinner';
 import {
   TYPES_DTS_FILE_NAME,
-  appendTypesToConfig,
   getSpaceTypes,
+  injectTSConfigInclude,
 } from '@/src/utils/types';
 
 export default async (
@@ -30,7 +30,9 @@ export default async (
     const typesFilePath = path.join(configDir, TYPES_DTS_FILE_NAME);
     await fs.writeFile(typesFilePath, code);
 
-    await appendTypesToConfig();
+    const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
+    const tsconfigContents = await injectTSConfigInclude(tsconfigPath);
+    await fs.writeFile(tsconfigPath, JSON.stringify(tsconfigContents, null, 2));
 
     spinner.succeed('Successfully generated types');
     process.exit(0);

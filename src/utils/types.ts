@@ -16,9 +16,16 @@ const TYPES_INCLUDE_PATH = '.ronin/*.d.ts';
 /**
  * Add the path to the generated TypeScript types to the `tsconfig.json` file.
  *
+ * @param path - Path to the `tsconfig.json` file.
+ *
  * @returns Promise resolving to void.
  */
-export const appendTypesToConfig = async (): Promise<void> => {
+export const injectTSConfigInclude = async (
+  path: string,
+): Promise<{
+  compilerOptions: Record<string, unknown>;
+  include: Array<string>;
+}> => {
   // Set a base TypeScript config used for every project.
   const tsConfigContents = {
     compilerOptions: {},
@@ -26,10 +33,9 @@ export const appendTypesToConfig = async (): Promise<void> => {
   };
 
   // Attempt to load the existing `tsconfig.json` file.
-  const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
-  const tsConfigExists = await fs.exists(tsconfigPath);
+  const tsConfigExists = await fs.exists(path);
   if (tsConfigExists) {
-    const contents = await fs.readFile(tsconfigPath, 'utf-8');
+    const contents = await fs.readFile(path, 'utf-8');
     const json = json5.parse(contents);
     Object.assign(tsConfigContents, json);
   }
@@ -38,8 +44,7 @@ export const appendTypesToConfig = async (): Promise<void> => {
   if (!tsConfigContents.include.includes(TYPES_INCLUDE_PATH))
     tsConfigContents.include.push(TYPES_INCLUDE_PATH);
 
-  // Saves the updated `tsconfig.json` file to disk.
-  await fs.writeFile(tsconfigPath, JSON.stringify(tsConfigContents, null, 2));
+  return tsConfigContents;
 };
 
 /**
