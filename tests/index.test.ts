@@ -21,7 +21,6 @@ import * as modelModule from '@/src/utils/model';
 import { convertObjectToArray } from '@/src/utils/model';
 import * as sessionModule from '@/src/utils/session';
 import * as spaceModule from '@/src/utils/space';
-import * as typesModule from '@/src/utils/types';
 import * as selectModule from '@inquirer/prompts';
 import * as getPort from 'get-port';
 import * as open from 'open';
