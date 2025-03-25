@@ -43,7 +43,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@ronin/codegen": "1.0.0",
     "@types/bun": "1.2.1",
     "@types/ini": "4.1.1",
     "bun-bagel": "1.1.0",

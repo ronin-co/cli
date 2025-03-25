@@ -23,7 +23,6 @@ import * as sessionModule from '@/src/utils/session';
 import * as spaceModule from '@/src/utils/space';
 import * as typesModule from '@/src/utils/types';
 import * as selectModule from '@inquirer/prompts';
-import { generate } from '@ronin/codegen';
 import * as getPort from 'get-port';
 import * as open from 'open';
 
