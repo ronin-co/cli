@@ -35,7 +35,8 @@ export const appendTypesToConfig = async (): Promise<void> => {
   }
 
   // Add the path to the generated TypeScript types to the `tsconfig.json` file.
-  tsConfigContents.include.push(TYPES_INCLUDE_PATH);
+  if (!tsConfigContents.include.includes(TYPES_INCLUDE_PATH))
+    tsConfigContents.include.push(TYPES_INCLUDE_PATH);
 
   // Saves the updated `tsconfig.json` file to disk.
   await fs.writeFile(tsconfigPath, JSON.stringify(tsConfigContents, null, 2));
