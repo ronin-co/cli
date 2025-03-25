@@ -26,24 +26,24 @@ export const injectTSConfigInclude = async (
   include: Array<string>;
 }> => {
   // Set a base TypeScript config used for every project.
-  const tsConfigContents = {
+  const contents = {
     compilerOptions: {},
     include: new Array<string>(),
   };
 
   // Attempt to load the existing `tsconfig.json` file.
-  const tsConfigExists = await fs.exists(path);
-  if (tsConfigExists) {
-    const contents = await fs.readFile(path, 'utf-8');
-    const json = json5.parse(contents);
-    Object.assign(tsConfigContents, json);
+  const fileExists = await fs.exists(path);
+  if (fileExists) {
+    const fileContents = await fs.readFile(path, 'utf-8');
+    const json = json5.parse(fileContents);
+    Object.assign(fileContents, json);
   }
 
   // Add the path to the generated TypeScript types to the `tsconfig.json` file.
-  if (!tsConfigContents.include.includes(TYPES_INCLUDE_PATH))
-    tsConfigContents.include.push(TYPES_INCLUDE_PATH);
+  if (!contents.include.includes(TYPES_INCLUDE_PATH))
+    contents.include.push(TYPES_INCLUDE_PATH);
 
-  return tsConfigContents;
+  return contents;
 };
 
 /**
