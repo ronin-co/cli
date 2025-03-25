@@ -99,7 +99,7 @@ export const run = async (config: { version: string }): Promise<void> => {
     return apply(appToken, session?.token, flags, migrationFilePath);
   }
 
-  // `types` sub command
+  // `types` sub command.
   if (normalizedPositionals.includes('types'))
     return generateTypes(appToken, session?.token);
 

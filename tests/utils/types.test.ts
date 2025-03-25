@@ -6,12 +6,12 @@ import * as typesModule from '@/src/utils/types';
 
 describe('types utils', () => {
   beforeEach(() => {
-    // Reset all mocks before each test
+    // Reset all mocks before each test.
     jest.restoreAllMocks();
   });
 
   afterEach(() => {
-    // Restore original fetch
+    // Restore original fetch.
     jest.restoreAllMocks();
   });
 
@@ -70,7 +70,7 @@ describe('types utils', () => {
     test('should fetch and return types successfully', async () => {
       const mockSpaceId = '123';
 
-      // Mock fetch response
+      // Mock fetch response.
       const fetchSpy = spyOn(global, 'fetch').mockImplementation(() =>
         Promise.resolve({
           ok: true,
