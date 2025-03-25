@@ -21,7 +21,9 @@ import * as modelModule from '@/src/utils/model';
 import { convertObjectToArray } from '@/src/utils/model';
 import * as sessionModule from '@/src/utils/session';
 import * as spaceModule from '@/src/utils/space';
+import * as typesModule from '@/src/utils/types';
 import * as selectModule from '@inquirer/prompts';
+import { generate } from '@ronin/codegen';
 import * as getPort from 'get-port';
 import * as open from 'open';
 
@@ -838,6 +840,38 @@ describe('CLI', () => {
           ),
         ).toBe(true);
       });
+    });
+  });
+
+  describe('types', () => {
+    test('should throw with an invalid token', async () => {
+      process.argv = ['bun', 'ronin', 'types'];
+      spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
+
+      await run({ version: '1.0.0' });
+
+      expect(
+        stderrSpy.mock.calls.some(
+          (call) =>
+            typeof call[0] === 'string' && call[0].includes('Failed to generate types'),
+        ),
+      ).toBe(true);
+    });
+
+    test('should handle network errors when generating types', async () => {
+      process.argv = ['bun', 'ronin', 'types'];
+
+      spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
+      spyOn(global, 'fetch').mockImplementation(() => {
+        throw new Error('Network error');
+      });
+
+      await run({ version: '1.0.0' });
+
+      expect(
+        // @ts-expect-error This is a mock.
+        stderrSpy.mock.calls.some((call) => call[0].includes('Network error')),
+      ).toBe(true);
     });
   });
 });
