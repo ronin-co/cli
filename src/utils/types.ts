@@ -36,7 +36,7 @@ export const injectTSConfigInclude = async (
   if (fileExists) {
     const fileContents = await fs.readFile(path, 'utf-8');
     const json = json5.parse(fileContents);
-    Object.assign(fileContents, json);
+    Object.assign(contents, json);
   }
 
   // Add the path to the generated TypeScript types to the `tsconfig.json` file.
