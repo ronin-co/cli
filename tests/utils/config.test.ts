@@ -13,7 +13,7 @@ describe('config', () => {
       fs.unlinkSync(configPath);
     }
     if (fs.existsSync(configDir)) {
-      fs.rmdirSync(configDir);
+      fs.rmdirSync(configDir, { recursive: true });
     }
 
     jest.clearAllMocks();
