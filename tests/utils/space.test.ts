@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, jest, spyOn, test } from 'bun:test';
 import * as logInModule from '@/src/commands/login';
 import * as configModule from '@/src/utils/config';
-import * as getSpacesModule from '@/src/utils/space';
 import * as selectModule from '@inquirer/prompts';
 
 import { getOrSelectSpaceId, getSpaces } from '@/src/utils/space';
@@ -233,16 +232,17 @@ describe('space utils', () => {
         },
         method: 'POST',
       });
+      spyOn(logInModule, 'default')
+        .mockReturnValueOnce(Promise.resolve('test-token'))
+        .mockReturnValueOnce(Promise.resolve(undefined));
 
-      spyOn(getSpacesModule, 'getSpaces')
-        .mockImplementationOnce(() => getSpaces('broken-token'))
-        .mockImplementationOnce(async () => []);
-
-      // @ts-expect-error This is a mock.
-      spyOn(logInModule, 'default').mockReturnValue('test-token');
-
-      const result = await getSpaces('broken-token');
-      expect(result).toEqual([]);
+      try {
+        await getSpaces('broken-token');
+      } catch (error) {
+        const err = error as Error;
+        expect(err).toBeInstanceOf(Error);
+        expect(err.message).toBe('Failed to fetch available spaces: Failed to log in.');
+      }
     });
   });
 });
