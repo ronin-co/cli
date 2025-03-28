@@ -110,7 +110,13 @@ describe('models', async () => {
       mock('https://data.ronin.co/?data-selector=test', {
         response: {
           status: 400,
-          data: 'This session is no longer valid.',
+          data: JSON.stringify({
+            error: {
+              message: 'This session is no longer valid. Please sign in again.',
+              code: 'AUTH_INVALID_SESSION',
+            },
+            data: null,
+          }),
         },
         method: 'POST',
       });

@@ -44,6 +44,9 @@ export const getModels = async (
         values: statement.params,
       }));
 
+      console.log({ nativeQueries });
+      console.log(token);
+
       const response = await fetch(`https://data.ronin.co/?data-selector=${space}`, {
         method: 'POST',
         headers: {
@@ -59,9 +62,8 @@ export const getModels = async (
         return 'records' in result ? result.records : [];
       });
     } catch (error) {
-      const err = error as Error;
       // If the session is no longer valid, log in again and try to fetch the models again.
-      if (err.message.includes('This session is no longer valid.')) {
+      if (error instanceof Error && error.code === 'AUTH_INVALID_SESSION') {
         spinner.stop();
         const sessionToken = await logIn(undefined, false);
         spinner.start();
