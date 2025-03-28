@@ -1,3 +1,4 @@
+import logIn from '@/src/commands/login';
 import { readConfig, saveConfig } from '@/src/utils/config';
 import { select } from '@inquirer/prompts';
 import type { Ora } from 'ora';
@@ -42,6 +43,17 @@ export const getSpaces = async (
         ],
       }),
     });
+
+    // We only reach this point if the session is invalid.
+    if (!response.ok && response.status === 400) {
+      const sessionToken = await logIn();
+
+      if (!sessionToken) {
+        throw new Error('Failed to log in.');
+      }
+
+      return getSpaces(sessionToken);
+    }
 
     if (!response.ok) {
       throw new Error(`API request failed with status: ${response.status}`);

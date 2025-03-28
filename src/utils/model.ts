@@ -1,9 +1,12 @@
+import logIn from '@/src/commands/login';
 import { IGNORED_FIELDS } from '@/src/utils/migration';
 import {
+  InvalidResponseError,
   type LocalPackages,
   type QueryResponse,
   getResponseBody,
 } from '@/src/utils/misc';
+import { spinner } from '@/src/utils/spinner';
 import type { Model } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
 import type { Row } from '@ronin/engine/types';
@@ -57,6 +60,18 @@ export const getModels = async (
         return 'records' in result ? result.records : [];
       });
     } catch (error) {
+      // If the session is no longer valid, log in again and try to fetch the models again.
+      if (
+        error instanceof InvalidResponseError &&
+        error.code &&
+        error.code === 'AUTH_INVALID_SESSION'
+      ) {
+        spinner.stop();
+        const sessionToken = await logIn(undefined, false);
+        spinner.start();
+        return getModels(packages, db, sessionToken, space, isLocal);
+      }
+
       throw new Error(`Failed to fetch remote models: ${(error as Error).message}`);
     }
   }

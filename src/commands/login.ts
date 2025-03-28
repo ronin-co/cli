@@ -5,7 +5,7 @@ import ora from 'ora';
 
 import { storeSession, storeTokenForBun, storeTokenForNPM } from '@/src/utils/session';
 
-const logIn = async (appToken?: string, exit = true): Promise<void> => {
+const logIn = async (appToken?: string, exit = true): Promise<string | undefined> => {
   const spinner = ora('Logging in').start();
 
   // If an app token is provided, we don't want to store a session for the CLI, since all
@@ -72,6 +72,8 @@ const logIn = async (appToken?: string, exit = true): Promise<void> => {
   spinner.succeed('Logged in successfully!');
 
   if (exit) process.exit(0);
+
+  return sessionToken;
 };
 
 export default logIn;

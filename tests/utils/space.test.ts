@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, jest, spyOn, test } from 'bun:test';
+import { mock } from 'bun-bagel';
+
+import * as logInModule from '@/src/commands/login';
 import * as configModule from '@/src/utils/config';
 import * as selectModule from '@inquirer/prompts';
 
@@ -199,6 +202,48 @@ describe('space utils', () => {
 
       readConfigSpy.mockRestore();
       saveConfigSpy.mockRestore();
+    });
+
+    test('should login when api returns 400 - fails', async () => {
+      mock('https://ronin.co/api', {
+        response: {
+          status: 400,
+          data: 'This session is no longer valid.',
+        },
+        method: 'POST',
+      });
+
+      // @ts-expect-error This is a mock.
+      spyOn(logInModule, 'default').mockReturnValue(undefined);
+
+      try {
+        await getSpaces('test-token');
+      } catch (error) {
+        const err = error as Error;
+        expect(err).toBeInstanceOf(Error);
+        expect(err.message).toBe('Failed to fetch available spaces: Failed to log in.');
+      }
+    });
+
+    test('should login when api returns 400 - succeeds', async () => {
+      mock('https://ronin.co/api', {
+        response: {
+          status: 400,
+          data: 'This session is no longer valid.',
+        },
+        method: 'POST',
+      });
+      spyOn(logInModule, 'default')
+        .mockReturnValueOnce(Promise.resolve('test-token'))
+        .mockReturnValueOnce(Promise.resolve(undefined));
+
+      try {
+        await getSpaces('broken-token');
+      } catch (error) {
+        const err = error as Error;
+        expect(err).toBeInstanceOf(Error);
+        expect(err.message).toBe('Failed to fetch available spaces: Failed to log in.');
+      }
     });
   });
 });
