@@ -1,6 +1,7 @@
 import logIn from '@/src/commands/login';
 import { IGNORED_FIELDS } from '@/src/utils/migration';
 import {
+  InvalidResponseError,
   type LocalPackages,
   type QueryResponse,
   getResponseBody,
@@ -60,7 +61,11 @@ export const getModels = async (
       });
     } catch (error) {
       // If the session is no longer valid, log in again and try to fetch the models again.
-      if (error instanceof Error && error.code === 'AUTH_INVALID_SESSION') {
+      if (
+        error instanceof InvalidResponseError &&
+        error.code &&
+        error.code === 'AUTH_INVALID_SESSION'
+      ) {
         spinner.stop();
         const sessionToken = await logIn(undefined, false);
         spinner.start();
