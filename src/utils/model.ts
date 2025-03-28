@@ -1,9 +1,11 @@
+import logIn from '@/src/commands/login';
 import { IGNORED_FIELDS } from '@/src/utils/migration';
 import {
   type LocalPackages,
   type QueryResponse,
   getResponseBody,
 } from '@/src/utils/misc';
+import { spinner } from '@/src/utils/spinner';
 import type { Model } from '@ronin/compiler';
 import type { Database } from '@ronin/engine';
 import type { Row } from '@ronin/engine/types';
@@ -57,6 +59,15 @@ export const getModels = async (
         return 'records' in result ? result.records : [];
       });
     } catch (error) {
+      const err = error as Error;
+      // If the session is no longer valid, log in again and try to fetch the models again.
+      if (err.message.includes('This session is no longer valid.')) {
+        spinner.stop();
+        const sessionToken = await logIn(undefined, false);
+        spinner.start();
+        return getModels(packages, db, sessionToken, space, isLocal);
+      }
+
       throw new Error(`Failed to fetch remote models: ${(error as Error).message}`);
     }
   }

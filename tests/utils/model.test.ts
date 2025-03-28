@@ -1,9 +1,9 @@
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, spyOn, test } from 'bun:test';
+import * as logInModule from '@/src/commands/login';
 import { initializeDatabase } from '@/src/utils/database';
 import { getLocalPackages } from '@/src/utils/misc';
-import { getModels } from '@/src/utils/model';
+import * as getModelsModule from '@/src/utils/model';
 import { clearMocks, mock } from 'bun-bagel';
-
 describe('models', async () => {
   const packages = await getLocalPackages();
   const db = await initializeDatabase(packages, './tests/fixtures/minimal.db');
@@ -11,7 +11,7 @@ describe('models', async () => {
   describe('local', () => {
     test('get models from local but there are no models', async () => {
       const packages = await getLocalPackages();
-      const models = await getModels(packages, db);
+      const models = await getModelsModule.getModels(packages, db);
 
       expect(models).toHaveLength(0);
       expect(models).toStrictEqual([]);
@@ -32,7 +32,7 @@ describe('models', async () => {
        `,
       ]);
 
-      const models = await getModels(packages, db);
+      const models = await getModelsModule.getModels(packages, db);
 
       expect(models).toHaveLength(1);
 
@@ -63,7 +63,13 @@ describe('models', async () => {
         method: 'POST',
       });
 
-      const models = await getModels(packages, db, '', 'updated-bsql-ip', false);
+      const models = await getModelsModule.getModels(
+        packages,
+        db,
+        '',
+        'updated-bsql-ip',
+        false,
+      );
 
       expect(models).toStrictEqual([]);
       expect(models).toHaveLength(0);
@@ -86,28 +92,43 @@ describe('models', async () => {
         method: 'POST',
       });
 
-      const models = await getModels(packages, db, '', 'updated-bsql-ip', false);
+      const models = await getModelsModule.getModels(
+        packages,
+        db,
+        '',
+        'updated-bsql-ip',
+        false,
+      );
 
       expect(models).toStrictEqual([]);
       expect(models).toHaveLength(0);
     });
 
-    test('get models fails', async () => {
+    test('get models fails with invalid session', async () => {
       const packages = await getLocalPackages();
 
-      mock('https://ronin.co/api', {
+      mock('https://data.ronin.co/?data-selector=test', {
         response: {
-          status: 500,
-          data: {},
+          status: 400,
+          data: 'This session is no longer valid.',
         },
+        method: 'POST',
+      });
+
+      spyOn(logInModule, 'default').mockImplementation(async () => {
+        throw new Error(
+          'Failed to fetch remote models: This session is no longer valid.',
+        );
       });
 
       try {
-        await getModels(packages, db, '', '', false);
+        await getModelsModule.getModels(packages, db, '', 'test', false);
       } catch (err) {
         const error = err as Error;
         expect(error).toBeInstanceOf(Error);
-        expect(error.message).toBe('Failed to fetch remote models: undefined');
+        expect(error.message).toBe(
+          'Failed to fetch remote models: This session is no longer valid.',
+        );
       }
     });
   });

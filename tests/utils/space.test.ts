@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, jest, spyOn, test } from 'bun:test';
+import * as logInModule from '@/src/commands/login';
 import * as configModule from '@/src/utils/config';
+import * as getSpacesModule from '@/src/utils/space';
 import * as selectModule from '@inquirer/prompts';
 
 import { getOrSelectSpaceId, getSpaces } from '@/src/utils/space';
+import { mock } from 'bun-bagel';
 
 describe('space utils', () => {
   beforeEach(() => {
@@ -199,6 +202,47 @@ describe('space utils', () => {
 
       readConfigSpy.mockRestore();
       saveConfigSpy.mockRestore();
+    });
+
+    test('should login when api returns 400 - fails', async () => {
+      mock('https://ronin.co/api', {
+        response: {
+          status: 400,
+          data: 'This session is no longer valid.',
+        },
+        method: 'POST',
+      });
+
+      // @ts-expect-error This is a mock.
+      spyOn(logInModule, 'default').mockReturnValue(undefined);
+
+      try {
+        await getSpaces('test-token');
+      } catch (error) {
+        const err = error as Error;
+        expect(err).toBeInstanceOf(Error);
+        expect(err.message).toBe('Failed to fetch available spaces: Failed to log in.');
+      }
+    });
+
+    test('should login when api returns 400 - succeeds', async () => {
+      mock('https://ronin.co/api', {
+        response: {
+          status: 400,
+          data: 'This session is no longer valid.',
+        },
+        method: 'POST',
+      });
+
+      spyOn(getSpacesModule, 'getSpaces')
+        .mockImplementationOnce(() => getSpaces('broken-token'))
+        .mockImplementationOnce(async () => []);
+
+      // @ts-expect-error This is a mock.
+      spyOn(logInModule, 'default').mockReturnValue('test-token');
+
+      const result = await getSpaces('broken-token');
+      expect(result).toEqual([]);
     });
   });
 });
