@@ -44,9 +44,6 @@ export const getModels = async (
         values: statement.params,
       }));
 
-      console.log({ nativeQueries });
-      console.log(token);
-
       const response = await fetch(`https://data.ronin.co/?data-selector=${space}`, {
         method: 'POST',
         headers: {

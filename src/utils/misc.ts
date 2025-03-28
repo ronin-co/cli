@@ -390,7 +390,6 @@ export const getResponseBody = async <T>(
     });
   }
 
-  console.log('json', json.error);
   if (json.error) {
     json.error.message = `${options?.errorPrefix ? `${options.errorPrefix} ` : ''}${json.error.message}`;
     throw new InvalidResponseError(json.error);
