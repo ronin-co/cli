@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, jest, spyOn, test } from 'bun:test';
+import { mock } from 'bun-bagel';
+
 import * as logInModule from '@/src/commands/login';
 import * as configModule from '@/src/utils/config';
 import * as selectModule from '@inquirer/prompts';
 
 import { getOrSelectSpaceId, getSpaces } from '@/src/utils/space';
-import { mock } from 'bun-bagel';
 
 describe('space utils', () => {
   beforeEach(() => {

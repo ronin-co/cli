@@ -80,7 +80,10 @@ export const run = async (config: { version: string }): Promise<void> => {
   if (!(session || normalizedPositionals.includes('login'))) await logIn(appToken, false);
 
   // `login` sub command
-  if (normalizedPositionals.includes('login')) await logIn(appToken);
+  if (normalizedPositionals.includes('login')) {
+    await logIn(appToken);
+    return;
+  }
 
   // `init` sub command
   if (normalizedPositionals.includes('init')) return initializeProject(positionals);
