@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import types from '@/src/commands/types';
 import { initializeDatabase } from '@/src/utils/database';
 import type { MigrationFlags } from '@/src/utils/migration';
 import { MIGRATIONS_PATH, getLocalPackages } from '@/src/utils/misc';
@@ -82,6 +83,10 @@ export default async (
     );
 
     spinner.succeed('Successfully applied migration');
+
+    // If desired, generate new TypeScript types
+    if (flags.types) await types(appToken, sessionToken);
+
     process.exit(0);
   } catch (err) {
     const message =
