@@ -31,7 +31,6 @@ export const printHelp = (): Promise<void> => {
       -h, --help                          Shows this help message
       -v, --version                       Shows the version of the CLI that is currently installed
       -d, --debug                         Shows additional debugging information
-      -t, --types                         Run the \`types\` command on completon
   `;
   console.log(text);
   process.exit(0);
