@@ -34,7 +34,7 @@ export const detectFormatConfig = (): {
             singleQuote: config.javascript?.formatter?.quoteStyle === 'single',
             semi: config.javascript?.formatter?.semicolons === 'always',
             configSource: path.basename(file),
-            quoteProps: 'asNeeded',
+            quoteProps: config.javascript?.formatter?.quoteProps ?? 'asNeeded',
           };
         }
 
@@ -46,7 +46,7 @@ export const detectFormatConfig = (): {
             singleQuote: config.rules?.quotes?.[1] === 'single',
             semi: config.rules?.semi?.[0] === 'error' || config.rules?.semi?.[0] === 2,
             configSource: path.basename(file),
-            quoteProps: 'asNeeded',
+            quoteProps: config.rules?.['quote-props']?.[1] ?? 'asNeeded',
           };
         }
 
@@ -57,7 +57,7 @@ export const detectFormatConfig = (): {
           singleQuote: config.singleQuote ?? true,
           semi: config.semi ?? true,
           configSource: path.basename(file),
-          quoteProps: 'asNeeded',
+          quoteProps: config.quoteProps ?? 'asNeeded',
         };
       } catch (err) {
         console.log(`Error parsing ${file}: ${err}`);
