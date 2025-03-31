@@ -802,6 +802,17 @@ describe('CLI', () => {
               call[0].includes('Successfully applied migration'),
           ),
         ).toBe(true);
+        expect(
+          stderrSpy.mock.calls.some(
+            (call) => typeof call[0] === 'string' && call[0].includes('Generating types'),
+          ),
+        ).toBe(true);
+        expect(
+          stderrSpy.mock.calls.some(
+            (call) =>
+              typeof call[0] === 'string' && call[0].includes('Failed to generate types'),
+          ),
+        ).toBe(true);
       });
 
       test('try to apply with non-existent migration file', async () => {
