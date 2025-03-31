@@ -25,6 +25,8 @@ import type { Model } from '@ronin/compiler';
 export interface MigrationOptions {
   rename?: boolean;
   requiredDefault?: boolean | string;
+  name?: string;
+  pluralName?: string;
 }
 
 /**
@@ -47,7 +49,7 @@ export const IGNORED_FIELDS = [
  *
  * @param definedModels - The models defined locally.
  * @param existingModels - The models defined remotely.
- * @param options - Optional options for the migration.
+ * @param Options - Optional flag to automatically rename models without prompting.
  *
  * @returns An array of migration steps (as code strings).
  */
