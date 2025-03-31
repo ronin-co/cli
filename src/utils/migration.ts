@@ -439,7 +439,7 @@ export const MIGRATION_FLAGS = {
   sql: { type: 'boolean', short: 's', default: false },
   local: { type: 'boolean', short: 'l', default: false },
   apply: { type: 'boolean', short: 'a', default: false },
-  types: { type: 'boolean', short: 't', default: true },
+  'skip-types': { type: 'boolean', default: false },
 } satisfies NonNullable<Parameters<typeof parseArgs>[0]>['options'];
 
 /**
