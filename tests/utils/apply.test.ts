@@ -546,6 +546,16 @@ describe('apply', () => {
             'create.model({"slug":"RONIN_TEMP_a","fields":{"name":{"type":"string"},"age":{"type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}}}})',
           );
 
+          expect(modelDiff[1]).toContain(
+            'add.RONIN_TEMP_a.with(() => get.a({"selecting":["name"]}))',
+          );
+
+          expect(modelDiff[2]).toContain('drop.model("a")');
+
+          expect(modelDiff[3]).toContain(
+            'alter.model("RONIN_TEMP_a").to({slug: "a", name: "A", pluralName: "As"})',
+          );
+
           expect(models).toHaveLength(1);
           // @ts-expect-error This is defined!
           expect(models[0]?.fields[1].defaultValue).toEqual({
@@ -663,9 +673,12 @@ describe('apply', () => {
             }
           }
 
-          expect(modelDiff[0]).toContain(
+          expect(modelDiff).toEqual([
             'alter.model(\'a\').create.field({"slug":"RONIN_TEMP_age","type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}})',
-          );
+            'set.a.to.RONIN_TEMP_age(f => f.age)',
+            'alter.model("a").drop.field("age")',
+            'alter.model("a").alter.field("RONIN_TEMP_age").to({slug: "age"})',
+          ]);
 
           expect(models).toHaveLength(1);
           // @ts-expect-error This is defined!
