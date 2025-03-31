@@ -14,6 +14,7 @@ export const detectFormatConfig = (): {
   singleQuote: boolean;
   semi: boolean;
   configSource: string;
+  quoteProps: 'asNeeded' | 'preserve' | 'consistent';
 } => {
   const configFiles = ['biome.json', '.prettierrc.json', '.eslintrc.json', '.prettierrc'];
 
@@ -33,6 +34,7 @@ export const detectFormatConfig = (): {
             singleQuote: config.javascript?.formatter?.quoteStyle === 'single',
             semi: config.javascript?.formatter?.semicolons === 'always',
             configSource: path.basename(file),
+            quoteProps: 'asNeeded',
           };
         }
 
@@ -44,6 +46,7 @@ export const detectFormatConfig = (): {
             singleQuote: config.rules?.quotes?.[1] === 'single',
             semi: config.rules?.semi?.[0] === 'error' || config.rules?.semi?.[0] === 2,
             configSource: path.basename(file),
+            quoteProps: 'asNeeded',
           };
         }
 
@@ -54,6 +57,7 @@ export const detectFormatConfig = (): {
           singleQuote: config.singleQuote ?? true,
           semi: config.semi ?? true,
           configSource: path.basename(file),
+          quoteProps: 'asNeeded',
         };
       } catch (err) {
         console.log(`Error parsing ${file}: ${err}`);
@@ -68,6 +72,7 @@ export const detectFormatConfig = (): {
     singleQuote: true,
     semi: true,
     configSource: 'default',
+    quoteProps: 'asNeeded',
   };
 };
 
@@ -85,6 +90,7 @@ export const formatCode = (code: string): string => {
       tabWidth: config.tabWidth,
       singleQuote: config.singleQuote,
       semi: config.semi,
+      quoteProps: config.quoteProps,
     },
   });
 

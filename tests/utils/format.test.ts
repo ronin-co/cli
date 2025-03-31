@@ -20,6 +20,7 @@ describe('format', () => {
       singleQuote: true,
       semi: true,
       configSource: 'default',
+      quoteProps: 'asNeeded',
     });
 
     // Restore original
@@ -54,6 +55,7 @@ describe('format', () => {
       singleQuote: true,
       semi: true,
       configSource: 'biome.json',
+      quoteProps: 'asNeeded',
     });
 
     // Restore originals
@@ -84,6 +86,7 @@ describe('format', () => {
       singleQuote: true,
       semi: true,
       configSource: '.eslintrc.json',
+      quoteProps: 'asNeeded',
     });
 
     // Restore originals
@@ -104,6 +107,7 @@ describe('format', () => {
         tabWidth: 4,
         singleQuote: false,
         semi: false,
+        quoteProps: 'asNeeded',
       });
 
     const config = detectFormatConfig();
@@ -113,6 +117,7 @@ describe('format', () => {
       singleQuote: false,
       semi: false,
       configSource: '.prettierrc.json',
+      quoteProps: 'asNeeded',
     });
 
     // Restore originals
@@ -125,6 +130,13 @@ describe('format', () => {
     const formatted = await formatCode(input);
     expect(formatted).toContain('function test()');
     expect(formatted).toContain(';');
+  });
+
+  test('drop double quotes for object keys', () => {
+    const input = 'const test = {"name": "John", "age": 30}';
+    const formatted = formatCode(input);
+    expect(formatted).toContain('name: "John"');
+    expect(formatted).toContain('age: 30');
   });
 
   test('detectFormatConfig should handle broken config files', () => {
@@ -153,6 +165,7 @@ describe('format', () => {
       singleQuote: true,
       semi: true,
       configSource: 'default',
+      quoteProps: 'asNeeded',
     });
 
     // Should log error about broken config
