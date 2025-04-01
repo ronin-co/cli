@@ -3,11 +3,14 @@ import { type LocalPackages, getLocalPackages } from '@/src/utils/misc';
 import { convertModelToObjectFields, getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { type Model, type Statement, Transaction } from '@ronin/compiler';
-import { type Database, Engine } from '@ronin/engine';
+import { Engine } from '@ronin/engine';
+import { BunDriver } from '@ronin/engine/drivers/bun';
 import { MemoryResolver } from '@ronin/engine/resolvers/memory';
+import type { Database } from '@ronin/engine/resources';
 
 const engine = new Engine({
-  resolvers: [(engine) => new MemoryResolver(engine)],
+  driver: (engine): BunDriver => new BunDriver({ engine }),
+  resolvers: [(engine) => new MemoryResolver({ engine })],
 });
 
 /**
