@@ -41,7 +41,7 @@ describe('protocol', () => {
       data: string | NodeJS.ArrayBufferView,
     ): void => {
       writeFileSyncCalled = true;
-      expect(path).toBe(`${process.cwd()}/schema/migrations/${fileName}.ts`);
+      expect(path).toBe(`${process.cwd()}/.ronin/migrations/${fileName}.ts`);
       expect(data).toContain(
         'create.model.to({ slug: "my_model", pluralSlug: "my_models" })',
       );
@@ -80,7 +80,7 @@ describe('protocol', () => {
       data: string | ArrayBufferView,
     ): void => {
       writeFileSyncCalled = true;
-      expect(path).toBe(`${process.cwd()}/schema/migrations/${fileName}.sql`);
+      expect(path).toBe(`${process.cwd()}/.ronin/migrations/${fileName}.sql`);
       expect(data).toBe('CREATE SCHEMA my_schema;');
     };
 
