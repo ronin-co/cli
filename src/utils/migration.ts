@@ -49,7 +49,7 @@ export const IGNORED_FIELDS = [
  *
  * @param definedModels - The models defined locally.
  * @param existingModels - The models defined remotely.
- * @param rename - Optional flag to automatically rename models without prompting.
+ * @param Options - Optional flag to automatically rename models without prompting.
  *
  * @returns An array of migration steps (as code strings).
  */
@@ -439,6 +439,7 @@ export const MIGRATION_FLAGS = {
   sql: { type: 'boolean', short: 's', default: false },
   local: { type: 'boolean', short: 'l', default: false },
   apply: { type: 'boolean', short: 'a', default: false },
+  'skip-types': { type: 'boolean', default: false },
 } satisfies NonNullable<Parameters<typeof parseArgs>[0]>['options'];
 
 /**
