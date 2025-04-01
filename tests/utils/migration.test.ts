@@ -41,8 +41,6 @@ describe('migration', () => {
       // It is not recognized as a model.
       const modelDiff = await diffModels([Account], [Account2], {
         rename: true,
-        name: 'Account',
-        pluralName: 'Accounts',
       });
 
       expect(modelDiff).toHaveLength(4);
@@ -88,10 +86,7 @@ describe('migration', () => {
 
     test('generates migration steps when meta model properties change', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([TestC], [TestA], {
-        name: 'ThisIsACoolModel',
-        pluralName: 'ThisIsACoolModels',
-      });
+      const modelDiff = await diffModels([TestC], [TestA]);
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
@@ -105,10 +100,7 @@ describe('migration', () => {
 
     test('generates migration steps when field definitions differ', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account], [Account2], {
-        name: 'Account',
-        pluralName: 'Accounts',
-      });
+      const modelDiff = await diffModels([Account], [Account2]);
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([

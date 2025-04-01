@@ -439,7 +439,11 @@ export const createFields = async (
             // @ts-expect-error This will work once the types are fixed.
             fields: convertArrayToObject(definedFields),
           },
-          { includeFields: existingFields },
+          {
+            includeFields: existingFields,
+            name: options?.name,
+            pluralName: options?.pluralName,
+          },
         ),
       );
       return diff;

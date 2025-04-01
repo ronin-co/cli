@@ -49,7 +49,7 @@ export const IGNORED_FIELDS = [
  *
  * @param definedModels - The models defined locally.
  * @param existingModels - The models defined remotely.
- * @param rename - Optional flag to automatically rename models without prompting.
+ * @param Options - Optional flag to automatically rename models without prompting.
  *
  * @returns An array of migration steps (as code strings).
  */
