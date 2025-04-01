@@ -34,7 +34,7 @@ import { getRowCount, getSQLTables, getTableRows, runMigration } from '@/fixture
 import { applyMigrationStatements } from '@/src/commands/apply';
 import type { MigrationFlags } from '@/src/utils/migration';
 import { getLocalPackages } from '@/src/utils/misc';
-import type { Database } from '@ronin/engine';
+import type { Database } from '@ronin/engine/resources';
 import type { Model } from 'ronin/schema';
 import { model, number, random, string } from 'ronin/schema';
 const packages = await getLocalPackages();

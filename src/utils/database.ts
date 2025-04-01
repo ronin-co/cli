@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import type { LocalPackages } from '@/src/utils/misc';
-import { type Database, Engine } from '@ronin/engine';
+import { Engine } from '@ronin/engine';
+import { BunDriver } from '@ronin/engine/drivers/bun';
 import { MemoryResolver } from '@ronin/engine/resolvers/memory';
+import type { Database } from '@ronin/engine/resources';
 
 /**
  * Initializes a new database instance.
@@ -18,7 +20,8 @@ export const initializeDatabase = async (
   const { Transaction, ROOT_MODEL } = packages.compiler;
 
   const engine = new Engine({
-    resolvers: [(engine) => new MemoryResolver(engine)],
+    driver: (engine): BunDriver => new BunDriver({ engine }),
+    resolvers: [(engine) => new MemoryResolver({ engine })],
   });
 
   const transaction = new Transaction([
@@ -32,7 +35,7 @@ export const initializeDatabase = async (
   if (fs.existsSync(fsPath)) {
     const file = fs.readFileSync(fsPath);
     const buffer = new Uint8Array(file);
-    await db.replaceContents(buffer);
+    await db.setContents(buffer);
   }
 
   try {

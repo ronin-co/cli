@@ -8,8 +8,7 @@ import {
 } from '@/src/utils/misc';
 import { spinner } from '@/src/utils/spinner';
 import type { Model } from '@ronin/compiler';
-import type { Database } from '@ronin/engine';
-import type { Row } from '@ronin/engine/types';
+import type { Database, Row } from '@ronin/engine/resources';
 
 /**
  * Fetches and formats schema models from either production API or local database.

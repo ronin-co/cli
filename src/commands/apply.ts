@@ -9,7 +9,7 @@ import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner as ora } from '@/src/utils/spinner';
 import { select } from '@inquirer/prompts';
-import type { Database } from '@ronin/engine';
+import type { Database } from '@ronin/engine/resources';
 
 /**
  * Applies a migration file to the database.
