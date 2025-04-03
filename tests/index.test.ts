@@ -33,6 +33,7 @@ describe('CLI', () => {
   let stdoutSpy: Mock<typeof console.log>;
   let stderrSpy: Mock<typeof process.stderr.write>;
   let exitSpy: Mock<typeof process.exit>;
+  let writeFileSyncSpy: Mock<typeof fs.writeFileSync>;
 
   beforeEach(() => {
     // Spy on stdout/stderr
@@ -51,7 +52,7 @@ describe('CLI', () => {
     // Prevent actually reading/writing files.
     // @ts-expect-error This is a mock.
     spyOn(fs, 'readdirSync').mockReturnValue(['migration-0001.ts', 'migration-0002.ts']);
-    spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+    writeFileSyncSpy = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     spyOn(fs, 'mkdirSync').mockImplementation(() => {});
     spyOn(fs.promises, 'writeFile').mockResolvedValue();
 
@@ -682,6 +683,31 @@ describe('CLI', () => {
               call[0].includes('Successfully applied migration'),
           ),
         ).toBe(true);
+      });
+
+      test('clean flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--clean'];
+        setupMigrationTest();
+
+        await run({ version: '1.0.0' });
+
+        expect(writeFileSyncSpy.mock.calls[0][1]).toContain(
+          `create.model({ slug: \"user\", fields: { name: { type: \"string\" }, age: { type: \"number\" } } })`,
+        );
+      });
+
+      test('clean flag with apply flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--clean', '--apply'];
+        setupMigrationTest();
+
+        try {
+          await run({ version: '1.0.0' });
+        } catch (error) {
+          expect(error).toBeInstanceOf(Error);
+          expect((error as Error).message).toContain(
+            'Cannot run `--apply` and `--clean` at the same time',
+          );
+        }
       });
     });
 
