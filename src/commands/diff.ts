@@ -24,6 +24,10 @@ export default async (
   flags: MigrationFlags,
   positionals: Array<string>,
 ): Promise<void> => {
+  if (flags.clean && flags.apply) {
+    throw new Error('Cannot run `--apply` and `--clean` at the same time');
+  }
+
   let status: Status = 'readingConfig';
   spinner.text = 'Reading configuration';
   const modelsInCodePath =
@@ -39,7 +43,9 @@ export default async (
     spinner.text = 'Comparing models';
 
     const [existingModels, definedModels] = await Promise.all([
-      getModels(packages, db, appToken ?? sessionToken, space, flags.local),
+      flags.clean
+        ? []
+        : getModels(packages, db, appToken ?? sessionToken, space, flags.local),
       getModelDefinitions(modelsInCodePath),
     ]);
 
