@@ -28,6 +28,10 @@ export default async (
     throw new Error('Cannot run `--apply` and `--clean` at the same time');
   }
 
+  if (flags.clean && flags.nuke) {
+    throw new Error('Cannot run `--nuke` and `--clean` at the same time');
+  }
+
   let status: Status = 'readingConfig';
   spinner.text = 'Reading configuration';
   const modelsInCodePath =
@@ -46,7 +50,7 @@ export default async (
       flags.clean
         ? []
         : getModels(packages, db, appToken ?? sessionToken, space, flags.local),
-      getModelDefinitions(modelsInCodePath),
+      flags.nuke ? [] : getModelDefinitions(modelsInCodePath),
     ]);
 
     if (flags.debug) {

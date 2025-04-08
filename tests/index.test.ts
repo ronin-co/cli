@@ -709,6 +709,31 @@ describe('CLI', () => {
           );
         }
       });
+
+      test('nuke flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--nuke'];
+        setupMigrationTest();
+
+        await run({ version: '1.0.0' });
+
+        expect(writeFileSyncSpy.mock.calls[0][1]).toContain(
+          `import { drop } from \"ronin\";\n\nexport default () => [\n  drop.model(\"user\"),\n];\n`,
+        );
+      });
+
+      test('nuke flag with clean flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--nuke', '--clean'];
+        setupMigrationTest();
+
+        try {
+          await run({ version: '1.0.0' });
+        } catch (error) {
+          expect(error).toBeInstanceOf(Error);
+          expect((error as Error).message).toContain(
+            'Cannot run `--nuke` and `--clean` at the same time',
+          );
+        }
+      });
     });
 
     describe('apply', () => {
