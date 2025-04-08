@@ -28,8 +28,8 @@ export default async (
     throw new Error('Cannot run `--apply` and `--clean` at the same time');
   }
 
-  if (flags.clean && flags.nuke) {
-    throw new Error('Cannot run `--nuke` and `--clean` at the same time');
+  if (flags.clean && flags.teardown) {
+    throw new Error('Cannot run `--teardown` and `--clean` at the same time');
   }
 
   let status: Status = 'readingConfig';
@@ -50,7 +50,7 @@ export default async (
       flags.clean
         ? []
         : getModels(packages, db, appToken ?? sessionToken, space, flags.local),
-      flags.nuke ? [] : getModelDefinitions(modelsInCodePath),
+      flags.teardown ? [] : getModelDefinitions(modelsInCodePath),
     ]);
 
     if (flags.debug) {
