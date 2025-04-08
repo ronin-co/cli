@@ -31,7 +31,7 @@ export const getModels = async (
   isLocal = true,
 ): Promise<Array<Model>> => {
   const { Transaction } = packages.compiler;
-  const transaction = new Transaction([{ get: { models: null } }]);
+  const transaction = new Transaction([{ list: { models: null } }]);
 
   let rawResults: Array<Array<Row>>;
 
