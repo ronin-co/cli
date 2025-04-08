@@ -32,7 +32,7 @@ export const printHelp = (): Promise<void> => {
       -v, --version                       Shows the version of the CLI that is currently installed
       -d, --debug                         Shows additional debugging information
       -c, --clean                         Creates the migration against a clean database
-      -r, --recreate                      Creates a migration that drops all models
+      -t, --teardown                      Creates a migration that drops all models
   `;
   console.log(text);
   process.exit(0);

@@ -710,8 +710,8 @@ describe('CLI', () => {
         }
       });
 
-      test('recreate flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--recreate'];
+      test('teardown flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--teardown'];
         setupMigrationTest();
 
         await run({ version: '1.0.0' });
@@ -721,8 +721,8 @@ describe('CLI', () => {
         );
       });
 
-      test('recreate flag with clean flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--recreate', '--clean'];
+      test('teardown flag with clean flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--teardown', '--clean'];
         setupMigrationTest();
 
         try {
@@ -730,7 +730,7 @@ describe('CLI', () => {
         } catch (error) {
           expect(error).toBeInstanceOf(Error);
           expect((error as Error).message).toContain(
-            'Cannot run `--recreate` and `--clean` at the same time',
+            'Cannot run `--teardown` and `--clean` at the same time',
           );
         }
       });
