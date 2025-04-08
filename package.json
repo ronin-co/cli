@@ -32,7 +32,7 @@
     "@dprint/typescript": "0.93.3",
     "@iarna/toml": "2.2.5",
     "@inquirer/prompts": "7.2.3",
-    "@ronin/engine": "0.1.16",
+    "@ronin/engine": "0.1.23",
     "chalk-template": "1.1.0",
     "get-port": "7.1.0",
     "ini": "5.0.0",
@@ -46,7 +46,7 @@
     "@types/bun": "1.2.1",
     "@types/ini": "4.1.1",
     "bun-bagel": "1.1.0",
-    "ronin": "6.3.2",
+    "ronin": "6.4.11",
     "tsup": "8.3.6",
     "typescript": "5.7.3"
   }
