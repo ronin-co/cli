@@ -710,8 +710,8 @@ describe('CLI', () => {
         }
       });
 
-      test('nuke flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--nuke'];
+      test('recreate flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--recreate'];
         setupMigrationTest();
 
         await run({ version: '1.0.0' });
@@ -721,8 +721,8 @@ describe('CLI', () => {
         );
       });
 
-      test('nuke flag with clean flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--nuke', '--clean'];
+      test('recreate flag with clean flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--recreate', '--clean'];
         setupMigrationTest();
 
         try {
@@ -730,7 +730,7 @@ describe('CLI', () => {
         } catch (error) {
           expect(error).toBeInstanceOf(Error);
           expect((error as Error).message).toContain(
-            'Cannot run `--nuke` and `--clean` at the same time',
+            'Cannot run `--recreate` and `--clean` at the same time',
           );
         }
       });
