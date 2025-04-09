@@ -685,8 +685,8 @@ describe('CLI', () => {
         ).toBe(true);
       });
 
-      test('clean flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--clean'];
+      test('force-create flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--force-create'];
         setupMigrationTest();
 
         await run({ version: '1.0.0' });
@@ -696,8 +696,8 @@ describe('CLI', () => {
         );
       });
 
-      test('clean flag with apply flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--clean', '--apply'];
+      test('force-create flag with apply flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--force-create', '--apply'];
         setupMigrationTest();
 
         try {
@@ -705,7 +705,32 @@ describe('CLI', () => {
         } catch (error) {
           expect(error).toBeInstanceOf(Error);
           expect((error as Error).message).toContain(
-            'Cannot run `--apply` and `--clean` at the same time',
+            'Cannot run `--apply` and `--force-create` at the same time',
+          );
+        }
+      });
+
+      test('force-drop flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--force-drop'];
+        setupMigrationTest();
+
+        await run({ version: '1.0.0' });
+
+        expect(writeFileSyncSpy.mock.calls[0][1]).toContain(
+          `import { drop } from \"ronin\";\n\nexport default () => [\n  drop.model(\"user\"),\n];\n`,
+        );
+      });
+
+      test('force-drop flag with force-create flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--force-drop', '--force-create'];
+        setupMigrationTest();
+
+        try {
+          await run({ version: '1.0.0' });
+        } catch (error) {
+          expect(error).toBeInstanceOf(Error);
+          expect((error as Error).message).toContain(
+            'Cannot run `--force-drop` and `--force-create` at the same time',
           );
         }
       });

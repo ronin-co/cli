@@ -31,7 +31,9 @@ export const printHelp = (): Promise<void> => {
       -h, --help                          Shows this help message
       -v, --version                       Shows the version of the CLI that is currently installed
       -d, --debug                         Shows additional debugging information
-      -c, --clean                         Creates the migration against a clean database
+      -c, --force-create                  Creates the migration against a clean database
+      -d, --force-drop                    Creates a migration that drops all models
+      -s, --skip-types                    Skip type generation after applying the migration
   `;
   console.log(text);
   process.exit(0);

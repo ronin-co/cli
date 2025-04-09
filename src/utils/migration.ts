@@ -440,7 +440,8 @@ export const MIGRATION_FLAGS = {
   local: { type: 'boolean', short: 'l', default: false },
   apply: { type: 'boolean', short: 'a', default: false },
   'skip-types': { type: 'boolean', default: false },
-  clean: { type: 'boolean', short: 'c', default: false },
+  'force-drop': { type: 'boolean', short: 'd', default: false },
+  'force-create': { type: 'boolean', short: 'c', default: false },
 } satisfies NonNullable<Parameters<typeof parseArgs>[0]>['options'];
 
 /**

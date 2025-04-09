@@ -24,8 +24,12 @@ export default async (
   flags: MigrationFlags,
   positionals: Array<string>,
 ): Promise<void> => {
-  if (flags.clean && flags.apply) {
-    throw new Error('Cannot run `--apply` and `--clean` at the same time');
+  if (flags['force-create'] && flags.apply) {
+    throw new Error('Cannot run `--apply` and `--force-create` at the same time');
+  }
+
+  if (flags['force-drop'] && flags['force-create']) {
+    throw new Error('Cannot run `--force-drop` and `--force-create` at the same time');
   }
 
   let status: Status = 'readingConfig';
@@ -43,10 +47,10 @@ export default async (
     spinner.text = 'Comparing models';
 
     const [existingModels, definedModels] = await Promise.all([
-      flags.clean
+      flags['force-create']
         ? []
         : getModels(packages, db, appToken ?? sessionToken, space, flags.local),
-      getModelDefinitions(modelsInCodePath),
+      flags['force-drop'] ? [] : getModelDefinitions(modelsInCodePath),
     ]);
 
     if (flags.debug) {
