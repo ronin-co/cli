@@ -685,8 +685,8 @@ describe('CLI', () => {
         ).toBe(true);
       });
 
-      test('clean flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--clean'];
+      test('force-create flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--force-create'];
         setupMigrationTest();
 
         await run({ version: '1.0.0' });
@@ -696,8 +696,8 @@ describe('CLI', () => {
         );
       });
 
-      test('clean flag with apply flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--clean', '--apply'];
+      test('force-create flag with apply flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--force-create', '--apply'];
         setupMigrationTest();
 
         try {
@@ -705,13 +705,13 @@ describe('CLI', () => {
         } catch (error) {
           expect(error).toBeInstanceOf(Error);
           expect((error as Error).message).toContain(
-            'Cannot run `--apply` and `--clean` at the same time',
+            'Cannot run `--apply` and `--force-create` at the same time',
           );
         }
       });
 
-      test('teardown flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--teardown'];
+      test('force-drop flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--force-drop'];
         setupMigrationTest();
 
         await run({ version: '1.0.0' });
@@ -721,8 +721,8 @@ describe('CLI', () => {
         );
       });
 
-      test('teardown flag with clean flag', async () => {
-        process.argv = ['bun', 'ronin', 'diff', '--teardown', '--clean'];
+      test('force-drop flag with force-create flag', async () => {
+        process.argv = ['bun', 'ronin', 'diff', '--force-drop', '--force-create'];
         setupMigrationTest();
 
         try {
@@ -730,7 +730,7 @@ describe('CLI', () => {
         } catch (error) {
           expect(error).toBeInstanceOf(Error);
           expect((error as Error).message).toContain(
-            'Cannot run `--teardown` and `--clean` at the same time',
+            'Cannot run `--force-drop` and `--force-create` at the same time',
           );
         }
       });
