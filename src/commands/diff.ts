@@ -13,6 +13,7 @@ import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { type Status, spinner } from '@/src/utils/spinner';
+import { confirm } from '@inquirer/prompts';
 import type { Model } from '@ronin/compiler';
 
 /**
@@ -64,6 +65,37 @@ export default async (
     if (modelDiff.length === 0) {
       spinner.succeed('No changes detected');
       return process.exit(0);
+    }
+
+    // Check if the latest migration has the same diff.
+    if (fs.existsSync(MIGRATIONS_PATH)) {
+      const files = fs.readdirSync(MIGRATIONS_PATH);
+      const migrationFiles = files.filter((f) => f.startsWith('migration-'));
+      if (migrationFiles.length > 0) {
+        const latestMigration = migrationFiles.sort().pop() as string;
+        const latestProtocol = new Protocol(packages);
+        await latestProtocol.load(path.join(MIGRATIONS_PATH, latestMigration));
+        const latestMigrationDiff = latestProtocol.queries;
+
+        const protocol = new Protocol(packages, modelDiff);
+        await protocol.convertToQueryObjects();
+        const currentMigrationDiff = protocol.queries;
+
+        if (
+          JSON.stringify(currentMigrationDiff) === JSON.stringify(latestMigrationDiff)
+        ) {
+          const shouldProceed = await confirm({
+            message:
+              'The current changes are identical to the latest migration. Do you want to create another migration anyway?',
+            default: false,
+          });
+
+          if (!shouldProceed) {
+            spinner.succeed('Migration creation cancelled');
+            return process.exit(0);
+          }
+        }
+      }
     }
 
     status = 'syncing';

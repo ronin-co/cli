@@ -181,6 +181,7 @@ export default () => [
       path.join(directoryPath, `${fileName}.ts`),
       formatCode(migrationContent),
     );
+
     return this;
   };
 
