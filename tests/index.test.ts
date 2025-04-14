@@ -773,7 +773,7 @@ describe('CLI', () => {
         ).toBe(true);
       });
 
-      test.only('diff with same diff as latest migration and create', async () => {
+      test('diff with same diff as latest migration and create', async () => {
         process.argv = ['bun', 'ronin', 'diff'];
         setupMigrationTest({
           modelDiff: [],
@@ -890,7 +890,6 @@ describe('CLI', () => {
 
         try {
           await run({ version: '1.0.0' });
-          console.error('test');
         } catch (error) {
           expect(error).toBeInstanceOf(Error);
           expect((error as Error).message).toContain(
