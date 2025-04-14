@@ -35,10 +35,10 @@ export default async (
       flags.local,
     );
 
-    // Check if migrations directory exists
+    // Verify that the migrations directory exists before proceeding.
     if (!fs.existsSync(MIGRATIONS_PATH)) {
       throw new Error(
-        'Migrations directory not found. Run `ronin diff` to create the migration directory and a migration.',
+        'Migrations directory not found. Run `ronin diff` to create your first migration.',
       );
     }
 
@@ -48,7 +48,7 @@ export default async (
     let migrationPrompt: string | undefined;
     if (migrations.length === 0) {
       throw new Error(
-        'No migration files found. Run `ronin diff` to create a migration.',
+        'No migrations found. Run `ronin diff` to create your first migration.',
       );
     }
 

@@ -4,10 +4,10 @@ import {
   beforeEach,
   describe,
   expect,
+  jest,
   spyOn,
   test,
 } from 'bun:test';
-import { jest } from 'bun:test';
 import type { ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -51,7 +51,6 @@ describe('CLI', () => {
 
     // Prevent actually reading/writing files.
     // @ts-expect-error This is a mock.
-
     spyOn(fs, 'readdirSync').mockReturnValue(['migration-0001.ts', 'migration-0002.ts']);
     writeFileSyncSpy = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     spyOn(fs, 'mkdirSync').mockImplementation(() => {});
@@ -822,11 +821,11 @@ describe('CLI', () => {
 
         try {
           await run({ version: '1.0.0' });
+          console.error('test');
         } catch (error) {
-          console.error(error);
           expect(error).toBeInstanceOf(Error);
           expect((error as Error).message).toContain(
-            'Migrations directory not found. Run `ronin diff` to create the migration directory and a migration.',
+            'Migrations directory not found. Run `ronin diff` to create your first migration.',
           );
         }
       });
@@ -985,7 +984,7 @@ describe('CLI', () => {
             (call) =>
               typeof call[0] === 'string' &&
               call[0].includes(
-                'No migration files found. Run `ronin diff` to create a migration.',
+                'No migrations found. Run `ronin diff` to create your first migration.',
               ),
           ),
         ).toBe(true);
