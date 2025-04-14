@@ -35,6 +35,13 @@ export default async (
       flags.local,
     );
 
+    // Check if migrations directory exists
+    if (!fs.existsSync(MIGRATIONS_PATH)) {
+      throw new Error(
+        'Migrations directory not found. Run `ronin diff` to create the migration directory and a migration.',
+      );
+    }
+
     // Get all filenames of migrations in the migrations directory.
     const migrations = fs.readdirSync(MIGRATIONS_PATH);
 

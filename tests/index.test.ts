@@ -51,6 +51,7 @@ describe('CLI', () => {
 
     // Prevent actually reading/writing files.
     // @ts-expect-error This is a mock.
+
     spyOn(fs, 'readdirSync').mockReturnValue(['migration-0001.ts', 'migration-0002.ts']);
     writeFileSyncSpy = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     spyOn(fs, 'mkdirSync').mockImplementation(() => {});
@@ -773,8 +774,10 @@ describe('CLI', () => {
           },
         ]);
 
-        spyOn(fs, 'existsSync').mockImplementation((path) =>
-          path.toString().includes('migration-fixture.ts'),
+        spyOn(fs, 'existsSync').mockImplementation(
+          (path) =>
+            path.toString().includes('migration-fixture.ts') ||
+            path.toString().includes('.ronin/migrations'),
         );
         spyOn(selectModule, 'select').mockResolvedValue('migration-0001.ts');
         spyOn(path, 'resolve').mockReturnValue(
@@ -797,6 +800,35 @@ describe('CLI', () => {
               call[0].includes('Authorization` header: Must be a valid JWT'),
           ),
         ).toBe(true);
+      });
+
+      test('apply migration without migrations directory', async () => {
+        process.argv = ['bun', 'ronin', 'apply'];
+
+        spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
+        spyOn(modelModule, 'getModels').mockResolvedValue([
+          {
+            slug: 'user',
+            // @ts-expect-error This is a mock.
+            fields: convertObjectToArray({
+              name: { type: 'string' },
+            }),
+          },
+        ]);
+
+        spyOn(fs, 'existsSync').mockImplementation((path) =>
+          path.toString().includes('migration-fixture.ts'),
+        );
+
+        try {
+          await run({ version: '1.0.0' });
+        } catch (error) {
+          console.error(error);
+          expect(error).toBeInstanceOf(Error);
+          expect((error as Error).message).toContain(
+            'Migrations directory not found. Run `ronin diff` to create the migration directory and a migration.',
+          );
+        }
       });
 
       test('should handle network errors when applying migration', async () => {
@@ -829,8 +861,10 @@ describe('CLI', () => {
           },
         ]);
 
-        spyOn(fs, 'existsSync').mockImplementation((path) =>
-          path.toString().includes('migration-fixture.ts'),
+        spyOn(fs, 'existsSync').mockImplementation(
+          (path) =>
+            path.toString().includes('migration-fixture.ts') ||
+            path.toString().includes('.ronin/migrations'),
         );
         spyOn(selectModule, 'select').mockResolvedValue('migration-0001.ts');
         spyOn(path, 'resolve').mockReturnValue(
@@ -880,8 +914,10 @@ describe('CLI', () => {
           },
         ]);
 
-        spyOn(fs, 'existsSync').mockImplementation((path) =>
-          path.toString().includes('migration-fixture.ts'),
+        spyOn(fs, 'existsSync').mockImplementation(
+          (path) =>
+            path.toString().includes('migration-fixture.ts') ||
+            path.toString().includes('.ronin/migrations'),
         );
         spyOn(selectModule, 'select').mockResolvedValue('migration-0001.ts');
         spyOn(path, 'resolve').mockReturnValue(
@@ -930,6 +966,10 @@ describe('CLI', () => {
             fields: [{ type: 'string', slug: 'name' }],
           },
         ]);
+
+        spyOn(fs, 'existsSync').mockImplementation((path) =>
+          path.toString().includes('.ronin/migrations'),
+        );
 
         await run({ version: '1.0.0' });
 
