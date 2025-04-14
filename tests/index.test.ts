@@ -22,6 +22,7 @@ import { convertObjectToArray } from '@/src/utils/model';
 import * as sessionModule from '@/src/utils/session';
 import * as spaceModule from '@/src/utils/space';
 import * as selectModule from '@inquirer/prompts';
+import * as confirmModule from '@inquirer/prompts';
 import * as getPort from 'get-port';
 import * as open from 'open';
 
@@ -488,26 +489,33 @@ describe('CLI', () => {
 
   describe('migration', () => {
     // Common migration test setup
-    const setupMigrationTest = () => {
+    // biome-ignore lint/nursery/useExplicitType: This is a mock.
+    const setupMigrationTest = (options?: {
+      modelDiff?: Array<any>;
+      modelDefinitions?: Array<any>;
+    }) => {
       spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
-      spyOn(modelModule, 'getModels').mockResolvedValue([
-        {
-          slug: 'user',
-          // @ts-expect-error This is a mock.
-          fields: convertObjectToArray({
-            name: { type: 'string' },
-          }),
-        },
-      ]);
-      spyOn(miscModule, 'getModelDefinitions').mockResolvedValue([
-        {
-          slug: 'user',
-          fields: {
-            name: { type: 'string' },
-            age: { type: 'number' },
+      spyOn(modelModule, 'getModels').mockResolvedValue(
+        options?.modelDiff ?? [
+          {
+            slug: 'user',
+            fields: convertObjectToArray({
+              name: { type: 'string' },
+            }),
           },
-        },
-      ]);
+        ],
+      );
+      spyOn(miscModule, 'getModelDefinitions').mockResolvedValue(
+        options?.modelDefinitions ?? [
+          {
+            slug: 'user',
+            fields: {
+              name: { type: 'string' },
+              age: { type: 'number' },
+            },
+          },
+        ],
+      );
       spyOn(fs, 'existsSync').mockImplementation(
         (path) => !path.toString().includes('.ronin/db.sqlite'),
       );
@@ -733,6 +741,67 @@ describe('CLI', () => {
             'Cannot run `--force-drop` and `--force-create` at the same time',
           );
         }
+      });
+
+      test('diff with same diff as latest migration and cancel', async () => {
+        process.argv = ['bun', 'ronin', 'diff'];
+        setupMigrationTest({
+          modelDiff: [],
+          modelDefinitions: [
+            {
+              slug: 'user',
+              fields: { name: { type: 'string' } },
+            },
+          ],
+        });
+
+        // @ts-expect-error This is a mock.
+        spyOn(fs, 'readdirSync').mockReturnValue(['migration-fixture.ts']);
+        spyOn(path, 'join').mockReturnValue(
+          path.join(process.cwd(), 'tests/fixtures/migration-fixture.ts'),
+        );
+        spyOn(confirmModule, 'confirm').mockResolvedValue(false);
+
+        await run({ version: '1.0.0' });
+
+        expect(
+          stderrSpy.mock.calls.some(
+            (call) =>
+              typeof call[0] === 'string' &&
+              call[0].includes('Migration creation cancelled'),
+          ),
+        ).toBe(true);
+      });
+
+      test.only('diff with same diff as latest migration and create', async () => {
+        process.argv = ['bun', 'ronin', 'diff'];
+        setupMigrationTest({
+          modelDiff: [],
+          modelDefinitions: [
+            {
+              slug: 'user',
+              fields: { name: { type: 'string' } },
+            },
+          ],
+        });
+
+        // @ts-expect-error This is a mock.
+        spyOn(fs, 'readdirSync').mockReturnValue(['migration-fixture.ts']);
+        spyOn(path, 'join').mockReturnValueOnce(
+          path.join(process.cwd(), 'tests/fixtures/migration-fixture.ts'),
+        );
+        spyOn(confirmModule, 'confirm').mockResolvedValue(true);
+        spyOn(Math, 'max').mockReturnValue(1);
+
+        await run({ version: '1.0.0' });
+        expect(writeFileSyncSpy.mock.calls[0][0]).toContain('migration-0002.ts');
+        expect(
+          stderrSpy.mock.calls.some(
+            (call) =>
+              typeof call[0] === 'string' &&
+              call[0].includes('Successfully generated migration protocol file'),
+          ),
+        ).toBe(true);
       });
     });
 
