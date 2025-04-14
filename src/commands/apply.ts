@@ -76,11 +76,6 @@ export default async (
       })),
     );
 
-    // Create the migrations directory if it doesn't exist.
-    if (!fs.existsSync(MIGRATIONS_PATH)) {
-      fs.mkdirSync(MIGRATIONS_PATH, { recursive: true });
-    }
-
     await applyMigrationStatements(
       appToken ?? sessionToken,
       flags,
