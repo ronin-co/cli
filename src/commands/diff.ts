@@ -84,11 +84,13 @@ export default async (
         if (
           JSON.stringify(currentMigrationDiff) === JSON.stringify(latestMigrationDiff)
         ) {
+          spinner.stop();
           const shouldProceed = await confirm({
             message:
               'The current changes are identical to the latest migration. Do you want to create another migration anyway?',
             default: false,
           });
+          spinner.start();
 
           if (!shouldProceed) {
             spinner.succeed('Migration creation cancelled');
