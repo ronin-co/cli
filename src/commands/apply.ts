@@ -58,7 +58,7 @@ export default async (
         (await select({
           message: 'Which migration do you want to apply?',
           choices: migrations
-            // Sort in reverse lexical order
+            // Sort in reverse lexical order.
             .sort((a, b) => b.localeCompare(a))
             .map((migration) => ({
               name: migration,
@@ -86,7 +86,7 @@ export default async (
 
     spinner.succeed('Successfully applied migration');
 
-    // If desired, generate new TypeScript types
+    // If desired, generate new TypeScript types.
     if (!flags['skip-types']) await types(appToken, sessionToken);
 
     process.exit(0);

@@ -77,7 +77,6 @@ export const getModels = async (
 
   const results = transaction.formatResults<Model>(rawResults, false);
   const models = 'records' in results[0] ? results[0].records : [];
-
   // @ts-expect-error This will work once the types are fixed.
   return models.map((model) => ({
     ...model,
