@@ -23,15 +23,19 @@ import type { Model } from '@ronin/compiler';
  * Options for migration operations.
  */
 export interface MigrationOptions {
+  /** Whether to automatically rename models without prompting. */
   rename?: boolean;
+  /** Default value to use for required fields. */
   requiredDefault?: boolean | string;
+  /** Name of the model. */
   name?: string;
+  /** Plural name of the model. */
   pluralName?: string;
 }
 
 /**
- * Fields to ignore.
- * There are several fields that are not relevant for the migration process.
+ * Fields to ignore during migration.
+ * These fields are not relevant for the migration process.
  */
 export const IGNORED_FIELDS = [
   'id',
@@ -119,7 +123,7 @@ export const diffModels = async (
  *
  * @param definedModels - The models defined locally.
  * @param existingModels - The models defined in the database.
- * @param rename - Optional flag to automatically rename fields without prompting.
+ * @param options - Optional configuration for migration behavior.
  *
  * @returns An array of field adjustments as code strings.
  */
@@ -128,13 +132,13 @@ const adjustModels = async (
   existingModels: Array<Model>,
   options?: MigrationOptions,
 ): Promise<Array<string>> => {
-  const diff: Array<string> = [];
+  const queries: Array<string> = [];
   // Adjust models
   for (const localModel of definedModels) {
     const remoteModel = existingModels.find((r) => r.slug === localModel.slug);
 
     if (remoteModel) {
-      diff.push(
+      queries.push(
         ...(await diffFields(
           // @ts-expect-error This will work once the types are fixed.
           localModel.fields || [],
@@ -148,7 +152,7 @@ const adjustModels = async (
     }
   }
 
-  return diff;
+  return queries;
 };
 
 /**
@@ -159,13 +163,13 @@ const adjustModels = async (
  * @returns An array of deletion queries as code strings.
  */
 export const dropModels = (models: Array<Model>): Array<string> => {
-  const diff: Array<string> = [];
+  const queries: Array<string> = [];
   for (const model of models) {
     // Queries for deleting the model.
     // Fields are deleted automatically due to CASCADE ON DELETE.
-    diff.push(dropModelQuery(model.slug));
+    queries.push(dropModelQuery(model.slug));
   }
-  return diff;
+  return queries;
 };
 
 /**
@@ -176,12 +180,12 @@ export const dropModels = (models: Array<Model>): Array<string> => {
  * @returns An array of creation queries as code strings.
  */
 export const createModels = (models: Array<Model>): Array<string> => {
-  const diff: Array<string> = [];
+  const queries: Array<string> = [];
   for (const model of models) {
-    diff.push(createModelQuery(model));
+    queries.push(createModelQuery(model));
   }
 
-  return diff;
+  return queries;
 };
 
 /**
@@ -213,15 +217,15 @@ export const modelsToAdd = (
   existingModels: Array<Model>,
 ): Array<Model> => {
   const currentModelsMap = new Map(existingModels.map((s) => [s.slug, s]));
-  const newModels: Array<Model> = [];
+  const queries: Array<Model> = [];
 
   for (const model of definedModels) {
     if (!currentModelsMap.has(model.slug)) {
-      newModels.push(model);
+      queries.push(model);
     }
   }
 
-  return newModels;
+  return queries;
 };
 
 /**
@@ -337,7 +341,7 @@ export const triggersToRecreate = (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
 ): Array<string> => {
-  const diff: Array<string> = [];
+  const queries: Array<string> = [];
 
   for (const definedModel of definedModels) {
     const existingModel = existingModels.find((m) => m.slug === definedModel.slug);
@@ -377,10 +381,10 @@ export const triggersToRecreate = (
       return acc;
     }, []);
 
-    diff.push(...(modelRecreated ? [] : needRecreation));
+    queries.push(...(modelRecreated ? [] : needRecreation));
   }
 
-  return diff;
+  return queries;
 };
 
 /**
@@ -415,7 +419,7 @@ export const indexesToRecreate = (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
 ): Array<string> => {
-  const diff: Array<string> = [];
+  const queries: Array<string> = [];
 
   for (const definedModel of definedModels) {
     const existingModel = existingModels.find((m) => m.slug === definedModel.slug);
@@ -452,10 +456,10 @@ export const indexesToRecreate = (
       return acc;
     }, []);
 
-    diff.push(...(modelRecreated ? [] : needRecreation));
+    queries.push(...(modelRecreated ? [] : needRecreation));
   }
 
-  return diff;
+  return queries;
 };
 
 /**
