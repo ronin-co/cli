@@ -408,6 +408,7 @@ describe('CLI', () => {
 
       test('should fail to initialize a project - no token provided', async () => {
         process.argv = ['bun', 'ronin', 'init', 'test-space'];
+        process.stdout.isTTY = true;
 
         spyOn(sessionModule, 'getSession').mockResolvedValue(null);
         // @ts-expect-error This is a mock.
