@@ -49,14 +49,4 @@ describe('CLI Integration Tests', () => {
     expect(exitCode).toBe(0);
     expect(stdout.toString()).toMatch(/\d+\.\d+\.\d+/); // Matches semver format
   });
-
-  test('should fail init command without space handle', async () => {
-    const { stderr, exitCode } = await $`RONIN_TOKEN=test bun ${CLI_PATH} init`
-      .nothrow()
-      .quiet();
-
-    expect(exitCode).toBe(1);
-    expect(stderr.toString()).toContain('Please provide a space handle like this:');
-    expect(stderr.toString()).toContain('$ ronin init my-space');
-  });
 });

@@ -35,7 +35,6 @@ export default async (
     await fs.writeFile(tsconfigPath, JSON.stringify(tsconfigContents, null, 2));
 
     spinner.succeed('Successfully generated types');
-    process.exit(0);
   } catch (err) {
     const message =
       err instanceof packages.compiler.RoninError
