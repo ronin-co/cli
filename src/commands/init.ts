@@ -2,13 +2,14 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import util from 'node:util';
-import types from '@/src/commands/types';
 import ora from 'ora';
 
+import types from '@/src/commands/types';
 import { exists } from '@/src/utils/file';
 import { MIGRATIONS_PATH, MODEL_IN_CODE_PATH, getLocalPackages } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { getOrSelectSpaceId } from '@/src/utils/space';
+
 export const exec = util.promisify(childProcess.exec);
 
 export default async (
@@ -44,8 +45,8 @@ export default async (
 
     const packages = await getLocalPackages();
 
-    // This case should never happen, since we login before running the init command
-    // if no tokens are provided.
+    // This case should never happen, since we log in before
+    // running the init command if no tokens are provided.
     if (!(token?.appToken || token?.sessionToken)) {
       spinner.fail(
         'Run `ronin login` to authenticate with RONIN or provide an app token',
@@ -67,7 +68,7 @@ export default async (
       await types(token.appToken, token.sessionToken);
     }
 
-    // Create ronin directories if they don't exist.
+    // Create migration directory if it doesn't exist.
     if (!(await exists(MIGRATIONS_PATH))) {
       await fs.mkdir(MIGRATIONS_PATH, { recursive: true });
     }
