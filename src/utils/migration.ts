@@ -281,8 +281,8 @@ export const adjustModelMeta = (
     // All records inserted will use the new prefix. All old ids are not updated.
     queries.push(
       ...createTempModelQuery(
-        // Use the updated model meta properties and the fields from the existing model,
-        // because we want to only update the model meta properties and add the fields afterwards.
+        // Create a temporary model with the new `idPrefix` but keep the existing fields.
+        // We later on drop, add or modify the fields.
         convertModelToObjectFields({ ...definedModel, fields: existingModel.fields }),
         {
           name: existingModel.name,
@@ -290,10 +290,7 @@ export const adjustModelMeta = (
         },
       ),
     );
-    // The model name only exists in the `ronin_schema` table, thus it does not need to
-    // recreate the SQL table.
   } else if (definedModel.name && definedModel.name !== existingModel.name) {
-    // Otherwise, just update the name.
     queries.push(
       `alter.model("${definedModel.slug}").to({name: "${definedModel.name}"})`,
     );
@@ -303,7 +300,7 @@ export const adjustModelMeta = (
 };
 
 /**
- * Generates queries to adjust metadata like name and ID prefix for multiple models.
+ * Generates queries to adjust metadata like `name` and `idPrefix` for multiple models.
  *
  * @param definedModels - The models defined locally.
  * @param existingModels - The models currently defined in the database.
