@@ -472,6 +472,228 @@ describe('apply', () => {
           expect(rows[0].id).toContain('corny_');
           expect(rows[1].id).toContain('test_');
         });
+
+        test('id prefix and add fields', async () => {
+          const definedModel = model({
+            slug: 'test',
+            idPrefix: 'test',
+            fields: {
+              name: string(),
+              age: number(),
+              email: string(),
+            },
+          }) as unknown as Model;
+
+          const existingModel = model({
+            slug: 'test',
+            idPrefix: 'corny',
+            fields: {
+              name: string(),
+            },
+          }) as unknown as Model;
+
+          const insert = {
+            add: {
+              test: {
+                with: {
+                  name: 'Ilayda',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            // @ts-expect-error This works once the types are fixed.
+            models: [definedModel, existingModel],
+            inlineParams: true,
+          });
+
+          const { db, models, modelDiff } = await runMigration(
+            // @ts-expect-error This works once the types are fixed.
+            [definedModel],
+            [existingModel],
+            {},
+            transaction.statements.map((statement) => statement),
+          );
+
+          await db.query(transaction.statements);
+          const rows = await getTableRows(db, models[0]);
+
+          expect(models[0].fields).toHaveLength(3);
+          expect(modelDiff).toHaveLength(6);
+          expect(models[0].slug).toBe('test');
+          expect(models[0].name).toBe('Test');
+          expect(models[0].pluralName).toBe('Tests');
+          expect(rows[0].id).toContain('corny_');
+          expect(rows[1].id).toContain('test_');
+        });
+
+        test('id prefix and drop fields', async () => {
+          const definedModel = model({
+            slug: 'test',
+            idPrefix: 'test',
+            fields: {
+              name: string(),
+            },
+          }) as unknown as Model;
+
+          const existingModel = model({
+            slug: 'test',
+            idPrefix: 'corny',
+            fields: {
+              name: string(),
+              age: number(),
+              email: string(),
+            },
+          }) as unknown as Model;
+
+          const insert = {
+            add: {
+              test: {
+                with: {
+                  name: 'Ilayda',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            // @ts-expect-error This works once the types are fixed.
+            models: [definedModel, existingModel],
+            inlineParams: true,
+          });
+
+          const { db, models, modelDiff } = await runMigration(
+            // @ts-expect-error This works once the types are fixed.
+            [definedModel],
+            [existingModel],
+            {},
+            transaction.statements.map((statement) => statement),
+          );
+
+          await db.query(transaction.statements);
+          const rows = await getTableRows(db, models[0]);
+
+          expect(models[0].fields).toHaveLength(1);
+          expect(modelDiff).toHaveLength(6);
+          expect(models[0].slug).toBe('test');
+          expect(models[0].name).toBe('Test');
+          expect(models[0].pluralName).toBe('Tests');
+          expect(rows[0].id).toContain('corny_');
+          expect(rows[1].id).toContain('test_');
+        });
+
+        test('id prefix and adjust field', async () => {
+          const definedModel = model({
+            slug: 'test',
+            idPrefix: 'test',
+            fields: {
+              name: string({ defaultValue: 'I <3 RONIN' }),
+            },
+          }) as unknown as Model;
+
+          const existingModel = model({
+            slug: 'test',
+            idPrefix: 'corny',
+            fields: {
+              name: string(),
+            },
+          }) as unknown as Model;
+
+          const insert = {
+            add: {
+              test: {
+                with: {
+                  name: 'Ilayda',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            // @ts-expect-error This works once the types are fixed.
+            models: [definedModel, existingModel],
+            inlineParams: true,
+          });
+
+          const { db, models, modelDiff } = await runMigration(
+            // @ts-expect-error This works once the types are fixed.
+            [definedModel],
+            [existingModel],
+            {},
+            transaction.statements.map((statement) => statement),
+          );
+
+          await db.query(transaction.statements);
+          const rows = await getTableRows(db, models[0]);
+
+          console.error(modelDiff);
+
+          expect(models[0].fields).toHaveLength(1);
+          expect(modelDiff).toHaveLength(8);
+          expect(models[0].slug).toBe('test');
+          expect(models[0].name).toBe('Test');
+          expect(models[0].pluralName).toBe('Tests');
+          expect(rows[0].id).toContain('corny_');
+          expect(rows[1].id).toContain('test_');
+        });
+
+        test('id prefix and drop, add and adjust fields', async () => {
+          const definedModel = model({
+            slug: 'test',
+            idPrefix: 'test',
+            fields: {
+              name: string({ defaultValue: 'I <3 RONIN' }),
+              email: string(),
+            },
+          }) as unknown as Model;
+
+          const existingModel = model({
+            slug: 'test',
+            idPrefix: 'corny',
+            fields: {
+              name: string(),
+              age: number(),
+            },
+          }) as unknown as Model;
+
+          const insert = {
+            add: {
+              test: {
+                with: {
+                  name: 'Ilayda',
+                },
+              },
+            },
+          };
+
+          const transaction = new Transaction([insert], {
+            // @ts-expect-error This works once the types are fixed.
+            models: [definedModel, existingModel],
+            inlineParams: true,
+          });
+
+          const { db, models, modelDiff } = await runMigration(
+            // @ts-expect-error This works once the types are fixed.
+            [definedModel],
+            [existingModel],
+            {},
+            transaction.statements.map((statement) => statement),
+          );
+
+          await db.query(transaction.statements);
+          const rows = await getTableRows(db, models[0]);
+
+          console.error(modelDiff);
+
+          expect(models[0].fields).toHaveLength(2);
+          expect(modelDiff).toHaveLength(10);
+          expect(models[0].slug).toBe('test');
+          expect(models[0].name).toBe('Test');
+          expect(models[0].pluralName).toBe('Tests');
+          expect(rows[0].id).toContain('corny_');
+          expect(rows[1].id).toContain('test_');
+        });
       });
     });
   });
