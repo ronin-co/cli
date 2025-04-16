@@ -11,7 +11,7 @@ import {
   TestE,
 } from '@/fixtures/index';
 import {
-  adjustModelMeta,
+  adjustModelsMeta,
   createModels,
   diffModels,
   dropModels,
@@ -396,7 +396,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = adjustModelMeta(definedModels, existingModels);
+      const queries = adjustModelsMeta(definedModels, existingModels);
 
       expect(queries).toHaveLength(8);
       expect(queries).toStrictEqual([
@@ -434,7 +434,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = adjustModelMeta(definedModels, existingModels);
+      const queries = adjustModelsMeta(definedModels, existingModels);
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual(['alter.model("test1").to({name: "Test Model 1"})']);
@@ -457,7 +457,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = adjustModelMeta(definedModels, existingModels);
+      const queries = adjustModelsMeta(definedModels, existingModels);
 
       expect(queries).toHaveLength(0);
       expect(queries).toStrictEqual([]);

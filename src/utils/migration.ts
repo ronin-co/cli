@@ -65,9 +65,9 @@ export const diffModels = async (
     convertModelToArrayFields(model),
   );
 
-  const diff: Array<string> = [];
+  const queries: Array<string> = [];
 
-  const adjustModelMetaQueries = adjustModelMeta(definedModels, existingModels);
+  const adjustModelsMetaQueries = adjustModelsMeta(definedModels, existingModels);
   const recreateIndexes = indexesToRecreate(definedModels, existingModels);
   const recreateTriggers = triggersToRecreate(definedModels, existingModels);
 
@@ -76,7 +76,7 @@ export const diffModels = async (
   let modelsToBeDropped = modelsToDrop(definedModels, existingModels);
 
   if (modelsToBeRenamed.length > 0) {
-    // Ask if the user wants to rename the models
+    // Ask if the user wants to rename the models.
     for (const model of modelsToBeRenamed) {
       const confirmRename =
         options?.rename ||
@@ -89,15 +89,15 @@ export const diffModels = async (
       if (confirmRename) {
         modelsToBeDropped = modelsToBeDropped.filter((s) => s.slug !== model.from.slug);
         modelsToBeAdded = modelsToBeAdded.filter((s) => s.slug !== model.to.slug);
-        diff.push(renameModelQuery(model.from.slug, model.to.slug));
+        queries.push(renameModelQuery(model.from.slug, model.to.slug));
       }
     }
   }
 
-  diff.push(...adjustModelMetaQueries);
-  diff.push(...dropModels(modelsToBeDropped));
+  queries.push(...adjustModelsMetaQueries);
+  queries.push(...dropModels(modelsToBeDropped));
 
-  diff.push(
+  queries.push(
     ...createModels(
       modelsToBeAdded.map((m) => ({
         ...m,
@@ -106,11 +106,11 @@ export const diffModels = async (
       })),
     ),
   );
-  diff.push(...(await adjustModels(definedModels, existingModels, options)));
-  diff.push(...recreateIndexes);
-  diff.push(...recreateTriggers);
+  queries.push(...(await adjustModels(definedModels, existingModels, options)));
+  queries.push(...recreateIndexes);
+  queries.push(...recreateTriggers);
 
-  return diff;
+  return queries;
 };
 
 /**
@@ -132,6 +132,7 @@ const adjustModels = async (
   // Adjust models
   for (const localModel of definedModels) {
     const remoteModel = existingModels.find((r) => r.slug === localModel.slug);
+
     if (remoteModel) {
       diff.push(
         ...(await diffFields(
@@ -261,42 +262,70 @@ export const modelsToRename = (
 /**
  * Generates queries to adjust model metadata like name and ID prefix.
  *
+ * @param definedModel - The model defined locally.
+ * @param existingModel - The model currently defined in the database.
+ *
+ * @returns An array of model metadata adjustment queries as code strings.
+ */
+export const adjustModelMeta = (
+  definedModel: Model,
+  existingModel: Model,
+): Array<string> => {
+  const queries: Array<string> = [];
+
+  // The `name` and the `idPrefix` are generated in the compiler thus they are
+  // not always present. So if the defined model has no name or idPrefix we skip
+  // the model.
+  if (definedModel.idPrefix && definedModel.idPrefix !== existingModel.idPrefix) {
+    // If the prefix changes we need to recreate the model.
+    // All records inserted will use the new prefix. All old ids are not updated.
+    queries.push(
+      ...createTempModelQuery(
+        // Use the updated model meta properties and the fields from the existing model,
+        // because we want to only update the model meta properties and add the fields afterwards.
+        convertModelToObjectFields({ ...definedModel, fields: existingModel.fields }),
+        {
+          name: existingModel.name,
+          pluralName: existingModel.pluralName,
+        },
+      ),
+    );
+    // The model name only exists in the `ronin_schema` table, thus it does not need to
+    // recreate the SQL table.
+  } else if (definedModel.name && definedModel.name !== existingModel.name) {
+    // Otherwise, just update the name.
+    queries.push(
+      `alter.model("${definedModel.slug}").to({name: "${definedModel.name}"})`,
+    );
+  }
+
+  return queries;
+};
+
+/**
+ * Generates queries to adjust metadata like name and ID prefix for multiple models.
+ *
  * @param definedModels - The models defined locally.
  * @param existingModels - The models currently defined in the database.
  *
  * @returns An array of model metadata adjustment queries as code strings.
  */
-export const adjustModelMeta = (
+export const adjustModelsMeta = (
   definedModels: Array<Model>,
   existingModels: Array<Model>,
 ): Array<string> => {
   const databaseModelsMap = new Map(existingModels.map((s) => [s.slug, s]));
-  const newModels: Array<string> = [];
+  const queries: Array<string> = [];
 
   for (const model of definedModels) {
     const currentModel = databaseModelsMap.get(model.slug);
 
     if (currentModel) {
-      // The `name` and the `idPrefix` are generated in the compiler thus they are
-      // not always present. So if the defined model has no name or idPrefix we skip
-      // the model.
-      if (model.idPrefix && model.idPrefix !== currentModel.idPrefix) {
-        // If the prefix changes we need to recreate the model.
-        // All records inserted will use the new prefix. All old ids are not updated.
-        newModels.push(
-          ...createTempModelQuery(convertModelToObjectFields(model), {
-            name: currentModel.name,
-            pluralName: currentModel.pluralName,
-          }),
-        );
-      } else if (model.name && model.name !== currentModel.name) {
-        // Otherwise, just update the name.
-        newModels.push(`alter.model("${model.slug}").to({name: "${model.name}"})`);
-      }
+      queries.push(...adjustModelMeta(model, currentModel));
     }
   }
 
-  return newModels;
+  return queries;
 };
 
 /**
