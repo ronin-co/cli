@@ -406,6 +406,44 @@ describe('CLI', () => {
         ).toBe(true);
       });
 
+      test('should fail to initialize a project - no token provided', async () => {
+        process.argv = ['bun', 'ronin', 'init', 'test-space'];
+
+        spyOn(sessionModule, 'getSession').mockResolvedValue(null);
+        // @ts-expect-error This is a mock.
+        spyOn(loginModule, 'default').mockImplementation(() => Promise.resolve());
+
+        spyOn(process, 'exit').mockImplementation(() => {
+          throw new Error('process.exit called');
+        });
+
+        setupInitTest();
+
+        spyOn(process, 'exit').mockImplementation(() => {
+          throw new Error('process.exit called');
+        });
+
+        try {
+          await run({ version: '1.0.0' });
+        } catch (error) {
+          expect(error).toBeInstanceOf(Error);
+          expect((error as Error).message).toContain('process.exit called');
+          expect(exitSpy).toHaveBeenCalledWith(1);
+        }
+
+        console.error(stderrSpy.mock.calls);
+
+        expect(
+          stderrSpy.mock.calls.some(
+            (call) =>
+              typeof call[0] === 'string' &&
+              call[0].includes(
+                'Run `ronin login` to authenticate with RONIN or provide an app token',
+              ),
+          ),
+        ).toBe(true);
+      });
+
       test('diff and apply', async () => {
         process.argv = ['bun', 'ronin', 'diff', '--apply'];
 

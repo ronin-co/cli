@@ -45,6 +45,8 @@ export default async (
 
     const packages = await getLocalPackages();
 
+    // This case should never happen, since we login before running the init command
+    // if no tokens are provided.
     if (!(token?.appToken || token?.sessionToken)) {
       spinner.fail(
         'Run `ronin login` to authenticate with RONIN or provide an app token',
