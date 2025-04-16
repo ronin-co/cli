@@ -37,7 +37,6 @@ export default async (
     if (gitignoreExists) {
       const gitignorePath = path.join(process.cwd(), '.gitignore');
       const gitignoreContents = await fs.readFile(gitignorePath, 'utf-8');
-
       if (!gitignoreContents.includes('.ronin')) {
         await fs.appendFile(gitignorePath, '\n.ronin');
       }
@@ -68,12 +67,12 @@ export default async (
       await types(token.appToken, token.sessionToken);
     }
 
-    // Create ronin directories if they don't exist
+    // Create ronin directories if they don't exist.
     if (!(await exists(MIGRATIONS_PATH))) {
       await fs.mkdir(MIGRATIONS_PATH, { recursive: true });
     }
 
-    // Create a `schema/index.ts` file if it doesn't exist
+    // Create a `schema/index.ts` file if it doesn't exist.
     if (!(await exists(MODEL_IN_CODE_PATH))) {
       // Ensure the parent directory exists.
       const parentDir = path.dirname(MODEL_IN_CODE_PATH);
