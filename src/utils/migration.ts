@@ -133,7 +133,6 @@ const adjustModels = async (
   options?: MigrationOptions,
 ): Promise<Array<string>> => {
   const queries: Array<string> = [];
-  // Adjust models
   for (const localModel of definedModels) {
     const remoteModel = existingModels.find((r) => r.slug === localModel.slug);
 
