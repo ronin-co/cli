@@ -2,23 +2,26 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import util from 'node:util';
-import json5 from 'json5';
 import ora from 'ora';
 
+import types from '@/src/commands/types';
 import { exists } from '@/src/utils/file';
 import { MIGRATIONS_PATH, MODEL_IN_CODE_PATH, getLocalPackages } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
+import { getOrSelectSpaceId } from '@/src/utils/space';
 
 export const exec = util.promisify(childProcess.exec);
 
-export default async (positionals: Array<string>): Promise<void> => {
+export default async (
+  positionals: Array<string>,
+  token?: { appToken?: string; sessionToken?: string },
+): Promise<void> => {
   const spinner = ora('Initializing project').start();
   const lastPositional = positionals.at(-1);
-  const spaceHandle = lastPositional === 'init' ? null : lastPositional;
+  let spaceHandle = lastPositional === 'init' ? null : lastPositional;
 
   if (!spaceHandle) {
-    spinner.fail('Please provide a space handle like this:\n$ ronin init my-space');
-    process.exit(1);
+    spaceHandle = await getOrSelectSpaceId(token?.sessionToken, spinner);
   }
 
   if (!(await exists('package.json'))) {
@@ -27,11 +30,6 @@ export default async (positionals: Array<string>): Promise<void> => {
     );
     process.exit(1);
   }
-
-  const packageManager = (await exists('bun.lockb')) ? 'bun' : 'npm';
-  const packageManagerName = packageManager === 'bun' ? 'Bun' : 'npm';
-
-  spinner.text = `Detected ${packageManagerName} — installing types package`;
 
   try {
     // Add `.ronin` to `.gitignore` if `.gitignore` exists but doesn't contain `.ronin`.
@@ -46,41 +44,47 @@ export default async (positionals: Array<string>): Promise<void> => {
     }
 
     const packages = await getLocalPackages();
-    const doModelsExist = (await getModels(packages)).length > 0;
+
+    // This case should never happen, since we log in before
+    // running the init command if no tokens are provided.
+    if (!(token?.appToken || token?.sessionToken)) {
+      spinner.fail(
+        'Run `ronin login` to authenticate with RONIN or provide an app token',
+      );
+      process.exit(1);
+    }
+
+    const doModelsExist =
+      (
+        await getModels(
+          packages,
+          undefined,
+          token.appToken || token.sessionToken,
+          spaceHandle,
+        )
+      ).length > 0;
 
     if (doModelsExist) {
-      // Install the types package using the preferred package manager.
-      if (packageManager === 'bun') {
-        await exec(`bun add @ronin-types/${spaceHandle} --dev`);
-      } else {
-        await exec(`npm install @ronin-types/${spaceHandle} --save-dev`);
-      }
-    } else {
-      // Create ronin directories.
-      await fs.mkdir(MIGRATIONS_PATH, { recursive: true });
+      await types(token.appToken, token.sessionToken);
+    }
 
-      // Create a `schema/index.ts` file.
+    // Create migration directory if it doesn't exist.
+    if (!(await exists(MIGRATIONS_PATH))) {
+      await fs.mkdir(MIGRATIONS_PATH, { recursive: true });
+    }
+
+    // Create a `schema/index.ts` file if it doesn't exist.
+    if (!(await exists(MODEL_IN_CODE_PATH))) {
+      // Ensure the parent directory exists.
+      const parentDir = path.dirname(MODEL_IN_CODE_PATH);
+      if (!(await exists(parentDir))) {
+        await fs.mkdir(parentDir, { recursive: true });
+      }
       await fs.writeFile(
         MODEL_IN_CODE_PATH,
         '// This file is the starting point to define your models in code.\n',
       );
     }
-
-    // Add the types package to the project's TypeScript config if one exists
-    const tsConfigPath = path.join(process.cwd(), 'tsconfig.json');
-    const tsConfigExists = await exists('tsconfig.json');
-
-    if (!tsConfigExists) return;
-
-    const contents = await fs.readFile(tsConfigPath, 'utf-8');
-    const tsConfig = json5.parse(contents);
-
-    if (!tsConfig.compilerOptions.types?.includes(`@ronin-types/${spaceHandle}`))
-      Object.assign(tsConfig.compilerOptions, {
-        types: [...(tsConfig.compilerOptions.types || []), `@ronin-types/${spaceHandle}`],
-      });
-
-    await fs.writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2));
   } catch (err) {
     if (err instanceof Error && err.message.includes('401')) {
       spinner.fail(
@@ -88,6 +92,7 @@ export default async (positionals: Array<string>): Promise<void> => {
       );
       process.exit(1);
     }
+    throw err;
   }
 
   spinner.succeed('Project initialized');
