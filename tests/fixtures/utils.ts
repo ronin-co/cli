@@ -1,4 +1,4 @@
-import { type MigrationOptions, diffModels } from '@/src/utils/migration';
+import { Migration, type MigrationOptions } from '@/src/utils/migration';
 import { type LocalPackages, getLocalPackages } from '@/src/utils/misc';
 import { convertModelToObjectFields, getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
@@ -96,7 +96,7 @@ export const runMigration = async (
 
   const packages = await getLocalPackages();
   const models = await getModels(packages, db);
-  const modelDiff = await diffModels(definedModels, models, options);
+  const modelDiff = await new Migration(definedModels, models, options).diff();
   const protocol = new Protocol(packages, modelDiff);
   await protocol.convertToQueryObjects();
 
