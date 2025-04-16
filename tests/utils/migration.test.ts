@@ -10,20 +10,13 @@ import {
   TestD,
   TestE,
 } from '@/fixtures/index';
-import {
-  adjustModelsMeta,
-  createModels,
-  diffModels,
-  dropModels,
-  indexesToRecreate,
-  triggersToRecreate,
-} from '@/src/utils/migration';
+import { Migration } from '@/src/utils/migration';
 import type { Model } from '@ronin/compiler';
 
 describe('migration', () => {
   describe('diff models', () => {
     test('returns empty array when models are in sync', async () => {
-      const modelDiff = await diffModels([], [TestB]);
+      const modelDiff = await new Migration([], [TestB]).diff();
 
       expect(modelDiff).toHaveLength(1);
       expect(modelDiff).toStrictEqual(['drop.model("test")']);
@@ -31,7 +24,7 @@ describe('migration', () => {
 
     test('returns empty array when both code and db have same account model', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account], [Account]);
+      const modelDiff = await new Migration([Account], [Account]).diff();
 
       expect(modelDiff).toHaveLength(0);
       expect(modelDiff).toStrictEqual([]);
@@ -39,9 +32,9 @@ describe('migration', () => {
 
     test('generates migration steps when renaming model slug', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account], [Account2], {
+      const modelDiff = await new Migration([Account], [Account2], {
         rename: true,
-      });
+      }).diff();
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
@@ -55,7 +48,7 @@ describe('migration', () => {
 
     test('creates new model when code has additional model', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account, Profile], [Account]);
+      const modelDiff = await new Migration([Account, Profile], [Account]).diff();
       expect(modelDiff).toHaveLength(1);
       expect(modelDiff).toStrictEqual([
         'create.model({"slug":"profile","fields":{"username":{"type":"string"}}})',
@@ -64,7 +57,7 @@ describe('migration', () => {
 
     test('drops model when db has additional model', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account], [Account, Profile]);
+      const modelDiff = await new Migration([Account], [Account, Profile]).diff();
 
       expect(modelDiff).toHaveLength(1);
       expect(modelDiff).toStrictEqual(['drop.model("profile")']);
@@ -72,7 +65,7 @@ describe('migration', () => {
 
     test('generates migration steps when field properties change', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account2], [Account]);
+      const modelDiff = await new Migration([Account2], [Account]).diff();
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
@@ -86,7 +79,7 @@ describe('migration', () => {
 
     test('generates migration steps when meta model properties change', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([TestC], [TestA]);
+      const modelDiff = await new Migration([TestC], [TestA]).diff();
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
@@ -100,7 +93,7 @@ describe('migration', () => {
 
     test('generates migration steps when field definitions differ', async () => {
       // It is not recognized as a model.
-      const modelDiff = await diffModels([Account], [Account2]);
+      const modelDiff = await new Migration([Account], [Account2]).diff();
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
@@ -113,9 +106,9 @@ describe('migration', () => {
     });
 
     test('renames model when model is renamed', async () => {
-      const modelDiff = await diffModels([AccountNew, Profile], [Account, Profile], {
+      const modelDiff = await new Migration([AccountNew, Profile], [Account, Profile], {
         rename: true,
-      });
+      }).diff();
 
       expect(modelDiff).toHaveLength(1);
       expect(modelDiff).toStrictEqual([
@@ -125,7 +118,7 @@ describe('migration', () => {
 
     describe('indexes', () => {
       test('handles index changes', async () => {
-        const modelDiff = await diffModels([TestB], [TestA]);
+        const modelDiff = await new Migration([TestB], [TestA]).diff();
 
         expect(modelDiff).toBeDefined();
         expect(modelDiff).toHaveLength(7);
@@ -134,7 +127,7 @@ describe('migration', () => {
 
     describe('triggers', () => {
       test('create model and trigger', async () => {
-        const modelDiff = await diffModels([TestD], []);
+        const modelDiff = await new Migration([TestD], []).diff();
 
         expect(modelDiff).toBeDefined();
         expect(modelDiff).toHaveLength(2);
@@ -146,7 +139,7 @@ describe('migration', () => {
       });
 
       test('drop model and trigger', async () => {
-        const modelDiff = await diffModels([], [TestD]);
+        const modelDiff = await new Migration([], [TestD]).diff();
 
         // Only drops the model because triggers are dropped by default
         expect(modelDiff).toHaveLength(1);
@@ -154,7 +147,7 @@ describe('migration', () => {
       });
 
       test('adjust trigger', async () => {
-        const modelDiff = await diffModels([TestE], [TestD]);
+        const modelDiff = await new Migration([TestE], [TestD]).diff();
 
         expect(modelDiff).toHaveLength(2);
         expect(modelDiff).toStrictEqual([
@@ -176,14 +169,14 @@ describe('migration', () => {
         },
       ];
 
-      const queries = dropModels(models);
+      const queries = new Migration().dropModels(models);
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual(['drop.model("test1")', 'drop.model("test2")']);
     });
 
     test('returns empty array for empty model list', () => {
-      const queries = dropModels([]);
+      const queries = new Migration().dropModels([]);
 
       expect(queries).toHaveLength(0);
       expect(queries).toStrictEqual([]);
@@ -213,7 +206,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = createModels(models);
+      const queries = new Migration().createModels(models);
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual([
@@ -229,14 +222,14 @@ describe('migration', () => {
         },
       ];
 
-      const queries = createModels(models);
+      const queries = new Migration().createModels(models);
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual(['create.model({"slug":"test1"})']);
     });
 
     test('returns empty array for empty model list', () => {
-      const queries = createModels([]);
+      const queries = new Migration().createModels([]);
 
       expect(queries).toHaveLength(0);
       expect(queries).toStrictEqual([]);
@@ -253,7 +246,7 @@ describe('migration', () => {
             unique: true,
           },
         },
-      };
+      } as unknown as Model;
 
       const existingModel = {
         slug: 'test',
@@ -264,10 +257,11 @@ describe('migration', () => {
             slug: 'old_index',
           },
         },
-      };
+      } as unknown as Model;
 
-      // @ts-expect-error This will work once the types are fixed.
-      const queries = [...indexesToRecreate([definedModel], [existingModel])];
+      const queries = [
+        ...new Migration().indexesToRecreate([definedModel], [existingModel]),
+      ];
 
       expect(queries).toHaveLength(2);
       expect(queries).toStrictEqual([
@@ -279,7 +273,7 @@ describe('migration', () => {
 
   describe('indexesToRecreate', () => {
     test('returns empty array when no models provided', () => {
-      const queries = indexesToRecreate([], []);
+      const queries = new Migration().indexesToRecreate([], []);
       expect(queries).toHaveLength(0);
       expect(queries).toStrictEqual([]);
     });
@@ -304,7 +298,7 @@ describe('migration', () => {
             },
           },
         },
-      ];
+      ] as unknown as Array<Model>;
 
       const existingModels = [
         {
@@ -327,10 +321,9 @@ describe('migration', () => {
             },
           },
         },
-      ];
+      ] as unknown as Array<Model>;
 
-      // @ts-expect-error This will work once the types are fixed.
-      const queries = indexesToRecreate(definedModels, existingModels);
+      const queries = new Migration().indexesToRecreate(definedModels, existingModels);
 
       expect(queries).toHaveLength(4);
       expect(queries).toStrictEqual([
@@ -352,12 +345,11 @@ describe('migration', () => {
             },
           },
         },
-      ];
+      ] as unknown as Array<Model>;
 
       const existingModels: Array<Model> = [];
 
-      // @ts-expect-error This will work once the types are fixed.
-      const queries = indexesToRecreate(definedModels, existingModels);
+      const queries = new Migration().indexesToRecreate(definedModels, existingModels);
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual([
@@ -396,7 +388,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = adjustModelsMeta(definedModels, existingModels);
+      const queries = new Migration().adjustModelsMeta(definedModels, existingModels);
 
       expect(queries).toHaveLength(8);
       expect(queries).toStrictEqual([
@@ -418,11 +410,11 @@ describe('migration', () => {
         {
           slug: 'test1',
           name: 'Test Model 1',
-          // Missing idPrefix
+          // Missing idPrefix.
         },
         {
           slug: 'test2',
-          // Missing both name and idPrefix
+          // Missing both name and idPrefix.
         },
       ];
 
@@ -434,7 +426,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = adjustModelsMeta(definedModels, existingModels);
+      const queries = new Migration().adjustModelsMeta(definedModels, existingModels);
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual(['alter.model("test1").to({name: "Test Model 1"})']);
@@ -457,7 +449,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = adjustModelsMeta(definedModels, existingModels);
+      const queries = new Migration().adjustModelsMeta(definedModels, existingModels);
 
       expect(queries).toHaveLength(0);
       expect(queries).toStrictEqual([]);
@@ -466,7 +458,7 @@ describe('migration', () => {
 
   describe('triggersToRecreate', () => {
     test('returns empty array when no models provided', () => {
-      const queries = triggersToRecreate([], []);
+      const queries = new Migration().triggersToRecreate([], []);
       expect(queries).toHaveLength(0);
       expect(queries).toStrictEqual([]);
     });
@@ -522,7 +514,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = triggersToRecreate(definedModels, existingModels);
+      const queries = new Migration().triggersToRecreate(definedModels, existingModels);
 
       expect(queries).toHaveLength(4);
       expect(queries).toStrictEqual([
@@ -546,7 +538,7 @@ describe('migration', () => {
         },
       ];
 
-      const queries = triggersToRecreate(definedModels, existingModels);
+      const queries = new Migration().triggersToRecreate(definedModels, existingModels);
 
       expect(queries).toHaveLength(0);
       expect(queries).toStrictEqual([]);
@@ -569,7 +561,7 @@ describe('migration', () => {
 
       const existingModels: Array<Model> = [];
 
-      const queries = triggersToRecreate(definedModels, existingModels);
+      const queries = new Migration().triggersToRecreate(definedModels, existingModels);
 
       expect(queries).toHaveLength(1);
       expect(queries).toStrictEqual([
