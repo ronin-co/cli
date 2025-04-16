@@ -278,7 +278,7 @@ export const adjustModelMeta = (
   // the model.
   if (definedModel.idPrefix && definedModel.idPrefix !== existingModel.idPrefix) {
     // If the prefix changes we need to recreate the model.
-    // All records inserted will use the new prefix. All old ids are not updated.
+    // All records inserted will use the new prefix. All old IDs are not updated.
     queries.push(
       ...createTempModelQuery(
         // Create a temporary model with the new `idPrefix` but keep the existing fields.
