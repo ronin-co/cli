@@ -400,6 +400,51 @@ describe('apply', () => {
             profiles: 0,
           });
         });
+
+        test('meta properties and fields', async () => {
+          const definedModel = model({
+            slug: 'test',
+            name: 'Test',
+            pluralName: 'Tests',
+            pluralSlug: 'tests',
+            idPrefix: 'test',
+            fields: {
+              name: string({ defaultValue: 'I <3 RONIN' }),
+              age: number(),
+              email: string(),
+            },
+          }) as unknown as Model;
+
+          const existingModel = model({
+            slug: 'test',
+            idPrefix: 'corny',
+            fields: {
+              name: string(),
+              age: number(),
+            },
+          }) as unknown as Model;
+
+          const { models, db, modelDiff } = await runMigration(
+            // @ts-expect-error This is a mock.
+            [definedModel],
+            [existingModel],
+          );
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+
+          expect(modelDiff).toHaveLength(9);
+          expect(models[0].fields).toHaveLength(3);
+          expect(models).toHaveLength(1);
+          expect(models[0].name).toBe('Test');
+          expect(rowCounts).toEqual({
+            tests: 0,
+          });
+        });
       });
     });
 
