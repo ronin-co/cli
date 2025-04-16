@@ -97,7 +97,7 @@ export const runMigration = async (
   const packages = await getLocalPackages();
   const models = await getModels(packages, db);
   const modelDiff = await diffModels(definedModels, models, options);
-  console.error(modelDiff);
+
   const protocol = new Protocol(packages, modelDiff);
   await protocol.convertToQueryObjects();
 

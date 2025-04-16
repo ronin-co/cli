@@ -433,8 +433,6 @@ describe('CLI', () => {
           expect(exitSpy).toHaveBeenCalledWith(1);
         }
 
-        console.error(stderrSpy.mock.calls);
-
         expect(
           stderrSpy.mock.calls.some(
             (call) =>

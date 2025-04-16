@@ -123,15 +123,25 @@ export const createTempModelQuery = (
     pluralName?: string;
   },
 ): Array<string> => {
-  const { slug, fields, indexes: _indexes, triggers, ...rest } = model;
+  const { slug, pluralSlug, fields, indexes: _indexes, triggers, ...rest } = model;
   const queries: Array<string> = [];
 
   const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${slug}`;
+  const tempModelPluralSlug = pluralSlug
+    ? `${RONIN_SCHEMA_TEMP_SUFFIX}${pluralSlug}`
+    : undefined;
 
-  // Create a copy of the model
-  queries.push(createModelQuery({ slug: tempModelSlug, fields, ...rest }));
+  // Create a copy of the model.
+  queries.push(
+    createModelQuery({
+      slug: tempModelSlug,
+      ...(pluralSlug ? { pluralSlug: tempModelPluralSlug } : {}),
+      fields,
+      ...rest,
+    }),
+  );
 
-  // Move all the data to the copied model
+  // Move all the data to the copied model.
   queries.push(
     `add.${tempModelSlug}.with(() => get.${slug}(${
       options?.includeFields
@@ -144,12 +154,12 @@ export const createTempModelQuery = (
     queries.push(...options.customQueries);
   }
 
-  // Delete the original model
+  // Delete the original model.
   queries.push(dropModelQuery(slug));
 
-  // Rename the copied model to the original model
+  // Rename the copied model to the original model.
   queries.push(
-    `alter.model("${tempModelSlug}").to({slug: "${slug}", name: "${options?.name}", pluralName: "${options?.pluralName}"})`,
+    `alter.model("${tempModelSlug}").to({slug: "${slug}", name: "${options?.name}", pluralName: "${options?.pluralName}"${model.pluralSlug ? `, pluralSlug: "${model.pluralSlug}"` : ''}})`,
   );
 
   for (const [key, value] of Object.entries(triggers || {})) {

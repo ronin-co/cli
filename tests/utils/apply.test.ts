@@ -401,7 +401,7 @@ describe('apply', () => {
           });
         });
 
-        test.only('meta properties and fields', async () => {
+        test('meta properties and fields', async () => {
           const definedModel = model({
             slug: 'test',
             name: 'Test',
@@ -437,7 +437,7 @@ describe('apply', () => {
             }
           }
 
-          expect(modelDiff).toHaveLength(1220);
+          expect(modelDiff).toHaveLength(9);
           expect(models[0].fields).toHaveLength(3);
           expect(models).toHaveLength(1);
           expect(models[0].name).toBe('Test');
@@ -672,8 +672,6 @@ describe('apply', () => {
           await db.query(transaction.statements);
           const rows = await getTableRows(db, models[0]);
 
-          console.error(modelDiff);
-
           expect(models[0].fields).toHaveLength(1);
           expect(modelDiff).toHaveLength(8);
           expect(models[0].slug).toBe('test');
@@ -728,8 +726,6 @@ describe('apply', () => {
 
           await db.query(transaction.statements);
           const rows = await getTableRows(db, models[0]);
-
-          console.error(modelDiff);
 
           expect(models[0].fields).toHaveLength(2);
           expect(modelDiff).toHaveLength(10);
