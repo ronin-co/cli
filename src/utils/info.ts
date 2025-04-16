@@ -21,7 +21,7 @@ export const printHelp = (): Promise<void> => {
   {bold COMMANDS}
 
       login                               Authenticate with RONIN (run by default for every command)
-      init [space]                        Initialize the TypeScript types for a given space
+      init [space]                        Initialize RONIN project structure
       diff                                Compare the database schema with the local schema and create a patch
       apply                               Apply the most recent patch to the database
       types                               Generates TypeScript types for the database schema

@@ -86,7 +86,11 @@ export const run = async (config: { version: string }): Promise<void> => {
   }
 
   // `init` sub command
-  if (normalizedPositionals.includes('init')) return initializeProject(positionals);
+  if (normalizedPositionals.includes('init'))
+    return initializeProject(positionals, {
+      appToken: appToken,
+      sessionToken: session?.token,
+    });
 
   // `diff` sub command
   if (normalizedPositionals.includes('diff')) {

@@ -14,6 +14,7 @@ import http from 'node:http';
 import path from 'node:path';
 import * as initModule from '@/src/commands/init';
 import * as loginModule from '@/src/commands/login';
+import * as typesModule from '@/src/commands/types';
 import { run } from '@/src/index';
 import * as infoModule from '@/src/utils/info';
 import * as miscModule from '@/src/utils/misc';
@@ -21,8 +22,8 @@ import * as modelModule from '@/src/utils/model';
 import { convertObjectToArray } from '@/src/utils/model';
 import * as sessionModule from '@/src/utils/session';
 import * as spaceModule from '@/src/utils/space';
-import * as selectModule from '@inquirer/prompts';
 import * as confirmModule from '@inquirer/prompts';
+import * as selectModule from '@inquirer/prompts';
 import * as getPort from 'get-port';
 import * as open from 'open';
 
@@ -283,40 +284,43 @@ describe('CLI', () => {
       test('should fail if no space handle is provided', async () => {
         process.argv = ['bun', 'ronin', 'init'];
 
-        try {
-          await run({ version: '1.0.0' });
-        } catch (error) {
-          expect((error as Error).message).toBe('process.exit called');
-          expect(exitSpy).toHaveBeenCalledWith(1);
-          expect(
-            stderrSpy.mock.calls.some((call) => call[0] === 'Initializing project'),
-          ).toBe(true);
-          expect(
-            stderrSpy.mock.calls.some(
-              (call) =>
-                typeof call[0] === 'string' &&
-                call[0].includes('Please provide a space handle like this:'),
-            ),
-          ).toBe(true);
-        }
+        // @ts-expect-error This is a mock.
+        spyOn(spaceModule, 'getOrSelectSpaceId').mockReturnValue('spa_space');
+        // @ts-expect-error This is a mock.
+        spyOn(modelModule, 'getModels').mockReturnValue([{ slug: 'test' }]);
+        // @ts-expect-error This is a mock.
+        spyOn(typesModule, 'default').mockImplementation(() => {});
+
+        await run({ version: '1.0.0' });
+
+        expect(
+          // @ts-expect-error This is a mock.
+          stderrSpy.mock.calls.some((call) => call[0].includes('Project initialized')),
+        ).toBe(true);
       });
 
       test('should fail if no package.json is found', async () => {
         process.argv = ['bun', 'ronin', 'init', 'my-space'];
         spyOn(fs.promises, 'access').mockImplementation(() => Promise.reject());
 
+        spyOn(process, 'exit').mockImplementation(() => {
+          throw new Error('process.exit called');
+        });
+
         try {
           await run({ version: '1.0.0' });
         } catch (error) {
-          expect((error as Error).message).toBe('process.exit called');
-          expect(exitSpy).toHaveBeenCalledWith(1);
           expect(
             stderrSpy.mock.calls.some(
               (call) =>
                 typeof call[0] === 'string' &&
-                call[0].includes('No `package.json` found'),
+                call[0].includes(
+                  'No `package.json` found in the current directory. Please run the command in your project.',
+                ),
             ),
           ).toBe(true);
+          expect((error as Error).message).toBe('process.exit called');
+          expect(exitSpy).toHaveBeenCalledWith(1);
         }
       });
 
@@ -353,23 +357,7 @@ describe('CLI', () => {
         );
       };
 
-      test('should successfully initialize a project with Bun when models exist', async () => {
-        spyOn(modelModule, 'getModels').mockResolvedValue([
-          {
-            slug: 'user',
-            // @ts-expect-error This is a mock.
-            fields: [{ type: 'string', slug: 'name' }],
-          },
-        ]);
-
-        setupInitTest(true);
-        await run({ version: '1.0.0' });
-        expect(initModule.exec).toHaveBeenCalledWith(
-          'bun add @ronin-types/test-space --dev',
-        );
-      });
-
-      test('should successfully initialize a project with Bun when no models exist', async () => {
+      test('should successfully initialize a project when no models exist', async () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([]);
 
         setupInitTest(true);
@@ -384,44 +372,76 @@ describe('CLI', () => {
         );
       });
 
-      test('should successfully initialize a project with npm', async () => {
-        spyOn(modelModule, 'getModels').mockResolvedValue([
-          {
-            slug: 'user',
-            // @ts-expect-error This is a mock.
-            fields: [{ type: 'string', slug: 'name' }],
-          },
-        ]);
-
-        setupInitTest(false);
-        await run({ version: '1.0.0' });
-        expect(initModule.exec).toHaveBeenCalledWith(
-          'npm install @ronin-types/test-space --save-dev',
-        );
-      });
-
       test('should fail to initialize a project with unauthorized access', async () => {
-        spyOn(modelModule, 'getModels').mockResolvedValue([
-          {
-            slug: 'user',
-            // @ts-expect-error This is a mock.
-            fields: [{ type: 'string', slug: 'name' }],
-          },
-        ]);
+        process.argv = ['bun', 'ronin', 'init', 'test-space'];
+
+        spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
+        // Skip types generation.
+        // @ts-expect-error This is a mock.
+        spyOn(typesModule, 'default').mockImplementation(() => {});
 
         setupInitTest();
 
-        // Mock exec to throw unauthorized error
-        spyOn(initModule, 'exec').mockImplementation(() => {
+        spyOn(modelModule, 'getModels').mockImplementation(() => {
           throw new Error('401 Unauthorized');
         });
 
-        await run({ version: '1.0.0' });
+        spyOn(process, 'exit').mockImplementation(() => {
+          throw new Error('process.exit called');
+        });
+
+        try {
+          await run({ version: '1.0.0' });
+        } catch (error) {
+          expect(error).toBeInstanceOf(Error);
+          expect((error as Error).message).toContain('process.exit called');
+          expect(exitSpy).toHaveBeenCalledWith(1);
+        }
+
         expect(
           stderrSpy.mock.calls.some(
             (call) =>
               typeof call[0] === 'string' &&
               call[0].includes('You are not a member of the "test-space" space'),
+          ),
+        ).toBe(true);
+      });
+
+      test('should fail to initialize a project - no token provided', async () => {
+        process.argv = ['bun', 'ronin', 'init', 'test-space'];
+        process.stdout.isTTY = true;
+
+        spyOn(sessionModule, 'getSession').mockResolvedValue(null);
+        // @ts-expect-error This is a mock.
+        spyOn(loginModule, 'default').mockImplementation(() => Promise.resolve());
+
+        spyOn(process, 'exit').mockImplementation(() => {
+          throw new Error('process.exit called');
+        });
+
+        setupInitTest();
+
+        spyOn(process, 'exit').mockImplementation(() => {
+          throw new Error('process.exit called');
+        });
+
+        try {
+          await run({ version: '1.0.0' });
+        } catch (error) {
+          expect(error).toBeInstanceOf(Error);
+          expect((error as Error).message).toContain('process.exit called');
+          expect(exitSpy).toHaveBeenCalledWith(1);
+        }
+
+        console.error(stderrSpy.mock.calls);
+
+        expect(
+          stderrSpy.mock.calls.some(
+            (call) =>
+              typeof call[0] === 'string' &&
+              call[0].includes(
+                'Run `ronin login` to authenticate with RONIN or provide an app token',
+              ),
           ),
         ).toBe(true);
       });
