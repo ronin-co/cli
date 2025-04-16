@@ -26,6 +26,7 @@ import * as confirmModule from '@inquirer/prompts';
 import * as selectModule from '@inquirer/prompts';
 import * as getPort from 'get-port';
 import * as open from 'open';
+
 describe('CLI', () => {
   // Store original values
   const originalIsTTY = process.stdout.isTTY;
