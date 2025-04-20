@@ -11,6 +11,7 @@ import {
   TestE,
 } from '@/fixtures/index';
 import { Migration } from '@/src/utils/migration';
+import type { ModelWithFieldsArray } from '@/src/utils/model';
 import type { Model } from '@ronin/compiler';
 
 describe('migration', () => {
@@ -246,7 +247,7 @@ describe('migration', () => {
             unique: true,
           },
         },
-      } as unknown as Model;
+      } as unknown as ModelWithFieldsArray;
 
       const existingModel = {
         slug: 'test',
@@ -257,7 +258,7 @@ describe('migration', () => {
             slug: 'old_index',
           },
         },
-      } as unknown as Model;
+      } as unknown as ModelWithFieldsArray;
 
       const queries = [
         ...new Migration().indexesToRecreate([definedModel], [existingModel]),
@@ -298,7 +299,7 @@ describe('migration', () => {
             },
           },
         },
-      ] as unknown as Array<Model>;
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const existingModels = [
         {
@@ -321,7 +322,7 @@ describe('migration', () => {
             },
           },
         },
-      ] as unknown as Array<Model>;
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const queries = new Migration().indexesToRecreate(definedModels, existingModels);
 
@@ -345,9 +346,9 @@ describe('migration', () => {
             },
           },
         },
-      ] as unknown as Array<Model>;
+      ] as unknown as Array<ModelWithFieldsArray>;
 
-      const existingModels: Array<Model> = [];
+      const existingModels: Array<ModelWithFieldsArray> = [];
 
       const queries = new Migration().indexesToRecreate(definedModels, existingModels);
 
@@ -371,7 +372,7 @@ describe('migration', () => {
           name: 'Test Model 2',
           idPrefix: 'TM2',
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const existingModels = [
         {
@@ -386,7 +387,7 @@ describe('migration', () => {
           pluralName: 'Old Plural Name 2',
           idPrefix: 'OLD2',
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const queries = new Migration().adjustModelsMeta(definedModels, existingModels);
 
@@ -416,7 +417,7 @@ describe('migration', () => {
           slug: 'test2',
           // Missing both name and idPrefix.
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const existingModels = [
         {
@@ -424,7 +425,7 @@ describe('migration', () => {
           name: 'Old Name',
           idPrefix: 'OLD',
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const queries = new Migration().adjustModelsMeta(definedModels, existingModels);
 
@@ -439,7 +440,7 @@ describe('migration', () => {
           name: 'Test Model',
           idPrefix: 'TM',
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const existingModels = [
         {
@@ -447,7 +448,7 @@ describe('migration', () => {
           name: 'Test Model',
           idPrefix: 'TM',
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const queries = new Migration().adjustModelsMeta(definedModels, existingModels);
 
@@ -464,7 +465,7 @@ describe('migration', () => {
     });
 
     test('returns queries for all models that need trigger changes', () => {
-      const definedModels: Array<Model> = [
+      const definedModels: Array<ModelWithFieldsArray> = [
         {
           slug: 'test1',
           triggers: {
@@ -487,9 +488,9 @@ describe('migration', () => {
             },
           },
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
-      const existingModels: Array<Model> = [
+      const existingModels: Array<ModelWithFieldsArray> = [
         {
           slug: 'test1',
           triggers: {
@@ -512,7 +513,7 @@ describe('migration', () => {
             },
           },
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const queries = new Migration().triggersToRecreate(definedModels, existingModels);
 
@@ -526,17 +527,17 @@ describe('migration', () => {
     });
 
     test('handles models with no triggers', () => {
-      const definedModels: Array<Model> = [
+      const definedModels: Array<ModelWithFieldsArray> = [
         {
           slug: 'test1',
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
-      const existingModels: Array<Model> = [
+      const existingModels: Array<ModelWithFieldsArray> = [
         {
           slug: 'test1',
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
       const queries = new Migration().triggersToRecreate(definedModels, existingModels);
 
@@ -545,7 +546,7 @@ describe('migration', () => {
     });
 
     test('handles when existing model is not found', () => {
-      const definedModels: Array<Model> = [
+      const definedModels: Array<ModelWithFieldsArray> = [
         {
           slug: 'test1',
           triggers: {
@@ -557,9 +558,9 @@ describe('migration', () => {
             },
           },
         },
-      ];
+      ] as unknown as Array<ModelWithFieldsArray>;
 
-      const existingModels: Array<Model> = [];
+      const existingModels: Array<ModelWithFieldsArray> = [];
 
       const queries = new Migration().triggersToRecreate(definedModels, existingModels);
 

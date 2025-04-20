@@ -55,11 +55,14 @@ export default async (
     ]);
 
     if (flags.debug) {
-      logModelDiffs(definedModels, existingModels);
+      logModelDiffs(definedModels as Array<Model>, existingModels as Array<Model>);
     }
 
     spinner.stop();
-    const modelDiff = await new Migration(definedModels, existingModels).diff();
+    const modelDiff = await new Migration(
+      definedModels as Array<Model>,
+      existingModels as Array<Model>,
+    ).diff();
     spinner.start();
 
     if (modelDiff.length === 0) {
@@ -119,7 +122,7 @@ export default async (
 
     if (flags.sql) {
       const allModels = [...existingModels, ...definedModels];
-      await protocol.saveSQL(`migration-${paddedNum}`, allModels);
+      await protocol.saveSQL(`migration-${paddedNum}`, allModels as Array<Model>);
     }
 
     spinner.succeed('Successfully generated migration protocol file');

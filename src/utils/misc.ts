@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { parseArgs } from 'node:util';
 import { readConfig, saveConfig } from '@/src/utils/config';
-import { fieldsToCreate, fieldsToDrop } from '@/src/utils/field';
+import { CompareModels } from '@/src/utils/field';
 import { convertModelToArrayFields } from '@/src/utils/model';
 import { spinner } from '@/src/utils/spinner';
 import { input } from '@inquirer/prompts';
@@ -117,20 +117,22 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
   const a = convertModelToArrayFields(tableA);
   const b = convertModelToArrayFields(tableB);
   // Get fields that were added and deleted between tables
-  // @ts-expect-error This will work once the types are fixed.
-  const fieldsToAdd = fieldsToCreate(b.fields ?? [], a.fields ?? []);
-  // @ts-expect-error This will work once the types are fixed.
-  const fieldsToDelete = fieldsToDrop(b.fields ?? [], a.fields ?? []);
+  const fieldsToAdd = new CompareModels(b, a).fieldsToCreate(
+    b.fields ?? [],
+    a.fields ?? [],
+  );
+  const fieldsToDelete = new CompareModels(b, a).fieldsToDrop(
+    b.fields ?? [],
+    a.fields ?? [],
+  );
 
   // Convert fields arrays to maps for easier lookup
   const fieldsA = Object.fromEntries(
-    // @ts-expect-error This will work once the types are fixed.
     (a.fields ?? []).map((field) => [field.slug, field]),
   );
 
   // Get all unique property keys from both tables
   const allKeys = new Set<string>();
-  // @ts-expect-error This will work once the types are fixed.
   for (const item of [...(b.fields ?? []), ...(a.fields ?? [])]) {
     for (const key of Object.keys(item)) {
       allKeys.add(key);
@@ -140,7 +142,6 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
   // Create column headers with color formatting
   const columnHeaders = [
     // Headers for current fields (green for new fields)
-    // @ts-expect-error This will work once the types are fixed.
     ...(b.fields ?? []).map((field) => {
       const isNew = fieldsToAdd.some((f) => f.slug === field.slug);
       return isNew ? `\x1b[32m${field.slug}\x1b[0m` : field.slug;
@@ -156,7 +157,6 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
       let hasValue = false;
 
       // Add values for current fields
-      // @ts-expect-error This will work once the types are fixed.
       (b.fields ?? []).forEach((field, index) => {
         const oldValue = fieldsA[field.slug]?.[key as keyof typeof field];
         const newValue = field[key as keyof typeof field];
@@ -174,7 +174,6 @@ export const logTableDiff = (tableB: Model, tableA: Model, tableName: string): v
       fieldsToDelete.forEach((field, i) => {
         const value = field[key as keyof typeof field];
         if (value !== undefined) hasValue = true;
-        // @ts-expect-error This will work once the types are fixed.
         row[columnHeaders[b.fields?.length ?? 0 + i]] = `\x1b[31m\x1b[9m${value}\x1b[0m`;
       });
 
@@ -223,7 +222,7 @@ export const getModelDefinitions = async (customPath?: string): Promise<Array<Mo
     ) as Array<Model>,
   );
 
-  // Check for duplicate model slugs
+  // Check for duplicate model slugs.
   const slugCounts = new Map<string, number>();
   for (const model of sortedModels) {
     const count = slugCounts.get(model.slug) ?? 0;

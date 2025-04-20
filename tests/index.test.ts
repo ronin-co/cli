@@ -43,13 +43,12 @@ describe('CLI', () => {
     stderrSpy = spyOn(process.stderr, 'write').mockImplementation(() => true);
     exitSpy = spyOn(process, 'exit').mockImplementation(() => undefined as never);
     spyOn(console, 'table').mockImplementation(() => {});
-    // @ts-expect-error This is a mock.
-    spyOn(fs.promises, 'appendFile').mockImplementation(() => {});
-    spyOn(sessionModule, 'getSession').mockImplementation(() => {
-      return Promise.resolve({
+    spyOn(fs.promises, 'appendFile').mockImplementation(() => Promise.resolve());
+    spyOn(sessionModule, 'getSession').mockImplementation(() =>
+      Promise.resolve({
         token: 'Bulgur',
-      });
-    });
+      }),
+    );
 
     // Prevent actually reading/writing files.
     // @ts-expect-error This is a mock.
@@ -283,13 +282,13 @@ describe('CLI', () => {
     describe('init', () => {
       test('should fail if no space handle is provided', async () => {
         process.argv = ['bun', 'ronin', 'init'];
-
-        // @ts-expect-error This is a mock.
-        spyOn(spaceModule, 'getOrSelectSpaceId').mockReturnValue('spa_space');
-        // @ts-expect-error This is a mock.
-        spyOn(modelModule, 'getModels').mockReturnValue([{ slug: 'test' }]);
-        // @ts-expect-error This is a mock.
-        spyOn(typesModule, 'default').mockImplementation(() => {});
+        spyOn(spaceModule, 'getOrSelectSpaceId').mockReturnValue(
+          Promise.resolve('spa_space'),
+        );
+        spyOn(modelModule, 'getModels').mockReturnValue(
+          Promise.resolve([{ slug: 'test', fields: [] }]),
+        );
+        spyOn(typesModule, 'default').mockImplementation(() => Promise.resolve());
 
         await run({ version: '1.0.0' });
 
@@ -452,7 +451,6 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock.
             fields: [{ type: 'string', slug: 'name' }],
           },
         ]);
@@ -518,6 +516,7 @@ describe('CLI', () => {
           {
             slug: 'user',
             fields: convertObjectToArray({
+              // @ts-expect-error This is a mock.
               name: { type: 'string' },
             }),
           },
@@ -577,6 +576,7 @@ describe('CLI', () => {
           {
             slug: 'user',
             fields: {
+              // @ts-expect-error This is a mock.
               name: { type: 'string' },
             },
           },
@@ -853,9 +853,10 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock.
             fields: convertObjectToArray({
-              name: { type: 'string' },
+              fields: {
+                name: { type: 'string' },
+              },
             }),
           },
         ]);
@@ -895,9 +896,10 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock.
             fields: convertObjectToArray({
-              name: { type: 'string' },
+              fields: {
+                name: { type: 'string' },
+              },
             }),
           },
         ]);
@@ -939,9 +941,10 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock.
             fields: convertObjectToArray({
-              name: { type: 'string' },
+              fields: {
+                name: { type: 'string' },
+              },
             }),
           },
         ]);
@@ -992,9 +995,10 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock.
             fields: convertObjectToArray({
-              name: { type: 'string' },
+              fields: {
+                name: { type: 'string' },
+              },
             }),
           },
         ]);
@@ -1047,7 +1051,6 @@ describe('CLI', () => {
         spyOn(modelModule, 'getModels').mockResolvedValue([
           {
             slug: 'user',
-            // @ts-expect-error This is a mock.
             fields: [{ type: 'string', slug: 'name' }],
           },
         ]);

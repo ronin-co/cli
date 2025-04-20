@@ -98,18 +98,18 @@ describe('queries', () => {
   });
 
   test('create temp model query', () => {
-    const fields = {
-      username: {
-        type: 'string',
-        name: 'Username',
-        unique: true,
-        required: true,
-      },
-    };
-
     const result = createTempModelQuery(
-      // @ts-expect-error TODO: Fix this type.
-      { slug: 'user', fields },
+      {
+        slug: 'user',
+        fields: {
+          username: {
+            type: 'string',
+            name: 'Username',
+            unique: true,
+            required: true,
+          },
+        },
+      },
       { name: 'User', pluralName: 'Users' },
     );
     expect(result).toEqual([
@@ -121,24 +121,23 @@ describe('queries', () => {
   });
 
   test('create temp model query with custom queries', () => {
-    const fields = {
-      username: {
-        slug: 'username',
-        type: 'string',
-        name: 'Username',
-        unique: true,
-        required: true,
-      },
-    };
-
     const customQueries: Array<string> = ['get.model("user")'];
     const result = createTempModelQuery(
-      // @ts-expect-error TODO: Fix this type.
-      { slug: 'user', fields },
+      {
+        slug: 'user',
+        fields: {
+          username: {
+            type: 'string',
+            name: 'Username',
+            unique: true,
+            required: true,
+          },
+        },
+      },
       { customQueries, name: 'User', pluralName: 'Users' },
     );
     expect(result).toEqual([
-      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"slug":"username","type":"string","name":"Username","unique":true,"required":true}}})',
+      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',
       ...customQueries,
       'drop.model("user")',
@@ -147,31 +146,26 @@ describe('queries', () => {
   });
 
   test('create temp model query with triggers', () => {
-    const fields = {
-      username: {
-        type: 'string',
-        name: 'Username',
-        unique: true,
-        required: true,
-      },
-    };
-
-    const triggers = {
-      test: {
-        action: 'INSERT',
-        when: 'BEFORE',
-        effects: [],
-      },
-    };
-
     const result = createTempModelQuery(
-      // @ts-expect-error Todo fix this type.
-      { slug: 'user', fields, triggers },
+      {
+        slug: 'user',
+        fields: {
+          username: { type: 'string', name: 'Username', unique: true, required: true },
+        },
+        triggers: {
+          test: {
+            action: 'INSERT',
+            when: 'BEFORE',
+            effects: [],
+          },
+        },
+      },
       {
         name: 'User',
         pluralName: 'Users',
       },
     );
+
     expect(result).toEqual([
       'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
       'add.RONIN_TEMP_user.with(() => get.user())',

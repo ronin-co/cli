@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { diffFields, fieldsAreDifferent, fieldsToRename } from '@/src/utils/field';
+import { CompareModels } from '@/src/utils/field';
+import type { ModelWithFieldsArray } from '@/src/utils/model';
 import type { ModelField } from '@ronin/compiler';
 
 describe('fields', () => {
@@ -15,7 +16,7 @@ describe('fields', () => {
         slug: 'id',
         unique: true,
       };
-      const diff = fieldsAreDifferent(field1, field2);
+      const diff = CompareModels.fieldsAreDifferent(field1, field2);
       expect(diff).toBe(false);
     });
 
@@ -31,7 +32,7 @@ describe('fields', () => {
         required: true,
         defaultValue: 'test',
       };
-      const diff = fieldsAreDifferent(field1, field2);
+      const diff = CompareModels.fieldsAreDifferent(field1, field2);
       expect(diff).toBe(true);
     });
 
@@ -45,7 +46,7 @@ describe('fields', () => {
         slug: 'id',
         defaultValue: 'RONIN_undefined',
       };
-      const diff = fieldsAreDifferent(field1, field2);
+      const diff = CompareModels.fieldsAreDifferent(field1, field2);
       expect(diff).toBe(true);
     });
 
@@ -58,7 +59,7 @@ describe('fields', () => {
         type: 'number',
         slug: 'profile',
       };
-      const diff = fieldsAreDifferent(field1, field2);
+      const diff = CompareModels.fieldsAreDifferent(field1, field2);
       expect(diff).toBe(true);
     });
 
@@ -71,7 +72,7 @@ describe('fields', () => {
         type: 'string',
         slug: 'id',
       };
-      const diff = fieldsAreDifferent(field1, field2);
+      const diff = CompareModels.fieldsAreDifferent(field1, field2);
       expect(diff).toBe(true);
     });
 
@@ -86,7 +87,7 @@ describe('fields', () => {
         slug: 'id',
         name: 'Identifier',
       };
-      const diff = fieldsAreDifferent(field1, field2);
+      const diff = CompareModels.fieldsAreDifferent(field1, field2);
       expect(diff).toBe(true);
     });
 
@@ -101,7 +102,7 @@ describe('fields', () => {
         slug: 'id',
         increment: false,
       };
-      const diff = fieldsAreDifferent(field1, field2);
+      const diff = CompareModels.fieldsAreDifferent(field1, field2);
       expect(diff).toBe(true);
     });
   });
@@ -124,7 +125,18 @@ describe('fields', () => {
           slug: 'id',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], []);
+
+      const localModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: localFields,
+      };
+      const remoteModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: remoteFields,
+      };
+      const diff = await new CompareModels(localModel, remoteModel, {
+        rename: true,
+      }).diff();
       expect(diff).toHaveLength(1);
       expect(diff).toStrictEqual([
         'alter.model(\'account\').create.field({"type":"string","slug":"name"})',
@@ -148,7 +160,18 @@ describe('fields', () => {
           slug: 'name',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], []);
+
+      const localModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: localFields,
+      };
+      const remoteModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: remoteFields,
+      };
+      const diff = await new CompareModels(localModel, remoteModel, {
+        rename: true,
+      }).diff();
       expect(diff).toHaveLength(1);
       expect(diff).toStrictEqual(['alter.model("account").drop.field("name")']);
     });
@@ -168,10 +191,20 @@ describe('fields', () => {
           unique: false,
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], [], {
+      const localModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: localFields,
+      };
+      const remoteModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: remoteFields,
+      };
+      const diff = await new CompareModels(localModel, remoteModel, {
+        rename: true,
         name: 'Account',
         pluralName: 'Accounts',
-      });
+      }).diff();
+
       expect(diff).toHaveLength(4);
       expect(diff).toStrictEqual([
         'create.model({"slug":"RONIN_TEMP_account","fields":{"id":{"type":"number","unique":true}}})',
@@ -196,11 +229,20 @@ describe('fields', () => {
           target: 'profile',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], [], {
+      const localModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: localFields,
+      };
+      const remoteModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: remoteFields,
+      };
+      const diff = await new CompareModels(localModel, remoteModel, {
+        rename: true,
         name: 'Account',
         pluralName: 'Accounts',
-        rename: true,
-      });
+      }).diff();
+
       expect(diff).toHaveLength(5);
       expect(diff).toStrictEqual([
         'create.model({"slug":"RONIN_TEMP_account","fields":{"profile":{"type":"link","target":"profile"}}})',
@@ -224,10 +266,17 @@ describe('fields', () => {
           slug: 'profile',
         },
       ];
-      const diff = await diffFields(localFields, remoteFields, 'account', [], [], {
+      const localModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: localFields,
+      };
+      const remoteModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: remoteFields,
+      };
+      const diff = await new CompareModels(localModel, remoteModel, {
         rename: true,
-      });
-
+      }).diff();
       expect(diff).toHaveLength(1);
       expect(diff).toStrictEqual([
         'alter.model("account").alter.field("profile").to({slug: "newProfile"})',
@@ -253,7 +302,18 @@ describe('fields', () => {
           required: true,
         },
       ];
-      const result = fieldsToRename(localFields, remoteFields);
+
+      const localModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: localFields,
+      };
+      const remoteModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: remoteFields,
+      };
+      const result = new CompareModels(localModel, remoteModel, {
+        rename: true,
+      }).fieldsToRename();
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         from: remoteFields[0],
@@ -276,7 +336,18 @@ describe('fields', () => {
           unique: true,
         },
       ];
-      const result = fieldsToRename(localFields, remoteFields);
+
+      const localModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: localFields,
+      };
+      const remoteModel: ModelWithFieldsArray = {
+        slug: 'account',
+        fields: remoteFields,
+      };
+      const result = new CompareModels(localModel, remoteModel, {
+        rename: true,
+      }).fieldsToRename();
       expect(result).toHaveLength(0);
     });
   });

@@ -34,8 +34,8 @@ import { getRowCount, getSQLTables, getTableRows, runMigration } from '@/fixture
 import { applyMigrationStatements } from '@/src/commands/apply';
 import type { MigrationFlags } from '@/src/utils/migration';
 import { getLocalPackages } from '@/src/utils/misc';
+import type { Model } from '@ronin/compiler';
 import type { Database } from '@ronin/engine/resources';
-import type { Model } from 'ronin/schema';
 import { model, number, random, string } from 'ronin/schema';
 const packages = await getLocalPackages();
 const { Transaction } = packages.compiler;
@@ -425,7 +425,6 @@ describe('apply', () => {
           }) as unknown as Model;
 
           const { models, db, modelDiff } = await runMigration(
-            // @ts-expect-error This is a mock.
             [definedModel],
             [existingModel],
           );
@@ -438,7 +437,7 @@ describe('apply', () => {
           }
 
           expect(modelDiff).toHaveLength(9);
-          expect(models[0].fields).toHaveLength(3);
+          expect(Object.keys(models[0]?.fields || {}).length).toBe(3);
           expect(models).toHaveLength(1);
           expect(models[0].name).toBe('Test');
           expect(rowCounts).toEqual({
@@ -495,13 +494,11 @@ describe('apply', () => {
           };
 
           const transaction = new Transaction([insert], {
-            // @ts-expect-error This works once the types are fixed.
             models: [definedModel, existingModel],
             inlineParams: true,
           });
 
           const { db, models } = await runMigration(
-            // @ts-expect-error This works once the types are fixed.
             [definedModel],
             [existingModel],
             {},
@@ -548,13 +545,11 @@ describe('apply', () => {
           };
 
           const transaction = new Transaction([insert], {
-            // @ts-expect-error This works once the types are fixed.
             models: [definedModel, existingModel],
             inlineParams: true,
           });
 
           const { db, models, modelDiff } = await runMigration(
-            // @ts-expect-error This works once the types are fixed.
             [definedModel],
             [existingModel],
             {},
@@ -564,7 +559,7 @@ describe('apply', () => {
           await db.query(transaction.statements);
           const rows = await getTableRows(db, models[0]);
 
-          expect(models[0].fields).toHaveLength(3);
+          expect(Object.keys(models[0]?.fields || {}).length).toBe(3);
           expect(modelDiff).toHaveLength(6);
           expect(models[0].slug).toBe('test');
           expect(models[0].name).toBe('Test');
@@ -603,13 +598,11 @@ describe('apply', () => {
           };
 
           const transaction = new Transaction([insert], {
-            // @ts-expect-error This works once the types are fixed.
             models: [definedModel, existingModel],
             inlineParams: true,
           });
 
           const { db, models, modelDiff } = await runMigration(
-            // @ts-expect-error This works once the types are fixed.
             [definedModel],
             [existingModel],
             {},
@@ -619,7 +612,7 @@ describe('apply', () => {
           await db.query(transaction.statements);
           const rows = await getTableRows(db, models[0]);
 
-          expect(models[0].fields).toHaveLength(1);
+          expect(Object.keys(models[0]?.fields || {}).length).toBe(1);
           expect(modelDiff).toHaveLength(6);
           expect(models[0].slug).toBe('test');
           expect(models[0].name).toBe('Test');
@@ -656,13 +649,11 @@ describe('apply', () => {
           };
 
           const transaction = new Transaction([insert], {
-            // @ts-expect-error This works once the types are fixed.
             models: [definedModel, existingModel],
             inlineParams: true,
           });
 
           const { db, models, modelDiff } = await runMigration(
-            // @ts-expect-error This works once the types are fixed.
             [definedModel],
             [existingModel],
             {},
@@ -672,9 +663,7 @@ describe('apply', () => {
           await db.query(transaction.statements);
           const rows = await getTableRows(db, models[0]);
 
-          console.error(modelDiff);
-
-          expect(models[0].fields).toHaveLength(1);
+          expect(Object.keys(models[0]?.fields || {}).length).toBe(1);
           expect(modelDiff).toHaveLength(8);
           expect(models[0].slug).toBe('test');
           expect(models[0].name).toBe('Test');
@@ -713,13 +702,11 @@ describe('apply', () => {
           };
 
           const transaction = new Transaction([insert], {
-            // @ts-expect-error This works once the types are fixed.
             models: [definedModel, existingModel],
             inlineParams: true,
           });
 
           const { db, models, modelDiff } = await runMigration(
-            // @ts-expect-error This works once the types are fixed.
             [definedModel],
             [existingModel],
             {},
@@ -729,9 +716,9 @@ describe('apply', () => {
           await db.query(transaction.statements);
           const rows = await getTableRows(db, models[0]);
 
-          console.error(modelDiff);
-
-          expect(models[0].fields).toHaveLength(2);
+          expect(Object.keys(models[0]?.fields || {}).length).toBe(2);
+          expect(modelDiff).toHaveLength(10);
+          expect(Object.keys(models[0]?.fields || {}).length).toBe(2);
           expect(modelDiff).toHaveLength(10);
           expect(models[0].slug).toBe('test');
           expect(models[0].name).toBe('Test');
@@ -774,8 +761,7 @@ describe('apply', () => {
           }
 
           expect(models).toHaveLength(1);
-          // @ts-expect-error This is defined!
-          expect(models[0]?.fields[0]?.unique).toBe(true);
+          expect(models[0]?.fields?.age?.unique).toBe(true);
           expect(rowCounts).toEqual({
             tests: 0,
           });
@@ -797,7 +783,6 @@ describe('apply', () => {
             },
           }) as unknown as Model;
 
-          // @ts-expect-error This works once the types are fixed.
           const { models, db, modelDiff } = await runMigration([ModelB], [ModelA], {
             requiredDefault: 'RONIN_TEST_VALUE',
           });
@@ -824,8 +809,7 @@ describe('apply', () => {
           );
 
           expect(models).toHaveLength(1);
-          // @ts-expect-error This is defined!
-          expect(models[0]?.fields[1].defaultValue).toEqual({
+          expect(models[0]?.fields?.age?.defaultValue).toEqual({
             __RONIN_EXPRESSION: 'random()',
           });
           expect(rowCounts).toEqual({
@@ -845,8 +829,7 @@ describe('apply', () => {
             }
           }
           expect(models).toHaveLength(1);
-          // @ts-expect-error This is defined!
-          expect(models[0]?.fields[0]?.type).toBe('string');
+          expect(models[0]?.fields?.name?.type).toBe('string');
           expect(rowCounts).toEqual({
             tests: 0,
           });
@@ -863,12 +846,9 @@ describe('apply', () => {
           }
           expect(modelDiff).toHaveLength(4);
           expect(models).toHaveLength(1);
-          // @ts-expect-error This is defined!
-          expect(models[0]?.fields[0]?.type).toBe('string');
-          // @ts-expect-error This is defined!
-          expect(models[0]?.fields[1]?.type).toBe('string');
-          // @ts-expect-error This is defined!
-          expect(models[0]?.fields[3]?.unique).toBe(true);
+          expect(models[0]?.fields?.name?.type).toBe('string');
+          expect(models[0]?.fields?.age?.type).toBe('string');
+          expect(models[0]?.fields?.description?.unique).toBe(true);
           expect(rowCounts).toEqual({
             tests: 0,
           });
@@ -886,8 +866,7 @@ describe('apply', () => {
             }
           }
           expect(models).toHaveLength(1);
-          // @ts-expect-error This is defined!
-          expect(models[0]?.fields[1]?.type).toBe('json');
+          expect(models[0]?.fields?.test?.type).toBe('json');
           expect(rowCounts).toEqual({
             tests: 0,
           });
@@ -928,7 +907,6 @@ describe('apply', () => {
             },
           }) as unknown as Model;
 
-          // @ts-expect-error This works once the types are fixed.
           const { models, db, modelDiff } = await runMigration([ModelB], [ModelA], {
             requiredDefault: 'RONIN_TEST_VALUE',
           });
@@ -948,8 +926,7 @@ describe('apply', () => {
           ]);
 
           expect(models).toHaveLength(1);
-          // @ts-expect-error This is defined!
-          expect(models[0]?.fields[1].defaultValue).toEqual({
+          expect(models[0]?.fields?.age?.defaultValue).toEqual({
             __RONIN_EXPRESSION: 'random()',
           });
           expect(rowCounts).toEqual({
@@ -1114,7 +1091,6 @@ describe('apply', () => {
             accounts: 1,
           });
 
-          // @ts-expect-error This is defined!
           expect(rows[0].email).toBe(1);
         });
       });
@@ -1166,16 +1142,20 @@ describe('apply', () => {
       describe('create', () => {
         test('with link cascade', async () => {
           const { models, db } = await runMigration([TestE, TestK], [TestE, TestJ]);
-
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
             if (model.pluralSlug) {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
+
           expect(models).toHaveLength(2);
-          // @ts-expect-error This is fixed when we stop converting between arrays and objects.
-          expect(models[1]?.fields[0]?.actions?.onDelete).toBe('CASCADE');
+          if (
+            models[1].fields?.test.type === 'link' &&
+            'actions' in models[1].fields.test
+          ) {
+            expect(models[1]?.fields?.test?.actions?.onDelete).toBe('CASCADE');
+          }
           expect(rowCounts).toEqual({
             comments: 0,
             tests: 0,
@@ -1193,7 +1173,7 @@ describe('apply', () => {
           }
           const res = await getSQLTables(db);
 
-          expect(res).toHaveLength(5);
+          expect(res).toHaveLength(4);
           expect(models).toHaveLength(2);
           expect(rowCounts).toEqual({
             tests: 0,

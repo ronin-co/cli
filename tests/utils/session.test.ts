@@ -70,7 +70,7 @@ describe('session utils', () => {
 
       const result = await readConfigFile('/test/path', 'test', (content) => content);
 
-      // @ts-expect-error This is a mock
+      // @ts-expect-error This is a mock.
       expect(result).toEqual({});
       expect(spinnerFailSpy).toHaveBeenCalledWith(
         'Failed to read test config file at /test/path',

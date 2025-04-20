@@ -96,7 +96,11 @@ export const runMigration = async (
 
   const packages = await getLocalPackages();
   const models = await getModels(packages, db);
-  const modelDiff = await new Migration(definedModels, models, options).diff();
+  const modelDiff = await new Migration(
+    definedModels,
+    models.map((model) => convertModelToObjectFields(model)),
+    options,
+  ).diff();
   const protocol = new Protocol(packages, modelDiff);
   await protocol.convertToQueryObjects();
 
@@ -109,7 +113,9 @@ export const runMigration = async (
   return {
     db,
     packages,
-    models: await getModels(packages, db),
+    models: (await getModels(packages, db)).map((model) =>
+      convertModelToObjectFields(model),
+    ),
     statements,
     modelDiff,
   };
@@ -153,7 +159,7 @@ export const getSQLTables = async (
 export const getTableRows = async (
   db: Database,
   model: Model,
-): Promise<Array<Record<string, string>>> => {
+): Promise<Array<Record<string, string | number>>> => {
   const transaction = new Transaction(
     [{ get: { [model?.pluralSlug || `${model.slug}s`]: null } }],
     {

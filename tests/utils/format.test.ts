@@ -33,7 +33,7 @@ describe('format', () => {
 
     fs.existsSync = (filePath: fs.PathLike): boolean =>
       filePath.toString().endsWith('biome.json');
-    // @ts-expect-error Override type
+    // @ts-expect-error Override type.
     fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
       JSON.stringify({
         formatter: {
@@ -69,7 +69,7 @@ describe('format', () => {
 
     fs.existsSync = (filePath: fs.PathLike): boolean =>
       filePath.toString().endsWith('.eslintrc.json');
-    // @ts-expect-error Override type
+    // @ts-expect-error Override type.
     fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
       JSON.stringify({
         rules: {
@@ -100,7 +100,7 @@ describe('format', () => {
 
     fs.existsSync = (filePath: fs.PathLike): boolean =>
       filePath.toString().endsWith('.prettierrc.json');
-    // @ts-expect-error Override type
+    // @ts-expect-error Override type.
     fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
       JSON.stringify({
         useTabs: true,
@@ -152,13 +152,13 @@ describe('format', () => {
 
     fs.existsSync = (filePath: fs.PathLike): boolean =>
       filePath.toString().endsWith('.prettierrc.json');
-    // @ts-expect-error Override type
+    // @ts-expect-error Override type.
     fs.readFileSync = (_path: fs.PathOrFileDescriptor): string =>
       '{ this is not valid JSON }';
 
     const config = detectFormatConfig();
 
-    // Should fall back to defaults when config is broken
+    // Should fall back to defaults when config is broken.
     expect(config).toEqual({
       useTabs: false,
       tabWidth: 2,
@@ -168,7 +168,7 @@ describe('format', () => {
       quoteProps: 'asNeeded',
     });
 
-    // Should log error about broken config
+    // Should log error about broken config.
     expect(loggedMessage).toContain('Error parsing .prettierrc.json:');
 
     // Restore originals
@@ -186,7 +186,7 @@ describe('format', () => {
         '(\n  id INTEGER \u001B[1;33mPRIMARY KEY\u001B[0m, name \u001B[1;33mTEXT\u001B[0m\n);',
       );
 
-      // Test case where match fails
+      // Test case where match fails.
       const noMatch = formatSqliteStatement('CREATE TABLE invalid');
       expect(noMatch).toBe(colorizeSql('CREATE TABLE invalid'));
     });
@@ -196,7 +196,7 @@ describe('format', () => {
       const formatted = formatSqliteStatement(input);
       expect(formatted).toContain('\u001B[1;33mALTER\u001B[0m \u001B[1;33mTABLE\u001B');
 
-      // Test case where match fails
+      // Test case where match fails.
       const noMatch = formatSqliteStatement('ALTER TABLE invalid');
       expect(noMatch).toBe(colorizeSql('ALTER TABLE invalid'));
     });
@@ -208,7 +208,7 @@ describe('format', () => {
         '\u001B[1;33mUPDATE\u001B[0m \u001B[1;36m"users"\u001B[0m\n\u001B[1;33mSET\u001B[0m name = \u001B[1;36m"John"\u001B[0m\n\u001B[1;33mRETURNING\u001B[0m *;',
       );
 
-      // Test case where match fails
+      // Test case where match fails.
       const noMatch = formatSqliteStatement('UPDATE invalid');
       expect(noMatch).toBe(colorizeSql('UPDATE invalid'));
     });
@@ -218,7 +218,7 @@ describe('format', () => {
       const formatted = formatSqliteStatement(input);
       expect(formatted).toBe(formatSqliteStatement('DROP TABLE "users";'));
 
-      // Test case where match fails
+      // Test case where match fails.
       const noMatch = formatSqliteStatement('DROP TABLE');
       expect(noMatch).toBe(colorizeSql('DROP TABLE'));
     });
@@ -229,7 +229,7 @@ describe('format', () => {
       const formatted = formatSqliteStatement(input);
       expect(formatted).toContain('\u001B[1;33mINSERT\u001B');
 
-      // Test case where match fails
+      // Test case where match fails.
       const noMatch = formatSqliteStatement('INSERT INTO invalid');
       expect(noMatch).toBe(colorizeSql('INSERT INTO invalid'));
     });

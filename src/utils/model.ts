@@ -7,8 +7,13 @@ import {
   getResponseBody,
 } from '@/src/utils/misc';
 import { spinner } from '@/src/utils/spinner';
-import type { Model } from '@ronin/compiler';
+import type { Model, ModelField } from '@ronin/compiler';
 import type { Database, Row } from '@ronin/engine/resources';
+
+/**
+ * A model with fields in array format.
+ */
+export type ModelWithFieldsArray = Omit<Model, 'fields'> & { fields: Array<ModelField> };
 
 /**
  * Fetches and formats schema models from either production API or local database.
@@ -29,7 +34,7 @@ export const getModels = async (
   token?: string,
   space?: string,
   isLocal = true,
-): Promise<Array<Model>> => {
+): Promise<Array<ModelWithFieldsArray>> => {
   const { Transaction } = packages.compiler;
   const transaction = new Transaction([{ list: { models: null } }]);
 
@@ -78,11 +83,9 @@ export const getModels = async (
   const results = transaction.formatResults<Model>(rawResults, false);
   const models = 'records' in results[0] ? results[0].records : [];
 
-  // @ts-expect-error This will work once the types are fixed.
   return models.map((model) => ({
     ...model,
-    // @ts-expect-error This will work once the types are fixed.
-    fields: convertObjectToArray(model.fields)?.filter(
+    fields: convertObjectToArray(model.fields || {})?.filter(
       (field) => !IGNORED_FIELDS.includes(field.slug),
     ),
   }));
@@ -95,13 +98,14 @@ export const getModels = async (
  *
  * @returns Array of field objects with slugs.
  */
-export const convertObjectToArray = <T extends Record<string, unknown>>(
-  input: T,
-): Array<{ slug: string } & T[keyof T]> => {
-  return Object.entries(input).map(([key, value]) => ({
+export const convertObjectToArray = (
+  fields: Pick<Model, 'fields'>,
+): Array<ModelField> => {
+  if (JSON.stringify(fields) === '{}') return [];
+
+  return Object.entries(fields).map(([key, value]) => ({
     slug: key,
-    // @ts-expect-error This will work once the types are fixed.
-    ...(value as T[keyof T]),
+    ...value,
   }));
 };
 
@@ -112,12 +116,12 @@ export const convertObjectToArray = <T extends Record<string, unknown>>(
  *
  * @returns Object with fields keyed by slug.
  */
-export const convertArrayToObject = <T extends { slug: string }>(
-  fields: Array<T> | undefined,
-): Record<string, Omit<T, 'slug'>> => {
+export const convertArrayFieldToObject = (
+  fields: Array<ModelField> | undefined,
+): Pick<Model, 'fields'> => {
   if (!fields) return {};
 
-  return fields.reduce<Record<string, Omit<T, 'slug'>>>((obj, field) => {
+  return fields.reduce<Record<string, Omit<ModelField, 'slug'>>>((obj, field) => {
     const { slug, ...rest } = field;
     obj[slug] = rest;
     return obj;
@@ -131,11 +135,9 @@ export const convertArrayToObject = <T extends { slug: string }>(
  *
  * @returns Model with fields converted to array format.
  */
-export const convertModelToArrayFields = (model: Model): Model => {
-  // @ts-expect-error This will work once the types are fixed.
-  if (JSON.stringify(model) === '{}') return {};
-  // @ts-expect-error This will work once the types are fixed.
-  return { ...model, fields: convertObjectToArray(model.fields) };
+export const convertModelToArrayFields = (model: Model): ModelWithFieldsArray => {
+  if (JSON.stringify(model) === '{}') return {} as ModelWithFieldsArray;
+  return { ...model, fields: convertObjectToArray(model?.fields || {}) };
 };
 
 /**
@@ -145,7 +147,6 @@ export const convertModelToArrayFields = (model: Model): Model => {
  *
  * @returns Model with fields converted to object format.
  */
-export const convertModelToObjectFields = (model: Model): Model => {
-  // @ts-expect-error This will work once the types are fixed.
-  return { ...model, fields: convertArrayToObject(model.fields) };
+export const convertModelToObjectFields = (model: ModelWithFieldsArray): Model => {
+  return { ...model, fields: convertArrayFieldToObject(model.fields) };
 };

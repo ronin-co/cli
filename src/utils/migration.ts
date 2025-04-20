@@ -1,7 +1,11 @@
 import type { parseArgs } from 'node:util';
-import { diffFields, fieldsToAdjust } from '@/src/utils/field';
+import { CompareModels } from '@/src/utils/field';
 import { type BaseFlags, areArraysEqual } from '@/src/utils/misc';
-import { convertModelToArrayFields, convertModelToObjectFields } from '@/src/utils/model';
+import {
+  type ModelWithFieldsArray,
+  convertModelToArrayFields,
+  convertModelToObjectFields,
+} from '@/src/utils/model';
 import {
   type Queries,
   createIndexQuery,
@@ -26,6 +30,14 @@ export interface MigrationOptions {
   requiredDefault?: boolean | string;
   /** Whether to debug the migration process. */
   debug?: boolean;
+}
+
+/**
+ * Options for migration operations that include model name and plural name.
+ */
+export interface MigrationOptionsWithName extends MigrationOptions {
+  name?: string;
+  pluralName?: string;
 }
 
 /**
@@ -66,10 +78,8 @@ export type MigrationFlags = BaseFlags &
 export class Migration {
   queries: Queries = [];
 
-  #definedModelsWithFieldsArray: Array<Model> = [];
-  #existingModelsWithFieldsArray: Array<Model> = [];
-  #definedModels: Array<Model> = [];
-  #existingModels: Array<Model> = [];
+  #definedModelsWithFieldsArray: Array<ModelWithFieldsArray> = [];
+  #existingModelsWithFieldsArray: Array<ModelWithFieldsArray> = [];
 
   options?: MigrationOptions;
 
@@ -78,8 +88,6 @@ export class Migration {
     existingModels?: Array<Model>,
     options?: MigrationOptions,
   ) {
-    this.#definedModels = definedModels || [];
-    this.#existingModels = existingModels || [];
     this.#definedModelsWithFieldsArray =
       definedModels?.map((model) => convertModelToArrayFields(model)) || [];
     this.#existingModelsWithFieldsArray =
@@ -116,7 +124,11 @@ export class Migration {
     // Handle the models that are not in the database but are defined in code.
     queries.push(
       ...this.createModels(
-        this.modelsToAdd(this.#definedModels, this.#existingModels, exludeFromAdded),
+        this.modelsToAdd(
+          this.#definedModelsWithFieldsArray,
+          this.#existingModelsWithFieldsArray,
+          exludeFromAdded,
+        ),
       ),
     );
 
@@ -179,16 +191,16 @@ export class Migration {
    *   - exludeFromDropped: Models that should be excluded from being dropped (as they're just renamed).
    */
   async renameModels(
-    modelsToBeRenamed: Array<{ to: Model; from: Model }>,
+    modelsToBeRenamed: Array<{ to: ModelWithFieldsArray; from: ModelWithFieldsArray }>,
     options?: MigrationOptions,
   ): Promise<{
     queries: Array<string>;
-    exludeFromAdded?: Array<Model>;
-    exludeFromDropped?: Array<Model>;
+    exludeFromAdded?: Array<ModelWithFieldsArray>;
+    exludeFromDropped?: Array<ModelWithFieldsArray>;
   }> {
     const queries: Array<string> = [];
-    const exludeFromAdded: Array<Model> = [];
-    const exludeFromDropped: Array<Model> = [];
+    const exludeFromAdded: Array<ModelWithFieldsArray> = [];
+    const exludeFromDropped: Array<ModelWithFieldsArray> = [];
 
     if (modelsToBeRenamed.length === 0) {
       return { queries: [] };
@@ -223,8 +235,8 @@ export class Migration {
    * @returns An array of field adjustments as code strings.
    */
   async adjustModels(
-    definedModels: Array<Model>,
-    existingModels: Array<Model>,
+    definedModels: Array<ModelWithFieldsArray>,
+    existingModels: Array<ModelWithFieldsArray>,
     options?: MigrationOptions,
   ): Promise<Array<string>> {
     const queries: Array<string> = [];
@@ -233,15 +245,11 @@ export class Migration {
 
       if (remoteModel) {
         queries.push(
-          ...(await diffFields(
-            // @ts-expect-error This will work once the types are fixed.
-            localModel.fields || [],
-            remoteModel.fields || [],
-            localModel.slug,
-            localModel.indexes || [],
-            localModel.triggers || [],
-            { ...options, name: remoteModel.name, pluralName: remoteModel.pluralName },
-          )),
+          ...(await new CompareModels(localModel, remoteModel, {
+            ...options,
+            name: remoteModel.name,
+            pluralName: remoteModel.pluralName,
+          }).diff()),
         );
       }
     }
@@ -291,13 +299,14 @@ export class Migration {
    * @returns An array of models to delete.
    */
   modelsToDrop(
-    definedModels: Array<Model>,
-    existingModels: Array<Model>,
-    exludeFromAdded?: Array<Model>,
+    definedModels: Array<ModelWithFieldsArray>,
+    existingModels: Array<ModelWithFieldsArray>,
+    exludeFromAdded?: Array<ModelWithFieldsArray>,
   ): Array<Model> {
     return existingModels
       .filter((s) => !definedModels.some((c) => c.slug === s.slug))
-      .filter((s) => !exludeFromAdded?.some((c) => c.slug === s.slug));
+      .filter((s) => !exludeFromAdded?.some((c) => c.slug === s.slug))
+      .map((s) => convertModelToObjectFields(s));
   }
 
   /**
@@ -310,9 +319,9 @@ export class Migration {
    * @returns An array of models to add.
    */
   modelsToAdd(
-    definedModels: Array<Model>,
-    existingModels: Array<Model>,
-    exludeFromDropped?: Array<Model>,
+    definedModels: Array<ModelWithFieldsArray>,
+    existingModels: Array<ModelWithFieldsArray>,
+    exludeFromDropped?: Array<ModelWithFieldsArray>,
   ): Array<Model> {
     const currentModelsMap = new Map(existingModels.map((s) => [s.slug, s]));
     const models: Array<Model> = [];
@@ -324,7 +333,7 @@ export class Migration {
           exludeFromDropped?.some((c) => c.slug === model.slug)
         )
       ) {
-        models.push(model);
+        models.push(convertModelToObjectFields(model));
       }
     }
 
@@ -340,21 +349,26 @@ export class Migration {
    * @returns An array of objects containing the old and new model definitions.
    */
   modelsToRename(
-    definedModels: Array<Model>,
-    existingModels: Array<Model>,
-  ): Array<{ to: Model; from: Model }> {
-    const modelsToBeAdded = this.modelsToAdd(definedModels, existingModels);
-    const modelsToBeDropped = this.modelsToDrop(definedModels, existingModels);
+    definedModels: Array<ModelWithFieldsArray>,
+    existingModels: Array<ModelWithFieldsArray>,
+  ): Array<{ to: ModelWithFieldsArray; from: ModelWithFieldsArray }> {
+    const modelsToBeAdded = this.modelsToAdd(definedModels, existingModels).map((model) =>
+      convertModelToArrayFields(model),
+    );
+    const modelsToBeDropped = this.modelsToDrop(definedModels, existingModels).map(
+      (model) => convertModelToArrayFields(model),
+    );
 
-    const modelsToRename: Array<{ to: Model; from: Model }> = [];
+    const modelsToRename: Array<{
+      to: ModelWithFieldsArray;
+      from: ModelWithFieldsArray;
+    }> = [];
 
     for (const model of modelsToBeAdded) {
       // Check if `model.fields` has the same fields as the current model
       const currentModel = modelsToBeDropped.find((s) => {
         return areArraysEqual(
-          // @ts-expect-error This will work once the types are fixed.
           model.fields?.map((f) => f.slug) || [],
-          // @ts-expect-error This will work once the types are fixed.
           s.fields?.map((f) => f.slug) || [],
         );
       });
@@ -374,7 +388,10 @@ export class Migration {
    *
    * @returns An array of model metadata adjustment queries as code strings.
    */
-  adjustModelMeta(definedModel: Model, existingModel: Model): Array<string> {
+  adjustModelMeta(
+    definedModel: ModelWithFieldsArray,
+    existingModel: ModelWithFieldsArray,
+  ): Array<string> {
     const queries: Array<string> = [];
 
     // The `name` and the `idPrefix` are generated in the compiler thus they are
@@ -412,8 +429,8 @@ export class Migration {
    * @returns An array of model metadata adjustment queries as code strings.
    */
   adjustModelsMeta(
-    definedModels: Array<Model>,
-    existingModels: Array<Model>,
+    definedModels: Array<ModelWithFieldsArray>,
+    existingModels: Array<ModelWithFieldsArray>,
   ): Array<string> {
     const databaseModelsMap = new Map(existingModels.map((s) => [s.slug, s]));
     const queries: Array<string> = [];
@@ -438,8 +455,8 @@ export class Migration {
    * @returns An array of trigger recreation queries as code strings.
    */
   triggersToRecreate(
-    definedModels: Array<Model>,
-    existingModels: Array<Model>,
+    definedModels: Array<ModelWithFieldsArray>,
+    existingModels: Array<ModelWithFieldsArray>,
   ): Array<string> {
     const queries: Array<string> = [];
 
@@ -447,7 +464,7 @@ export class Migration {
       const existingModel = existingModels.find((m) => m.slug === definedModel.slug);
       const modelRecreated = this.modelWillBeRecreated(
         definedModel,
-        existingModel || ({} as Model),
+        existingModel || ({} as ModelWithFieldsArray),
       );
 
       // For each trigger in the defined model, check if a trigger with the same slug exists
@@ -495,12 +512,19 @@ export class Migration {
    *
    * @returns True if the model needs recreation, false otherwise.
    */
-  modelWillBeRecreated(definedModel: Model, existingModel: Model): boolean {
+  modelWillBeRecreated(
+    definedModel: ModelWithFieldsArray,
+    existingModel: ModelWithFieldsArray,
+  ): boolean {
     if (!existingModel) return false;
     return (
-      // @ts-expect-error This will work once the types are fixed.
-      (fieldsToAdjust(definedModel.fields || [], existingModel.fields || []) ?? [])
-        .length > 0
+      (
+        new CompareModels(definedModel, existingModel, {
+          ...this.options,
+          name: existingModel.name,
+          pluralName: existingModel.pluralName,
+        }).fieldsToAdjust(definedModel.fields || [], existingModel.fields || []) ?? []
+      ).length > 0
     );
   }
 
@@ -513,8 +537,8 @@ export class Migration {
    * @returns An array of index recreation queries as code strings.
    */
   indexesToRecreate(
-    definedModels: Array<Model>,
-    existingModels: Array<Model>,
+    definedModels: Array<ModelWithFieldsArray>,
+    existingModels: Array<ModelWithFieldsArray>,
   ): Array<string> {
     const queries: Array<string> = [];
 
@@ -522,7 +546,7 @@ export class Migration {
       const existingModel = existingModels.find((m) => m.slug === definedModel.slug);
       const modelRecreated = this.modelWillBeRecreated(
         definedModel,
-        existingModel || ({} as Model),
+        existingModel || ({} as ModelWithFieldsArray),
       );
 
       // For each index in the defined model, check if an index with the same slug exists
@@ -557,49 +581,5 @@ export class Migration {
     }
 
     return queries;
-  }
-
-  print(type: 'all' | 'queries' | 'summary' = 'all', debugMessage?: string): void {
-    if (this.queries.length === 0) {
-      console.info('No queries to log! 💂🏼‍♂️');
-      return;
-    }
-
-    if (this.options?.debug) {
-      console.log(debugMessage);
-    }
-
-    switch (type) {
-      case 'all': {
-        console.table(
-          this.queries.map((query) => ({ Queries: `\x1b[32m${query}\x1b[0m` })),
-        );
-        console.info(`Total Queries: ${this.queries.length}`);
-        break;
-      }
-      case 'queries': {
-        console.table(
-          this.queries.map((query) => ({ Queries: `\x1b[32m${query}\x1b[0m` })),
-        );
-        break;
-      }
-      case 'summary': {
-        console.info(`Total Queries: ${this.queries.length}`);
-        break;
-      }
-      default: {
-        console.table(
-          this.queries.map((query) => ({ Queries: `\x1b[32m${query}\x1b[0m` })),
-        );
-        console.info(`Total Queries: ${this.queries.length}`);
-        break;
-      }
-    }
-  }
-
-  debug(message: string): void {
-    if (this.options?.debug) {
-      console.warn(message);
-    }
   }
 }
