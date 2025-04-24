@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, jest, mock, test } from 'bun:test';
+import { afterEach, beforeAll, describe, expect, jest, mock, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { readConfig, resetConfig, saveConfig } from '@/src/utils/config';
@@ -6,6 +6,10 @@ import { readConfig, resetConfig, saveConfig } from '@/src/utils/config';
 describe('config', () => {
   const configDir = path.join(process.cwd(), '.ronin');
   const configPath = path.join(configDir, 'config.json');
+
+  beforeAll(() => {
+    jest.clearAllMocks();
+  });
 
   afterEach(() => {
     mock.restore();
