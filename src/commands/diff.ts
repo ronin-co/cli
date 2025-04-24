@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import apply from '@/src/commands/apply';
 import { initializeDatabase } from '@/src/utils/database';
-import { type MigrationFlags, diffModels } from '@/src/utils/migration';
+import { Migration, type MigrationFlags } from '@/src/utils/migration';
 import {
   MIGRATIONS_PATH,
   getLocalPackages,
@@ -55,11 +55,14 @@ export default async (
     ]);
 
     if (flags.debug) {
-      logModelDiffs(definedModels, existingModels);
+      logModelDiffs(definedModels as Array<Model>, existingModels as Array<Model>);
     }
 
     spinner.stop();
-    const modelDiff = await diffModels(definedModels, existingModels);
+    const modelDiff = await new Migration(
+      definedModels as Array<Model>,
+      existingModels as Array<Model>,
+    ).diff();
     spinner.start();
 
     if (modelDiff.length === 0) {
@@ -119,7 +122,7 @@ export default async (
 
     if (flags.sql) {
       const allModels = [...existingModels, ...definedModels];
-      await protocol.saveSQL(`migration-${paddedNum}`, allModels);
+      await protocol.saveSQL(`migration-${paddedNum}`, allModels as Array<Model>);
     }
 
     spinner.succeed('Successfully generated migration protocol file');

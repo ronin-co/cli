@@ -23,15 +23,14 @@ import {
 
 import { stderr } from 'node:process';
 import { Account, CONSTANTS, TestA, TestB } from '@/fixtures/index';
-import { convertModelToArrayFields } from '@/src/utils/model';
 import type { Model } from '@ronin/compiler';
 
 describe('misc', () => {
   beforeEach(() => {
-    // Don't log anything to the console in the tests
+    // Don't log anything to the console in the tests.
     spyOn(console, 'log').mockImplementation(() => {});
     spyOn(console, 'table').mockImplementation(() => {});
-    // @ts-expect-error This is a mock
+    // @ts-expect-error This is a mock.
     spyOn(stderr, 'write').mockImplementation(() => {});
   });
 
@@ -210,7 +209,7 @@ describe('misc', () => {
     test('should return models in code definitions - one model', async () => {
       mock.module('@/src/utils/misc', () => {
         return {
-          getModelDefinitions: (): Array<Model> => [convertModelToArrayFields(Account)],
+          getModelDefinitions: (): Array<Model> => [Account],
         };
       });
 
@@ -220,17 +219,15 @@ describe('misc', () => {
         {
           slug: 'account',
           pluralSlug: 'accounts',
-          fields: [
-            {
-              // @ts-expect-error This will work once the types are fixed.
-              slug: 'name',
+          fields: {
+            name: {
               type: 'string',
             },
-          ],
+          },
         },
       ]);
-      expect(models).toHaveLength(1);
 
+      expect(models).toHaveLength(1);
       mock.restore();
     });
   });

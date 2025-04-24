@@ -6,11 +6,11 @@ interface Config {
   modelsDir?: string;
 }
 
-export const saveConfig = (config: Config): void => {
+export const saveConfig = (config: Config): string => {
   const configDir = path.join(process.cwd(), '.ronin');
 
   if (!fs.existsSync(configDir)) {
-    fs.mkdirSync(configDir);
+    fs.mkdirSync(configDir, { recursive: true });
   }
 
   const configPath = path.join(configDir, 'config.json');
@@ -21,6 +21,8 @@ export const saveConfig = (config: Config): void => {
   }
 
   fs.writeFileSync(configPath, JSON.stringify({ ...existingConfig, ...config }, null, 2));
+
+  return configPath;
 };
 
 export const resetConfig = (): void => {

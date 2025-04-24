@@ -1,6 +1,9 @@
 import { RONIN_SCHEMA_TEMP_SUFFIX } from '@/src/utils/misc';
 import type { Model, ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
 
+export type Query = string;
+export type Queries = Array<Query>;
+
 /**
  * Generates a RONIN query to drop a model.
  *
@@ -13,15 +16,14 @@ import type { Model, ModelField, ModelIndex, ModelTrigger } from '@ronin/compile
  * dropModelQuery('user') // Output: drop.model("user")
  * ```
  */
-export const dropModelQuery = (modelSlug: string): string => {
+export const dropModelQuery = (modelSlug: string): Query => {
   return `drop.model("${modelSlug}")`;
 };
 
 /**
  * Generates a RONIN query to create a model.
  *
- * @param modelSlug - The identifier for the model.
- * @param properties - Optional model properties like fields, pluralSlug, etc.
+ * @param model - The model to create.
  *
  * @returns A string representing the RONIN create model query.
  *
@@ -31,9 +33,9 @@ export const dropModelQuery = (modelSlug: string): string => {
  * createModelQuery('user', { pluralSlug: 'users' }) // Output: create.model({slug:'user',pluralSlug:'users'})
  * ```
  */
-export const createModelQuery = (model: Model): string => {
+export const createModelQuery = (model: Model): Query => {
   const { indexes, triggers, ...rest } = model;
-  return `create.model(${JSON.stringify(rest)})`;
+  return `create.model(${JSON.stringify({ ...rest, indexes, triggers })})`;
 };
 
 /**
@@ -50,7 +52,7 @@ export const createModelQuery = (model: Model): string => {
  * // Output: alter.model('user').create.field({"slug":"email","type":"string","unique":true})
  * ```
  */
-export const createFieldQuery = (modelSlug: string, field: ModelField): string => {
+export const createFieldQuery = (modelSlug: string, field: ModelField): Query => {
   return `alter.model('${modelSlug}').create.field(${JSON.stringify(field)})`;
 };
 
@@ -73,7 +75,7 @@ export const setFieldQuery = (
   modelSlug: string,
   fieldSlug: string,
   fieldTo: Partial<ModelField>,
-): string => {
+): Query => {
   return `alter.model("${modelSlug}").alter.field("${fieldSlug}").to(${JSON.stringify(fieldTo)})`;
 };
 
@@ -90,7 +92,7 @@ export const setFieldQuery = (
  * dropFieldQuery('user', 'email') // Output: alter.model("user").drop.field("email")
  * ```
  */
-export const dropFieldQuery = (modelSlug: string, fieldSlug: string): string => {
+export const dropFieldQuery = (modelSlug: string, fieldSlug: string): Query => {
   return `alter.model("${modelSlug}").drop.field("${fieldSlug}")`;
 };
 
@@ -122,9 +124,9 @@ export const createTempModelQuery = (
     name?: string;
     pluralName?: string;
   },
-): Array<string> => {
+): Queries => {
   const { slug, pluralSlug, fields, indexes: _indexes, triggers, ...rest } = model;
-  const queries: Array<string> = [];
+  const queries: Queries = [];
 
   const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${slug}`;
   const tempModelPluralSlug = pluralSlug
@@ -170,15 +172,20 @@ export const createTempModelQuery = (
 };
 
 /**
+ * Generates a RONIN query to create a temporary column for field updates.
  *
+ * @param modelSlug - The identifier for the model.
+ * @param field - The field configuration to create.
+ *
+ * @returns A string representing the RONIN create field query.
  */
 export const createTempColumnQuery = (
   modelSlug: string,
   field: ModelField,
   _indexes: Array<ModelIndex>,
   _triggers: Array<ModelTrigger>,
-): Array<string> => {
-  const queries: Array<string> = [];
+): Queries => {
+  const queries: Queries = [];
   // 1. Create a temporary field with the new desired type and constraints.
   // The temp field name is prefixed with RONIN_SCHEMA_TEMP_ to avoid conflicts.
   queries.push(
@@ -220,7 +227,7 @@ export const createTempColumnQuery = (
  * renameModelQuery('user', 'account') // Output: alter.model("user").to({slug: "account"})
  * ```
  */
-export const renameModelQuery = (modelSlug: string, newModelSlug: string): string => {
+export const renameModelQuery = (modelSlug: string, newModelSlug: string): Query => {
   return `alter.model("${modelSlug}").to({slug: "${newModelSlug}"})`;
 };
 
@@ -239,7 +246,7 @@ export const renameModelQuery = (modelSlug: string, newModelSlug: string): strin
  * // Output: alter.model("user").alter.field("email").to({slug: "emailAddress"})
  * ```
  */
-export const renameFieldQuery = (modelSlug: string, from: string, to: string): string => {
+export const renameFieldQuery = (modelSlug: string, from: string, to: string): Query => {
   return `alter.model("${modelSlug}").alter.field("${from}").to({slug: "${to}"})`;
 };
 
@@ -251,7 +258,7 @@ export const renameFieldQuery = (modelSlug: string, from: string, to: string): s
  *
  * @returns A string representing the query.
  */
-export const createTriggerQuery = (modelSlug: string, trigger: ModelTrigger): string => {
+export const createTriggerQuery = (modelSlug: string, trigger: ModelTrigger): Query => {
   return `alter.model("${modelSlug}").create.trigger(${JSON.stringify(trigger)})`;
 };
 
@@ -263,7 +270,7 @@ export const createTriggerQuery = (modelSlug: string, trigger: ModelTrigger): st
  *
  * @returns A string representing the query.
  */
-export const dropTriggerQuery = (modelSlug: string, triggerName: string): string => {
+export const dropTriggerQuery = (modelSlug: string, triggerName: string): Query => {
   return `alter.model("${modelSlug}").drop.trigger("${triggerName}")`;
 };
 
@@ -275,7 +282,7 @@ export const dropTriggerQuery = (modelSlug: string, triggerName: string): string
  *
  * @returns A string representing the query.
  */
-export const dropIndexQuery = (modelSlug: string, indexSlug: string): string => {
+export const dropIndexQuery = (modelSlug: string, indexSlug: string): Query => {
   return `alter.model("${modelSlug}").drop.index("${indexSlug}")`;
 };
 
@@ -287,6 +294,6 @@ export const dropIndexQuery = (modelSlug: string, indexSlug: string): string => 
  *
  * @returns A string representing the query.
  */
-export const createIndexQuery = (modelSlug: string, index: ModelIndex): string => {
+export const createIndexQuery = (modelSlug: string, index: ModelIndex): Query => {
   return `alter.model("${modelSlug}").create.index(${JSON.stringify(index)})`;
 };

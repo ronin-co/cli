@@ -2,19 +2,43 @@ import { afterEach, beforeEach, describe, expect, jest, spyOn, test } from 'bun:
 import { mock } from 'bun-bagel';
 
 import * as logInModule from '@/src/commands/login';
-import * as configModule from '@/src/utils/config';
+import { getOrSelectSpaceId, getSpaces } from '@/src/utils/space';
 import * as selectModule from '@inquirer/prompts';
 
-import { getOrSelectSpaceId, getSpaces } from '@/src/utils/space';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 describe('space utils', () => {
+  let tempDir: string;
+  let originalCwd: string;
+
   beforeEach(() => {
     // Reset all mocks before each test
     jest.restoreAllMocks();
+
+    // Create a temporary directory
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ronin-test-'));
+
+    // Save original cwd and change to temp directory
+    originalCwd = process.cwd();
+    process.chdir(tempDir);
+
+    // Create .ronin directory in the temp dir
+    const roninDir = path.join(tempDir, '.ronin');
+    if (!fs.existsSync(roninDir)) {
+      fs.mkdirSync(roninDir, { recursive: true });
+    }
   });
 
   afterEach(() => {
-    // Restore original fetch
+    // Restore original working directory
+    process.chdir(originalCwd);
+
+    // Clean up temporary directory
+    fs.rmSync(tempDir, { recursive: true, force: true });
+
+    // Restore all mocks
     jest.restoreAllMocks();
   });
 
@@ -96,24 +120,16 @@ describe('space utils', () => {
 
   describe('getOrSelectSpaceId', () => {
     test('should return existing space from config', async () => {
-      const readConfigSpy = spyOn(configModule, 'readConfig').mockImplementation(() => ({
-        space: 'existing-space',
-      }));
-      const saveConfigSpy = spyOn(configModule, 'saveConfig');
+      // Write a test config file directly
+      const configDir = path.join(tempDir, '.ronin');
+      const configPath = path.join(configDir, 'config.json');
+      fs.writeFileSync(configPath, JSON.stringify({ space: 'existing-space' }));
 
       const result = await getOrSelectSpaceId();
       expect(result).toBe('existing-space');
-
-      readConfigSpy.mockRestore();
-      saveConfigSpy.mockRestore();
     });
 
     test('should auto-select space when only one available', async () => {
-      const readConfigSpy = spyOn(configModule, 'readConfig').mockImplementation(() => ({
-        space: undefined,
-      }));
-      const saveConfigSpy = spyOn(configModule, 'saveConfig');
-
       const fetchSpy = spyOn(global, 'fetch').mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -128,19 +144,16 @@ describe('space utils', () => {
 
       const result = await getOrSelectSpaceId('test-token');
       expect(result).toBe('single-space');
-      expect(saveConfigSpy).toHaveBeenCalledWith({ space: 'single-space' });
 
-      readConfigSpy.mockRestore();
-      saveConfigSpy.mockRestore();
+      // Verify config was saved
+      const configPath = path.join(tempDir, '.ronin', 'config.json');
+      const savedConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      expect(savedConfig.space).toBe('single-space');
+
       fetchSpy.mockRestore();
     });
 
     test('should prompt user to select space when multiple available', async () => {
-      const readConfigSpy = spyOn(configModule, 'readConfig').mockImplementation(() => ({
-        space: undefined,
-      }));
-      const saveConfigSpy = spyOn(configModule, 'saveConfig');
-
       const fetchSpy = spyOn(global, 'fetch').mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -159,20 +172,17 @@ describe('space utils', () => {
 
       const result = await getOrSelectSpaceId('test-token');
       expect(result).toBe('space-2');
-      expect(saveConfigSpy).toHaveBeenCalledWith({ space: 'space-2' });
 
-      readConfigSpy.mockRestore();
-      saveConfigSpy.mockRestore();
+      // Verify config was saved
+      const configPath = path.join(tempDir, '.ronin', 'config.json');
+      const savedConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      expect(savedConfig.space).toBe('space-2');
+
       fetchSpy.mockRestore();
       selectSpy.mockRestore();
     });
 
     test('should throw error when no spaces available', async () => {
-      const readConfigSpy = spyOn(configModule, 'readConfig').mockImplementation(() => ({
-        space: undefined,
-      }));
-      const saveConfigSpy = spyOn(configModule, 'saveConfig');
-
       const fetchSpy = spyOn(global, 'fetch').mockImplementation(() =>
         Promise.resolve({
           ok: true,
@@ -187,21 +197,11 @@ describe('space utils', () => {
         "You don't have access to any space or your CLI session is invalid",
       );
 
-      readConfigSpy.mockRestore();
-      saveConfigSpy.mockRestore();
       fetchSpy.mockRestore();
     });
 
     test('should throw error when space is not specified', async () => {
-      const readConfigSpy = spyOn(configModule, 'readConfig').mockImplementation(() => ({
-        space: undefined,
-      }));
-      const saveConfigSpy = spyOn(configModule, 'saveConfig');
-
       await expect(getOrSelectSpaceId()).rejects.toThrow('Space ID is not specified');
-
-      readConfigSpy.mockRestore();
-      saveConfigSpy.mockRestore();
     });
 
     test('should login when api returns 400 - fails', async () => {

@@ -17,7 +17,7 @@ const TestAccount = model({
 
   presets: {
     over18: {
-      // @ts-expect-error This will work once the types are fixed.
+      // @ts-expect-error Fix in syntax.
       with: {
         age: {
           being: {
@@ -39,7 +39,7 @@ const TestAccount2 = model({
 
   presets: {
     over18: {
-      // @ts-expect-error This will work once the types are fixed.
+      // @ts-expect-error Fix in syntax.
       with: {
         age: {
           being: {
@@ -269,7 +269,8 @@ export const TestE = model({
     filedTrigger: {
       action: 'DELETE',
       when: 'AFTER',
-      // @ts-expect-error Fix in models
+      // @ts-expect-error Fix in models.
+      // biome-ignore lint/nursery/useExplicitType: This has to be fixed in the syntax.
       effects: () => [add.comment.with({ name: 'Test' })],
     },
   },
@@ -377,8 +378,7 @@ export const TestQ = model({
   slug: 'many',
   fields: {
     name: string(),
-    // @ts-expect-error This will work once the types are fixed.
-    test: link({ target: 'test', kind: 'many', actions: { onDelete: 'CASCADE' } }),
+    test: link({ target: 'test', kind: 'many' }),
   },
 }) as unknown as Model;
 
@@ -389,8 +389,6 @@ export const TestR = model({
     test: link({
       target: 'test',
       kind: 'many',
-      // @ts-expect-error This will work once the types are fixed.
-      actions: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
     }),
   },
 }) as unknown as Model;
@@ -402,8 +400,6 @@ export const TestS = model({
     test: link({
       target: 'test',
       kind: 'many',
-      // @ts-expect-error This will work once the types are fixed.
-      actions: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
     }),
     email: string(),
   },

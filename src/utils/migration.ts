@@ -1,12 +1,13 @@
 import type { parseArgs } from 'node:util';
-import { diffFields, fieldsToAdjust } from '@/src/utils/field';
+import { CompareModels } from '@/src/utils/field';
 import { type BaseFlags, areArraysEqual } from '@/src/utils/misc';
 import {
-  convertArrayToObject,
+  type ModelWithFieldsArray,
   convertModelToArrayFields,
   convertModelToObjectFields,
 } from '@/src/utils/model';
 import {
+  type Queries,
   createIndexQuery,
   createModelQuery,
   createTempModelQuery,
@@ -23,15 +24,25 @@ import type { Model } from '@ronin/compiler';
  * Options for migration operations.
  */
 export interface MigrationOptions {
+  /** Whether to automatically rename models without prompting. */
   rename?: boolean;
+  /** Default value to use for required fields. */
   requiredDefault?: boolean | string;
+  /** Whether to debug the migration process. */
+  debug?: boolean;
+}
+
+/**
+ * Options for migration operations that include model name and plural name.
+ */
+export interface MigrationOptionsWithName extends MigrationOptions {
   name?: string;
   pluralName?: string;
 }
 
 /**
- * Fields to ignore.
- * There are several fields that are not relevant for the migration process.
+ * Fields to ignore during migration.
+ * These fields are not relevant for the migration process.
  */
 export const IGNORED_FIELDS = [
   'id',
@@ -42,421 +53,6 @@ export const IGNORED_FIELDS = [
   'ronin.createdAt',
   'ronin.locked',
 ];
-
-/**
- * Generates the difference (migration steps) between models defined in code and models
- * in the database.
- *
- * @param definedModels - The models defined locally.
- * @param existingModels - The models defined remotely.
- * @param Options - Optional flag to automatically rename models without prompting.
- *
- * @returns An array of migration steps (as code strings).
- */
-export const diffModels = async (
-  definedModelsWithFieldObject: Array<Model>,
-  existingModelsWithFieldObject: Array<Model>,
-  options?: MigrationOptions,
-): Promise<Array<string>> => {
-  const definedModels = definedModelsWithFieldObject.map((model) =>
-    convertModelToArrayFields(model),
-  );
-  const existingModels = existingModelsWithFieldObject.map((model) =>
-    convertModelToArrayFields(model),
-  );
-
-  const queries: Array<string> = [];
-
-  const adjustModelsMetaQueries = adjustModelsMeta(definedModels, existingModels);
-  const recreateIndexes = indexesToRecreate(definedModels, existingModels);
-  const recreateTriggers = triggersToRecreate(definedModels, existingModels);
-
-  const modelsToBeRenamed = modelsToRename(definedModels, existingModels);
-  let modelsToBeAdded = modelsToAdd(definedModels, existingModels);
-  let modelsToBeDropped = modelsToDrop(definedModels, existingModels);
-
-  if (modelsToBeRenamed.length > 0) {
-    // Ask if the user wants to rename the models.
-    for (const model of modelsToBeRenamed) {
-      const confirmRename =
-        options?.rename ||
-        (process.env.NODE_ENV !== 'test' &&
-          (await confirm({
-            message: `Did you mean to rename model: ${model.from.slug} -> ${model.to.slug}`,
-            default: true,
-          })));
-
-      if (confirmRename) {
-        modelsToBeDropped = modelsToBeDropped.filter((s) => s.slug !== model.from.slug);
-        modelsToBeAdded = modelsToBeAdded.filter((s) => s.slug !== model.to.slug);
-        queries.push(renameModelQuery(model.from.slug, model.to.slug));
-      }
-    }
-  }
-
-  queries.push(...adjustModelsMetaQueries);
-  queries.push(...dropModels(modelsToBeDropped));
-
-  queries.push(
-    ...createModels(
-      modelsToBeAdded.map((m) => ({
-        ...m,
-        // @ts-expect-error This will work once the types are fixed.
-        fields: convertArrayToObject(m.fields),
-      })),
-    ),
-  );
-  queries.push(...(await adjustModels(definedModels, existingModels, options)));
-  queries.push(...recreateIndexes);
-  queries.push(...recreateTriggers);
-
-  return queries;
-};
-
-/**
- * Adjusts models by determining the differences in fields between models defined in code
- * and those defined in the database.
- *
- * @param definedModels - The models defined locally.
- * @param existingModels - The models defined in the database.
- * @param rename - Optional flag to automatically rename fields without prompting.
- *
- * @returns An array of field adjustments as code strings.
- */
-const adjustModels = async (
-  definedModels: Array<Model>,
-  existingModels: Array<Model>,
-  options?: MigrationOptions,
-): Promise<Array<string>> => {
-  const diff: Array<string> = [];
-  // Adjust models
-  for (const localModel of definedModels) {
-    const remoteModel = existingModels.find((r) => r.slug === localModel.slug);
-
-    if (remoteModel) {
-      diff.push(
-        ...(await diffFields(
-          // @ts-expect-error This will work once the types are fixed.
-          localModel.fields || [],
-          remoteModel.fields || [],
-          localModel.slug,
-          localModel.indexes || [],
-          localModel.triggers || [],
-          { ...options, name: remoteModel.name, pluralName: remoteModel.pluralName },
-        )),
-      );
-    }
-  }
-
-  return diff;
-};
-
-/**
- * Generates queries to delete models from the database.
- *
- * @param models - An array of models to delete.
- *
- * @returns An array of deletion queries as code strings.
- */
-export const dropModels = (models: Array<Model>): Array<string> => {
-  const diff: Array<string> = [];
-  for (const model of models) {
-    // Queries for deleting the model.
-    // Fields are deleted automatically due to CASCADE ON DELETE.
-    diff.push(dropModelQuery(model.slug));
-  }
-  return diff;
-};
-
-/**
- * Generates queries to create models in the database.
- *
- * @param models - An array of models to create.
- *
- * @returns An array of creation queries as code strings.
- */
-export const createModels = (models: Array<Model>): Array<string> => {
-  const diff: Array<string> = [];
-  for (const model of models) {
-    diff.push(createModelQuery(model));
-  }
-
-  return diff;
-};
-
-/**
- * Filters models defined in code that are missing in the database.
- *
- * @param definedModels - The models defined locally.
- * @param existingModels - The models currently defined in the database.
- *
- * @returns An array of models to delete.
- */
-export const modelsToDrop = (
-  definedModels: Array<Model>,
-  existingModels: Array<Model>,
-): Array<Model> => {
-  return existingModels.filter((s) => !definedModels.some((c) => c.slug === s.slug));
-};
-
-/**
- * Filters models that need to be added to the database as they are defined locally
- * but absent remotely.
- *
- * @param definedModels - The models defined locally.
- * @param existingModels - The models currently defined in the database.
- *
- * @returns An array of models to add.
- */
-export const modelsToAdd = (
-  definedModels: Array<Model>,
-  existingModels: Array<Model>,
-): Array<Model> => {
-  const currentModelsMap = new Map(existingModels.map((s) => [s.slug, s]));
-  const newModels: Array<Model> = [];
-
-  for (const model of definedModels) {
-    if (!currentModelsMap.has(model.slug)) {
-      newModels.push(model);
-    }
-  }
-
-  return newModels;
-};
-
-/**
- * Filters models that need to be renamed in the database.
- *
- * @param definedModels - The models defined locally.
- * @param existingModels - The models currently defined in the database.
- *
- * @returns An array of objects containing the old and new model definitions.
- */
-export const modelsToRename = (
-  definedModels: Array<Model>,
-  existingModels: Array<Model>,
-): Array<{ to: Model; from: Model }> => {
-  const modelsToBeAdded = modelsToAdd(definedModels, existingModels);
-  const modelsToBeDropped = modelsToDrop(definedModels, existingModels);
-
-  const modelsToRename: Array<{ to: Model; from: Model }> = [];
-
-  for (const model of modelsToBeAdded) {
-    // Check if `model.fields` has the same fields as the current model
-    const currentModel = modelsToBeDropped.find((s) => {
-      return areArraysEqual(
-        // @ts-expect-error This will work once the types are fixed.
-        model.fields?.map((f) => f.slug) || [],
-        // @ts-expect-error This will work once the types are fixed.
-        s.fields?.map((f) => f.slug) || [],
-      );
-    });
-    if (currentModel) {
-      modelsToRename.push({ to: model, from: currentModel });
-    }
-  }
-
-  return modelsToRename;
-};
-
-/**
- * Generates queries to adjust model metadata like name and ID prefix.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns An array of model metadata adjustment queries as code strings.
- */
-export const adjustModelMeta = (
-  definedModel: Model,
-  existingModel: Model,
-): Array<string> => {
-  const queries: Array<string> = [];
-
-  // The `name` and the `idPrefix` are generated in the compiler thus they are
-  // not always present. So if the defined model has no name or idPrefix we skip
-  // the model.
-  if (definedModel.idPrefix && definedModel.idPrefix !== existingModel.idPrefix) {
-    // If the prefix changes we need to recreate the model.
-    // All records inserted will use the new prefix. All old IDs are not updated.
-    queries.push(
-      ...createTempModelQuery(
-        // Create a temporary model with the new `idPrefix` but keep the existing fields.
-        // We later on drop, add or modify the fields.
-        convertModelToObjectFields({ ...definedModel, fields: existingModel.fields }),
-        {
-          name: existingModel.name,
-          pluralName: existingModel.pluralName,
-        },
-      ),
-    );
-  } else if (definedModel.name && definedModel.name !== existingModel.name) {
-    queries.push(
-      `alter.model("${definedModel.slug}").to({name: "${definedModel.name}"})`,
-    );
-  }
-
-  return queries;
-};
-
-/**
- * Generates queries to adjust metadata like `name` and `idPrefix` for multiple models.
- *
- * @param definedModels - The models defined locally.
- * @param existingModels - The models currently defined in the database.
- *
- * @returns An array of model metadata adjustment queries as code strings.
- */
-export const adjustModelsMeta = (
-  definedModels: Array<Model>,
-  existingModels: Array<Model>,
-): Array<string> => {
-  const databaseModelsMap = new Map(existingModels.map((s) => [s.slug, s]));
-  const queries: Array<string> = [];
-
-  for (const model of definedModels) {
-    const currentModel = databaseModelsMap.get(model.slug);
-
-    if (currentModel) {
-      queries.push(...adjustModelMeta(model, currentModel));
-    }
-  }
-
-  return queries;
-};
-
-/**
- * Generates queries to recreate triggers for models.
- *
- * @param definedModels - The models defined locally.
- * @param existingModels - The models currently defined in the database.
- *
- * @returns An array of trigger recreation queries as code strings.
- */
-export const triggersToRecreate = (
-  definedModels: Array<Model>,
-  existingModels: Array<Model>,
-): Array<string> => {
-  const diff: Array<string> = [];
-
-  for (const definedModel of definedModels) {
-    const existingModel = existingModels.find((m) => m.slug === definedModel.slug);
-    const modelRecreated = modelWillBeRecreated(
-      definedModel,
-      existingModel || ({} as Model),
-    );
-
-    // For each trigger in the defined model, check if a trigger with the same slug exists
-    // in the database. If it does and its properties differ, drop the existing trigger and
-    // create a new one with the updated properties.
-    const needRecreation = Object.entries(definedModel.triggers || {}).reduce<
-      Array<string>
-    >((acc, [slug, trigger]) => {
-      const existingTrigger = existingModel?.triggers?.[slug];
-      if (
-        existingTrigger &&
-        !(JSON.stringify(trigger) === JSON.stringify(existingTrigger))
-      ) {
-        const createTrigger = createTriggerQuery(definedModel.slug, {
-          slug,
-          ...trigger,
-        });
-        const dropTrigger = dropTriggerQuery(definedModel.slug, slug);
-        acc.push(dropTrigger);
-        acc.push(createTrigger);
-        return acc;
-      }
-      if (definedModel.triggers?.[slug] && !existingModel?.triggers?.[slug]) {
-        acc.push(
-          createTriggerQuery(definedModel.slug, {
-            slug,
-            ...trigger,
-          }),
-        );
-      }
-      return acc;
-    }, []);
-
-    diff.push(...(modelRecreated ? [] : needRecreation));
-  }
-
-  return diff;
-};
-
-/**
- * Checks if a model needs to be recreated due to field changes.
- *
- * @param definedModel - The model defined locally.
- * @param existingModel - The model currently defined in the database.
- *
- * @returns True if the model needs recreation, false otherwise.
- */
-export const modelWillBeRecreated = (
-  definedModel: Model,
-  existingModel: Model,
-): boolean => {
-  if (!existingModel) return false;
-  return (
-    // @ts-expect-error This will work once the types are fixed.
-    (fieldsToAdjust(definedModel.fields || [], existingModel.fields || []) ?? []).length >
-    0
-  );
-};
-
-/**
- * Generates queries to recreate indexes for models.
- *
- * @param definedModels - The models defined locally.
- * @param existingModels - The models currently defined in the database.
- *
- * @returns An array of index recreation queries as code strings.
- */
-export const indexesToRecreate = (
-  definedModels: Array<Model>,
-  existingModels: Array<Model>,
-): Array<string> => {
-  const diff: Array<string> = [];
-
-  for (const definedModel of definedModels) {
-    const existingModel = existingModels.find((m) => m.slug === definedModel.slug);
-    const modelRecreated = modelWillBeRecreated(
-      definedModel,
-      existingModel || ({} as Model),
-    );
-
-    // For each index in the defined model, check if an index with the same slug exists
-    // in the database. If it does and its properties differ, drop the existing index and
-    // create a new one with the updated properties.
-    const needRecreation = Object.entries(definedModel.indexes || {}).reduce<
-      Array<string>
-    >((acc, [slug, index]) => {
-      const existingIndex = existingModel?.indexes?.[slug];
-      if (existingIndex && !(JSON.stringify(index) === JSON.stringify(existingIndex))) {
-        const createIndex = createIndexQuery(definedModel.slug, {
-          slug,
-          ...index,
-        });
-        const dropIndex = dropIndexQuery(definedModel.slug, slug);
-        acc.push(dropIndex);
-        acc.push(createIndex);
-        return acc;
-      }
-      if (definedModel.indexes?.[slug] && !existingModel?.indexes?.[slug]) {
-        acc.push(
-          createIndexQuery(definedModel.slug, {
-            slug,
-            ...index,
-          }),
-        );
-      }
-      return acc;
-    }, []);
-
-    diff.push(...(modelRecreated ? [] : needRecreation));
-  }
-
-  return diff;
-};
 
 /**
  * Command line flags for migration operations.
@@ -475,3 +71,363 @@ export const MIGRATION_FLAGS = {
  */
 export type MigrationFlags = BaseFlags &
   Partial<Record<keyof typeof MIGRATION_FLAGS, boolean>>;
+
+interface RenameResult {
+  queries: Array<string>;
+  excludeFromAdded?: Array<ModelWithFieldsArray>;
+  excludeFromDropped?: Array<ModelWithFieldsArray>;
+}
+
+/**
+ * Class for generating migration queries.
+ *
+ * @param definedModels - The models defined in code.
+ * @param existingModels - The models in the database.
+ * @param options - The options for the migration.
+ *
+ * @example
+ * ```typescript
+ * const migration = new Migration([TestA], [TestB]);
+ * const queries = await migration.diff();
+ * ```
+ */
+export class Migration {
+  queries: Queries = [];
+  options?: MigrationOptions;
+
+  #definedModels: Array<ModelWithFieldsArray> = [];
+  #existingModels: Array<ModelWithFieldsArray> = [];
+
+  constructor(
+    definedModels?: Array<Model>,
+    existingModels?: Array<Model>,
+    options?: MigrationOptions,
+  ) {
+    this.#definedModels = definedModels?.map(convertModelToArrayFields) || [];
+    this.#existingModels = existingModels?.map(convertModelToArrayFields) || [];
+    this.options = options;
+  }
+
+  /**
+   * Generates the difference (migration steps) between models defined in code and models
+   * in the database.
+   *
+   * @returns An array of migration steps (as code strings).
+   */
+  async diff(): Promise<Queries> {
+    const queries: Queries = [];
+
+    const renamedModels = await this.#processRenamedModels();
+    queries.push(...renamedModels.queries);
+
+    queries.push(...this.#generateAddModelQueries(renamedModels.excludeFromAdded));
+    queries.push(...this.#generateDropModelQueries(renamedModels.excludeFromDropped));
+
+    queries.push(...this.#generateMetaChangeQueries());
+    queries.push(...(await this.#generateFieldChangeQueries()));
+
+    queries.push(...this.#generateIndexRecreationQueries());
+    queries.push(...this.#generateTriggerRecreationQueries());
+
+    this.queries = queries;
+    return queries;
+  }
+
+  async #processRenamedModels(): Promise<RenameResult> {
+    const modelsToRename = this.#findModelsToRename();
+    return await this.#generateRenameQueries(modelsToRename);
+  }
+
+  #generateAddModelQueries(excludeModels?: Array<ModelWithFieldsArray>): Array<string> {
+    const modelsToAdd = this.#findModelsToAdd(excludeModels);
+    return modelsToAdd.map(createModelQuery);
+  }
+
+  #generateDropModelQueries(excludeModels?: Array<ModelWithFieldsArray>): Array<string> {
+    const modelsToDrop = this.#findModelsToDrop(excludeModels);
+    return modelsToDrop.map((model) => dropModelQuery(model.slug));
+  }
+
+  #generateMetaChangeQueries(): Array<string> {
+    const queries: Array<string> = [];
+
+    for (const definedModel of this.#definedModels) {
+      const existingModel = this.#existingModels.find(
+        (model) => model.slug === definedModel.slug,
+      );
+
+      if (existingModel) {
+        queries.push(...this.#generateModelMetaQueries(definedModel, existingModel));
+      }
+    }
+
+    return queries;
+  }
+
+  async #generateFieldChangeQueries(): Promise<Array<string>> {
+    const queries: Array<string> = [];
+
+    for (const definedModel of this.#definedModels) {
+      const existingModel = this.#existingModels.find(
+        (model) => model.slug === definedModel.slug,
+      );
+
+      if (existingModel) {
+        const compareOptions = {
+          ...this.options,
+          name: existingModel.name,
+          pluralName: existingModel.pluralName,
+        };
+
+        const compareModels = new CompareModels(
+          definedModel,
+          existingModel,
+          compareOptions,
+        );
+        queries.push(...(await compareModels.diff()));
+      }
+    }
+
+    return queries;
+  }
+
+  #generateModelMetaQueries(
+    definedModel: ModelWithFieldsArray,
+    existingModel: ModelWithFieldsArray,
+  ): Array<string> {
+    const queries: Array<string> = [];
+
+    if (definedModel.idPrefix && definedModel.idPrefix !== existingModel.idPrefix) {
+      const modelWithUpdatedPrefix = {
+        ...definedModel,
+        fields: existingModel.fields,
+      };
+
+      queries.push(
+        ...createTempModelQuery(convertModelToObjectFields(modelWithUpdatedPrefix), {
+          name: existingModel.name,
+          pluralName: existingModel.pluralName,
+        }),
+      );
+    } else if (definedModel.name && definedModel.name !== existingModel.name) {
+      queries.push(
+        `alter.model("${definedModel.slug}").to({name: "${definedModel.name}"})`,
+      );
+    }
+
+    return queries;
+  }
+
+  async #generateRenameQueries(
+    modelsToRename: Array<{ to: ModelWithFieldsArray; from: ModelWithFieldsArray }>,
+  ): Promise<RenameResult> {
+    if (modelsToRename.length === 0) {
+      return { queries: [] };
+    }
+
+    const queries: Array<string> = [];
+    const excludeFromAdded: Array<ModelWithFieldsArray> = [];
+    const excludeFromDropped: Array<ModelWithFieldsArray> = [];
+
+    for (const { to, from } of modelsToRename) {
+      const shouldRename =
+        this.options?.rename ||
+        (await confirm({
+          message: `Did you mean to rename model: ${from.slug} -> ${to.slug}`,
+          default: true,
+        }));
+
+      if (shouldRename) {
+        excludeFromAdded.push(to);
+        excludeFromDropped.push(from);
+        queries.push(renameModelQuery(from.slug, to.slug));
+      }
+    }
+
+    return {
+      queries,
+      excludeFromAdded,
+      excludeFromDropped,
+    };
+  }
+
+  #findModelsToRename(): Array<{ to: ModelWithFieldsArray; from: ModelWithFieldsArray }> {
+    const addedModels = this.#findModelsToAdd().map(convertModelToArrayFields);
+    const droppedModels = this.#findModelsToDrop().map(convertModelToArrayFields);
+
+    const modelPairs: Array<{ to: ModelWithFieldsArray; from: ModelWithFieldsArray }> =
+      [];
+
+    for (const addedModel of addedModels) {
+      const matchingDroppedModel = droppedModels.find((droppedModel) =>
+        areArraysEqual(
+          addedModel.fields?.map((field) => field.slug) || [],
+          droppedModel.fields?.map((field) => field.slug) || [],
+        ),
+      );
+
+      if (matchingDroppedModel) {
+        modelPairs.push({ to: addedModel, from: matchingDroppedModel });
+      }
+    }
+
+    return modelPairs;
+  }
+
+  #findModelsToAdd(excludeModels?: Array<ModelWithFieldsArray>): Array<Model> {
+    return this.#definedModels
+      .filter(
+        (definedModel) =>
+          !(
+            this.#existingModels.some(
+              (existingModel) => existingModel.slug === definedModel.slug,
+            ) ||
+            excludeModels?.some((excludeModel) => excludeModel.slug === definedModel.slug)
+          ),
+      )
+      .map(convertModelToObjectFields);
+  }
+
+  #findModelsToDrop(excludeModels?: Array<ModelWithFieldsArray>): Array<Model> {
+    return this.#existingModels
+      .filter(
+        (existingModel) =>
+          !(
+            this.#definedModels.some(
+              (definedModel) => definedModel.slug === existingModel.slug,
+            ) ||
+            excludeModels?.some(
+              (excludeModel) => excludeModel.slug === existingModel.slug,
+            )
+          ),
+      )
+      .map(convertModelToObjectFields);
+  }
+
+  #needsRecreation(
+    definedModel: ModelWithFieldsArray,
+    existingModel: ModelWithFieldsArray,
+  ): boolean {
+    if (!existingModel) return false;
+
+    const compareModels = new CompareModels(definedModel, existingModel, {
+      ...this.options,
+      name: existingModel.name,
+      pluralName: existingModel.pluralName,
+    });
+
+    const fieldsToAdjust =
+      compareModels.fieldsToAdjust(
+        definedModel.fields || [],
+        existingModel.fields || [],
+      ) || [];
+
+    return fieldsToAdjust.length > 0;
+  }
+
+  #generateIndexRecreationQueries(): Array<string> {
+    const queries: Array<string> = [];
+
+    for (const definedModel of this.#definedModels) {
+      const existingModel = this.#existingModels.find(
+        (model) => model.slug === definedModel.slug,
+      );
+
+      if (!existingModel || this.#needsRecreation(definedModel, existingModel)) {
+        continue;
+      }
+
+      queries.push(...this.#generateIndexDiffQueries(definedModel, existingModel));
+    }
+
+    return queries;
+  }
+
+  #generateIndexDiffQueries(
+    definedModel: ModelWithFieldsArray,
+    existingModel: ModelWithFieldsArray,
+  ): Array<string> {
+    const queries: Array<string> = [];
+    const definedIndexes = definedModel.indexes || {};
+    const existingIndexes = existingModel.indexes || {};
+
+    for (const [indexSlug, indexDef] of Object.entries(definedIndexes)) {
+      const existingIndex = existingIndexes[indexSlug];
+
+      if (!existingIndex) {
+        queries.push(
+          createIndexQuery(definedModel.slug, {
+            slug: indexSlug,
+            ...indexDef,
+          }),
+        );
+        continue;
+      }
+
+      if (JSON.stringify(indexDef) !== JSON.stringify(existingIndex)) {
+        queries.push(dropIndexQuery(definedModel.slug, indexSlug));
+        queries.push(
+          createIndexQuery(definedModel.slug, {
+            slug: indexSlug,
+            ...indexDef,
+          }),
+        );
+      }
+    }
+
+    return queries;
+  }
+
+  #generateTriggerRecreationQueries(): Array<string> {
+    const queries: Array<string> = [];
+
+    for (const definedModel of this.#definedModels) {
+      const existingModel = this.#existingModels.find(
+        (model) => model.slug === definedModel.slug,
+      );
+
+      if (!existingModel || this.#needsRecreation(definedModel, existingModel)) {
+        continue;
+      }
+
+      queries.push(...this.#generateTriggerDiffQueries(definedModel, existingModel));
+    }
+
+    return queries;
+  }
+
+  #generateTriggerDiffQueries(
+    definedModel: ModelWithFieldsArray,
+    existingModel: ModelWithFieldsArray,
+  ): Array<string> {
+    const queries: Array<string> = [];
+    const definedTriggers = definedModel.triggers || {};
+    const existingTriggers = existingModel.triggers || {};
+
+    for (const [triggerSlug, triggerDef] of Object.entries(definedTriggers)) {
+      const existingTrigger = existingTriggers[triggerSlug];
+
+      if (!existingTrigger) {
+        queries.push(
+          createTriggerQuery(definedModel.slug, {
+            slug: triggerSlug,
+            ...triggerDef,
+          }),
+        );
+        continue;
+      }
+
+      if (JSON.stringify(triggerDef) !== JSON.stringify(existingTrigger)) {
+        queries.push(dropTriggerQuery(definedModel.slug, triggerSlug));
+        queries.push(
+          createTriggerQuery(definedModel.slug, {
+            slug: triggerSlug,
+            ...triggerDef,
+          }),
+        );
+      }
+    }
+
+    return queries;
+  }
+}
