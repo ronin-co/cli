@@ -8,9 +8,6 @@ describe('config', () => {
   const configPath = path.join(configDir, 'config.json');
 
   beforeAll(() => {
-    console.error('does config exist?', fs.existsSync(configPath));
-    console.error('does config dir exist?', fs.existsSync(configDir));
-
     mock.restore();
     jest.clearAllMocks();
   });
@@ -30,9 +27,6 @@ describe('config', () => {
   describe('saveConfig', () => {
     test('should save new config', () => {
       const config = { space: 'test-space', modelsDir: 'schema/index.ts' };
-      console.error('path', configPath);
-      console.error('dir', configDir);
-      console.error(fs.existsSync(configPath));
       saveConfig(config);
 
       expect(JSON.parse(fs.readFileSync(configPath, 'utf-8'))).toEqual(config);
