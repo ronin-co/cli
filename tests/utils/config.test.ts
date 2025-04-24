@@ -8,6 +8,9 @@ describe('config', () => {
   const configPath = path.join(configDir, 'config.json');
 
   beforeAll(() => {
+    console.error('does config exist?', fs.existsSync(configPath));
+    console.error('does config dir exist?', fs.existsSync(configDir));
+
     jest.clearAllMocks();
   });
 
