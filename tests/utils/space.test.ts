@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, jest, spyOn, test } from 'bun:test';
 import { mock } from 'bun-bagel';
 
+import fs from 'node:fs';
 import * as logInModule from '@/src/commands/login';
 import * as configModule from '@/src/utils/config';
-import * as selectModule from '@inquirer/prompts';
-
 import { getOrSelectSpaceId, getSpaces } from '@/src/utils/space';
+import * as selectModule from '@inquirer/prompts';
 
 describe('space utils', () => {
   beforeEach(() => {
@@ -139,7 +139,10 @@ describe('space utils', () => {
       const readConfigSpy = spyOn(configModule, 'readConfig').mockImplementation(() => ({
         space: undefined,
       }));
+
       const saveConfigSpy = spyOn(configModule, 'saveConfig');
+
+      spyOn(fs.promises, 'writeFile').mockResolvedValue(undefined);
 
       const fetchSpy = spyOn(global, 'fetch').mockImplementation(() =>
         Promise.resolve({
