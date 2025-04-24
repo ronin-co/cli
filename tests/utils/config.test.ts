@@ -11,6 +11,7 @@ describe('config', () => {
     console.error('does config exist?', fs.existsSync(configPath));
     console.error('does config dir exist?', fs.existsSync(configDir));
 
+    mock.restore();
     jest.clearAllMocks();
   });
 
@@ -27,6 +28,16 @@ describe('config', () => {
   });
 
   describe('saveConfig', () => {
+    test('should save new config', () => {
+      const config = { space: 'test-space', modelsDir: 'schema/index.ts' };
+      console.error('path', configPath);
+      console.error('dir', configDir);
+      console.error(fs.existsSync(configPath));
+      saveConfig(config);
+
+      expect(JSON.parse(fs.readFileSync(configPath, 'utf-8'))).toEqual(config);
+    });
+
     test('should merge with existing config', () => {
       const initialConfig = { space: 'test-space' };
       const additionalConfig = { modelsDir: 'models' };
@@ -37,17 +48,6 @@ describe('config', () => {
       expect(JSON.parse(fs.readFileSync(configPath, 'utf-8'))).toEqual({
         ...initialConfig,
         ...additionalConfig,
-      });
-
-      test('should save new config', () => {
-        const config = { space: 'test-space', modelsDir: 'schema/index.ts' };
-        console.error('path', configPath);
-        console.error('dir', configDir);
-        console.error(fs.existsSync(configPath));
-        const savedConfigPath = saveConfig(config);
-        console.error('savedConfigPath', savedConfigPath);
-
-        expect(JSON.parse(fs.readFileSync(savedConfigPath, 'utf-8'))).toEqual(config);
       });
     });
   });
