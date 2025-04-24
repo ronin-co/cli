@@ -35,7 +35,7 @@ export const dropModelQuery = (modelSlug: string): Query => {
  */
 export const createModelQuery = (model: Model): Query => {
   const { indexes, triggers, ...rest } = model;
-  return `create.model(${JSON.stringify(rest)})`;
+  return `create.model(${JSON.stringify({ ...rest, indexes, triggers })})`;
 };
 
 /**

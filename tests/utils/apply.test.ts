@@ -206,7 +206,7 @@ describe('apply', () => {
     describe('without records', () => {
       describe('create', () => {
         test('simple', async () => {
-          const { models, statements, db } = await runMigration([TestA], []);
+          const { models, statements, db, modelDiff } = await runMigration([TestA], []);
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -215,7 +215,8 @@ describe('apply', () => {
             }
           }
 
-          expect(statements).toHaveLength(4);
+          expect(modelDiff).toHaveLength(1);
+          expect(statements).toHaveLength(3);
           expect(models).toHaveLength(1);
           expect(models[0].name).toBe('Test');
           expect(models[0].pluralName).toBe('Tests');
@@ -226,7 +227,7 @@ describe('apply', () => {
         });
 
         test('with index', async () => {
-          const { models, statements, db } = await runMigration([TestB], []);
+          const { models, statements, db, modelDiff } = await runMigration([TestB], []);
 
           const rowCounts: Record<string, number> = {};
           for (const model of models) {
@@ -234,7 +235,9 @@ describe('apply', () => {
               rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
             }
           }
-          expect(statements).toHaveLength(4);
+
+          expect(modelDiff).toHaveLength(1);
+          expect(statements).toHaveLength(3);
           expect(models).toHaveLength(1);
           expect(models[0].name).toBe('Test');
           expect(models[0].pluralName).toBe('Tests');
