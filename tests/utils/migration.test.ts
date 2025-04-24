@@ -144,7 +144,7 @@ describe('migration', () => {
 
       test('adjust trigger', async () => {
         const modelDiff = await new Migration([TestE], [TestD]).diff();
-        console.error(modelDiff);
+
         expect(modelDiff).toHaveLength(2);
         expect(modelDiff).toStrictEqual([
           'alter.model("comment").drop.trigger("filedTrigger")',

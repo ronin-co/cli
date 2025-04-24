@@ -19,11 +19,12 @@ import { run } from '@/src/index';
 import * as infoModule from '@/src/utils/info';
 import * as miscModule from '@/src/utils/misc';
 import * as modelModule from '@/src/utils/model';
-import { convertObjectToArray } from '@/src/utils/model';
+import { type ModelWithFieldsArray, convertObjectToArray } from '@/src/utils/model';
 import * as sessionModule from '@/src/utils/session';
 import * as spaceModule from '@/src/utils/space';
 import * as confirmModule from '@inquirer/prompts';
 import * as selectModule from '@inquirer/prompts';
+import type { Model } from '@ronin/compiler';
 import * as getPort from 'get-port';
 import * as open from 'open';
 
@@ -507,8 +508,8 @@ describe('CLI', () => {
     // Common migration test setup
     // biome-ignore lint/nursery/useExplicitType: This is a mock.
     const setupMigrationTest = (options?: {
-      modelDiff?: Array<any>;
-      modelDefinitions?: Array<any>;
+      modelDiff?: Array<ModelWithFieldsArray>;
+      modelDefinitions?: Array<Model>;
     }) => {
       spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
       spyOn(modelModule, 'getModels').mockResolvedValue(

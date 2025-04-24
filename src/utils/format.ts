@@ -3,6 +3,18 @@ import path from 'node:path';
 import { createFromBuffer } from '@dprint/formatter';
 import { getPath } from '@dprint/typescript';
 
+// Top-level regex constants for better performance
+const CREATE_TABLE_REGEX = /CREATE TABLE "(.*?)" \((.*?)\)/s;
+const COLUMN_SPLIT_REGEX = /,(?= ")/;
+const ALTER_TABLE_REGEX = /ALTER TABLE "(.*?)" ADD COLUMN "(.*?)" (.*)/;
+const UPDATE_REGEX = /UPDATE "(.*?)" SET (.*?) RETURNING (.*)/;
+const DROP_TABLE_REGEX = /DROP TABLE "(.*?)"/;
+const INSERT_REGEX = /INSERT INTO "(.*?)" \((.*?)\)(.*)/;
+const KEYWORD_REGEX =
+  /\b(CREATE|TABLE|ALTER|ADD|COLUMN|INSERT|INTO|SELECT|TEXT|BOOLEAN|DATETIME|DEFAULT|UPDATE|SET|RETURNING|DROP|ON DELETE|ON UPDATE|PRIMARY KEY|REFERENCES)\b/g;
+const TABLE_NAME_REGEX = /"([^"]+)"/g;
+const STRING_LITERAL_REGEX = /'([^']+)'/g;
+
 /**
  * Detects code formatting configuration from common config files.
  *
@@ -117,20 +129,20 @@ export const formatCode = (code: string): string => {
  */
 export const formatSqliteStatement = (statement: string): string => {
   if (statement.startsWith('CREATE TABLE')) {
-    const match = statement.match(/CREATE TABLE "(.*?)" \((.*)\)/s);
+    const match = statement.match(CREATE_TABLE_REGEX);
     if (match) {
       const tableName = match[1];
       const columns = match[2]
-        .split(/,(?= ")/) // Split only at commas followed by space and quotes
-        .map((col, index) => (index === 0 ? col.trim() : `\n  ${col.trim()}`)) // Indent all but first line
-        .join(', '); // Join with a comma and space for correct formatting
+        .split(COLUMN_SPLIT_REGEX)
+        .map((col, index) => (index === 0 ? col.trim() : `\n  ${col.trim()}`))
+        .join(', ');
 
       return colorizeSql(`CREATE TABLE "${tableName}" (\n  ${columns}\n);`);
     }
   }
 
   if (statement.startsWith('ALTER TABLE')) {
-    const match = statement.match(/ALTER TABLE "(.*?)" ADD COLUMN "(.*?)" (.*)/);
+    const match = statement.match(ALTER_TABLE_REGEX);
     if (match) {
       return colorizeSql(
         `ALTER TABLE "${match[1]}"\n  ADD COLUMN "${match[2]}" ${match[3]};`,
@@ -139,21 +151,21 @@ export const formatSqliteStatement = (statement: string): string => {
   }
 
   if (statement.startsWith('UPDATE')) {
-    const match = statement.match(/UPDATE "(.*?)" SET (.*?) RETURNING (.*)/);
+    const match = statement.match(UPDATE_REGEX);
     if (match) {
       return colorizeSql(`UPDATE "${match[1]}"\nSET ${match[2]}\nRETURNING ${match[3]};`);
     }
   }
 
   if (statement.startsWith('DROP TABLE')) {
-    const match = statement.match(/DROP TABLE "(.*?)"/);
+    const match = statement.match(DROP_TABLE_REGEX);
     if (match) {
       return colorizeSql(`DROP TABLE "${match[1]}";`);
     }
   }
 
   if (statement.startsWith('INSERT INTO')) {
-    const match = statement.match(/INSERT INTO "(.*?)" \((.*?)\)(.*)/);
+    const match = statement.match(INSERT_REGEX);
     if (match) {
       return colorizeSql(`INSERT INTO "${match[1]}"\n  (${match[2]})\n${match[3]};`);
     }
@@ -185,10 +197,7 @@ export const colorizeSql = (sql: string): string => {
   };
 
   return sql
-    .replace(
-      /\b(CREATE|TABLE|ALTER|ADD|COLUMN|INSERT|INTO|SELECT|TEXT|BOOLEAN|DATETIME|DEFAULT|UPDATE|SET|RETURNING|DROP|ON DELETE|ON UPDATE|PRIMARY KEY|REFERENCES)\b/g,
-      `${colors.keyword}$1${colors.reset}`,
-    )
-    .replace(/"([^"]+)"/g, `${colors.table}"$1"${colors.reset}`) // Table & column names
-    .replace(/'([^']+)'/g, `${colors.string}'$1'${colors.reset}`); // String literals
+    .replace(KEYWORD_REGEX, `${colors.keyword}$1${colors.reset}`)
+    .replace(TABLE_NAME_REGEX, `${colors.table}"$1"${colors.reset}`)
+    .replace(STRING_LITERAL_REGEX, `${colors.string}'$1'${colors.reset}`);
 };

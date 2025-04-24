@@ -269,7 +269,8 @@ export const TestE = model({
     filedTrigger: {
       action: 'DELETE',
       when: 'AFTER',
-      // @ts-expect-error Fix in models
+      // @ts-expect-error Fix in models.
+      // biome-ignore lint/nursery/useExplicitType: This has to be fixed in the syntax.
       effects: () => [add.comment.with({ name: 'Test' })],
     },
   },

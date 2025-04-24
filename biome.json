@@ -6,7 +6,6 @@
   },
   "formatter": {
     "enabled": true,
-
     "attributePosition": "multiline",
     "indentStyle": "space",
     "indentWidth": 2,
@@ -30,8 +29,9 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-
-      "a11y": { "all": true },
+      "a11y": {
+        "all": true
+      },
       "complexity": {
         "all": true,
         "noExcessiveCognitiveComplexity": "off"
@@ -48,17 +48,19 @@
       },
       "performance": {
         "all": true,
-
         "noBarrelFile": "off",
         "noReExportAll": "off",
         "noDelete": "off"
       },
-      "security": { "all": true },
+      "security": {
+        "all": true
+      },
       "style": {
         "all": true,
         "noDefaultExport": "off",
         "useBlockStatements": "off",
         "noNonNullAssertion": "off",
+        "noNamespaceImport": "off",
         "useConsistentArrayType": {
           "level": "warn",
           "options": {
@@ -73,7 +75,8 @@
       "suspicious": {
         "all": true,
         "noConsole": "off",
-        "noConsoleLog": "off"
+        "noConsoleLog": "off",
+        "noEmptyBlockStatements": "off"
       }
     }
   },

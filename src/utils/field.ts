@@ -344,7 +344,7 @@ export class CompareModels {
     definedFields: Array<ModelField>,
     existingFields: Array<ModelField>,
   ): Array<ModelField> | undefined {
-    if (!definedFields.length || !existingFields.length) {
+    if (definedFields.length === 0 || existingFields.length === 0) {
       return undefined;
     }
 
@@ -397,8 +397,8 @@ export class CompareModels {
     definedFields: Array<ModelField>,
     existingFields: Array<ModelField>,
   ): Array<ModelField> {
-    if (!definedFields.length) return [];
-    if (!existingFields.length) return definedFields;
+    if (definedFields.length === 0) return [];
+    if (existingFields.length === 0) return definedFields;
 
     const existingSlugs = new Set(existingFields.map((field) => field.slug));
     return definedFields.filter((field) => !existingSlugs.has(field.slug));
@@ -520,8 +520,8 @@ export class CompareModels {
     definedFields: Array<ModelField>,
     existingFields: Array<ModelField>,
   ): Array<ModelField> {
-    if (!existingFields.length) return [];
-    if (!definedFields.length) return existingFields;
+    if (existingFields.length === 0) return [];
+    if (definedFields.length === 0) return existingFields;
 
     const definedSlugs = new Set(definedFields.map((field) => field.slug));
     return existingFields.filter((field) => !definedSlugs.has(field.slug));
