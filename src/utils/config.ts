@@ -10,7 +10,7 @@ export const saveConfig = (config: Config): void => {
   const configDir = path.join(process.cwd(), '.ronin');
 
   if (!fs.existsSync(configDir)) {
-    fs.mkdirSync(configDir);
+    fs.mkdirSync(configDir, { recursive: true });
   }
 
   const configPath = path.join(configDir, 'config.json');
