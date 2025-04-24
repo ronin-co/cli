@@ -8,6 +8,7 @@ interface Config {
 
 export const saveConfig = (config: Config): void => {
   const configDir = path.join(process.cwd(), '.ronin');
+  console.error('configDir', configDir);
 
   if (!fs.existsSync(configDir)) {
     fs.mkdirSync(configDir, { recursive: true });
