@@ -25,9 +25,10 @@ describe('config', () => {
       console.error('path', configPath);
       console.error('dir', configDir);
       console.error(fs.existsSync(configPath));
-      saveConfig(config);
+      const savedConfigPath = saveConfig(config);
+      console.error('savedConfigPath', savedConfigPath);
 
-      expect(JSON.parse(fs.readFileSync(configPath, 'utf-8'))).toEqual(config);
+      expect(JSON.parse(fs.readFileSync(savedConfigPath, 'utf-8'))).toEqual(config);
     });
 
     test('should merge with existing config', () => {
