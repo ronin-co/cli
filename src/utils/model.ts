@@ -92,21 +92,21 @@ export const getModels = async (
 };
 
 /**
- * Converts an object of fields into an array of field objects with slugs.
+ * Converts an object of fields, indexes, or triggers into an array of objects with slugs.
  *
- * @param input - Object containing field definitions.
+ * @param input - Object containing field, index, or trigger definitions.
  *
- * @returns Array of field objects with slugs.
+ * @returns Array of objects with slugs.
  */
-export const convertObjectToArray = (
-  fields: Pick<Model, 'fields'>,
-): Array<ModelField> => {
-  if (JSON.stringify(fields) === '{}') return [];
+export const convertObjectToArray = <T extends { slug: string }>(
+  obj: Pick<Model, 'fields' | 'indexes' | 'triggers'> | undefined,
+): Array<T> => {
+  if (!obj || JSON.stringify(obj) === '{}') return [];
 
-  return Object.entries(fields).map(([key, value]) => ({
+  return Object.entries(obj).map(([key, value]) => ({
     slug: key,
     ...value,
-  }));
+  })) as Array<T>;
 };
 
 /**

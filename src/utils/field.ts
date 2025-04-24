@@ -1,4 +1,4 @@
-import type { MigrationOptions, MigrationOptionsWithName } from '@/src/utils/migration';
+import type { MigrationOptionsWithName } from '@/src/utils/migration';
 import { RONIN_SCHEMA_TEMP_SUFFIX } from '@/src/utils/misc';
 import {
   type ModelWithFieldsArray,
@@ -14,10 +14,32 @@ import {
   renameFieldQuery,
 } from '@/src/utils/queries';
 import { confirm, input, select } from '@inquirer/prompts';
-import type { ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
+import type { Model, ModelField } from '@ronin/compiler';
 
+/**
+ * A utility class for comparing and generating migration queries between two model definitions.
+ * This class is responsible for detecting differences between local and remote model fields,
+ * and generating the necessary SQL queries to synchronize them.
+ *
+ * The comparison process handles:
+ * - Field additions
+ * - Field deletions
+ * - Field renames
+ * - Field type changes
+ * - Constraint modifications (required, unique)
+ * - Default value changes
+ *
+ * @example
+ * ```typescript
+ * const localModel = { slug: 'user', fields: [...] };
+ * const remoteModel = { slug: 'user', fields: [...] };
+ * const comparer = new CompareModels(localModel, remoteModel);
+ * const migrationQueries = await comparer.diff();
+ * ```
+ */
 export class CompareModels {
   queries: Queries = [];
+  #fieldComparisonCache = new Map<string, boolean>();
 
   #definedModel: ModelWithFieldsArray;
   #existingModel: ModelWithFieldsArray;
@@ -58,7 +80,7 @@ export class CompareModels {
   ): Promise<{
     defaultValue: string | boolean | undefined;
     definedFields: Array<ModelField> | undefined;
-    queries: Array<string>;
+    queries: Queries;
   }> {
     let defaultValue: string | boolean | undefined;
     if (field.type === 'boolean') {
@@ -106,8 +128,8 @@ export class CompareModels {
    *
    * @returns An array of migration steps (as SQL query strings).
    */
-  async diff(): Promise<Array<string>> {
-    const diff: Array<string> = [];
+  async diff(): Promise<Queries> {
+    const diff: Queries = [];
     const definedFields = this.#definedModel.fields;
     const existingFields = this.#existingModel.fields;
 
@@ -133,7 +155,6 @@ export class CompareModels {
           if (field.from.type === 'link') {
             diff.push(
               ...createTempModelQuery(
-                // TODO SIMPLER WAY TO DO THIS
                 {
                   slug: this.#localModelSlug,
                   fields: convertArrayFieldToObject([
@@ -193,10 +214,12 @@ export class CompareModels {
       if (field.unique || existingField?.unique) {
         diff.push(
           ...this.adjustFields(
-            this.#localModelSlug,
-            definedFields,
-            convertObjectToArray(this.#definedModel.indexes || []),
-            convertObjectToArray(this.#definedModel.triggers || []),
+            {
+              slug: this.#localModelSlug,
+              fields: convertArrayFieldToObject(definedFields),
+              indexes: this.#definedModel.indexes,
+              triggers: this.#definedModel.triggers,
+            },
             {
               name: this.#options?.name,
               pluralName: this.#options?.pluralName,
@@ -229,10 +252,12 @@ export class CompareModels {
       } else if (field.type === 'link' && field.kind === 'many') {
         diff.push(
           ...this.adjustFields(
-            this.#localModelSlug,
-            definedFields,
-            this.#definedModel.indexes,
-            this.#definedModel.triggers,
+            {
+              slug: this.#localModelSlug,
+              fields: convertArrayFieldToObject(definedFields),
+              indexes: this.#definedModel.indexes,
+              triggers: this.#definedModel.triggers,
+            },
             {
               name: this.#options?.name,
               pluralName: this.#options?.pluralName,
@@ -244,8 +269,8 @@ export class CompareModels {
           ...createTempColumnQuery(
             this.#localModelSlug,
             field,
-            this.#definedModel.indexes,
-            this.#definedModel.triggers,
+            convertObjectToArray(this.#definedModel.indexes),
+            convertObjectToArray(this.#definedModel.triggers),
           ),
         );
       }
@@ -268,31 +293,38 @@ export class CompareModels {
       this.#definedModel.fields,
       this.#existingModel.fields,
     );
-    let fieldsToDropped = this.fieldsToDrop(
+    const fieldsToDropped = this.fieldsToDrop(
       this.#definedModel.fields,
       this.#existingModel.fields,
     );
 
     const fieldsToRename: Array<{ from: ModelField; to: ModelField }> = [];
+    const processedSlugs = new Set<string>();
 
     for (const field of fieldsToCreated) {
-      const currentField = fieldsToDropped.find(
-        (s) =>
-          JSON.stringify({
-            type: field.type,
-            unique: field.unique,
-            required: field.required,
-          }) ===
-          JSON.stringify({
-            type: s.type,
-            unique: s.unique,
-            required: s.required,
-          }),
-      );
+      if (processedSlugs.has(field.slug)) continue;
+
+      const currentField = fieldsToDropped.find((s) => {
+        if (processedSlugs.has(s.slug)) return false;
+
+        const key = `${field.slug}-${s.slug}`;
+        if (this.#fieldComparisonCache.has(key)) {
+          return this.#fieldComparisonCache.get(key);
+        }
+
+        const isMatch =
+          field.type === s.type &&
+          field.unique === s.unique &&
+          field.required === s.required;
+
+        this.#fieldComparisonCache.set(key, isMatch);
+        return isMatch;
+      });
 
       if (currentField) {
         fieldsToRename.push({ from: currentField, to: field });
-        fieldsToDropped = fieldsToDropped.filter((s) => s.slug !== currentField.slug);
+        processedSlugs.add(currentField.slug);
+        processedSlugs.add(field.slug);
       }
     }
 
@@ -312,18 +344,21 @@ export class CompareModels {
     definedFields: Array<ModelField>,
     existingFields: Array<ModelField>,
   ): Array<ModelField> | undefined {
+    if (!definedFields.length || !existingFields.length) {
+      return undefined;
+    }
+
     const diff: Array<ModelField> = [];
-    let needsAdjustment = false;
+    const existingFieldsMap = new Map(existingFields.map((field) => [field.slug, field]));
 
     for (const local of definedFields) {
-      const remote = existingFields.find((r) => r.slug === local.slug);
+      const remote = existingFieldsMap.get(local.slug);
       if (remote && CompareModels.fieldsAreDifferent(local, remote)) {
-        needsAdjustment = true;
         diff.push(local);
       }
     }
 
-    return needsAdjustment ? diff : undefined;
+    return diff.length > 0 ? diff : undefined;
   }
 
   /**
@@ -342,26 +377,12 @@ export class CompareModels {
    *
    * @returns Array of SQL queries to perform the table recreation.
    */
-  adjustFields(
-    modelSlug: string,
-    fields: Array<ModelField>,
-    indexes: Array<ModelIndex>,
-    triggers: Array<ModelTrigger>,
-    options?: MigrationOptions,
-  ): Array<string> {
-    return createTempModelQuery(
-      {
-        slug: modelSlug,
-        fields: convertArrayFieldToObject(fields),
-        indexes,
-        triggers: convertArrayFieldToObject(triggers),
-      },
-      {
-        ...options,
-        name: this.#options?.name,
-        pluralName: this.#options?.pluralName,
-      },
-    );
+  adjustFields(model: Model, options?: MigrationOptionsWithName): Queries {
+    return createTempModelQuery(model, {
+      ...options,
+      name: this.#options?.name,
+      pluralName: this.#options?.pluralName,
+    });
   }
 
   /**
@@ -376,9 +397,11 @@ export class CompareModels {
     definedFields: Array<ModelField>,
     existingFields: Array<ModelField>,
   ): Array<ModelField> {
-    return definedFields.filter(
-      (field) => !existingFields.find((remote) => remote.slug === field.slug),
-    );
+    if (!definedFields.length) return [];
+    if (!existingFields.length) return definedFields;
+
+    const existingSlugs = new Set(existingFields.map((field) => field.slug));
+    return definedFields.filter((field) => !existingSlugs.has(field.slug));
   }
 
   /**
@@ -394,8 +417,8 @@ export class CompareModels {
     modelSlug: string,
     definedFields?: Array<ModelField>,
     existingFields?: Array<ModelField>,
-  ): Promise<Array<string>> {
-    const diff: Array<string> = [];
+  ): Promise<Queries> {
+    const diff: Queries = [];
 
     for (const fieldToAdd of fields) {
       // If the field is unique, we need to create a temporary model with the existing fields
@@ -497,9 +520,11 @@ export class CompareModels {
     definedFields: Array<ModelField>,
     existingFields: Array<ModelField>,
   ): Array<ModelField> {
-    return existingFields.filter(
-      (field) => !definedFields.find((local) => local.slug === field.slug),
-    );
+    if (!existingFields.length) return [];
+    if (!definedFields.length) return existingFields;
+
+    const definedSlugs = new Set(definedFields.map((field) => field.slug));
+    return existingFields.filter((field) => !definedSlugs.has(field.slug));
   }
 
   /**
@@ -514,8 +539,8 @@ export class CompareModels {
     fieldsToDrop: Array<ModelField>,
     modelSlug: string,
     fields: Array<ModelField>,
-  ): Array<string> {
-    const diff: Array<string> = [];
+  ): Queries {
+    const diff: Queries = [];
     for (const fieldToDrop of fieldsToDrop) {
       if (fieldToDrop.unique) {
         return createTempModelQuery(
