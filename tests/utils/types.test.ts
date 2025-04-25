@@ -27,6 +27,24 @@ describe('types utils', () => {
       });
     });
 
+    test('should add an `include` array', async () => {
+      spyOn(fs, 'exists').mockReturnValue(Promise.resolve(true));
+      spyOn(fs, 'readFile').mockReturnValue(
+        Promise.resolve(
+          JSON.stringify({
+            compilerOptions: {},
+          }),
+        ),
+      );
+
+      const config = await typesModule.injectTSConfigInclude('fake-path');
+
+      expect(config).toMatchObject({
+        compilerOptions: {},
+        include: ['**/*.ts', '**/*.tsx', '.ronin/*.d.ts'],
+      });
+    });
+
     test('should extend a populated `include` array', async () => {
       spyOn(fs, 'exists').mockReturnValue(Promise.resolve(true));
       spyOn(fs, 'readFile').mockReturnValue(
