@@ -39,6 +39,11 @@ export const injectTSConfigInclude = async (
     Object.assign(contents, json);
   }
 
+  // If the user has not already provided any `include` files then
+  // we need to add some defaults so their code base continues to act
+  // like it does currently.
+  if (contents.include.length <= 0) contents.include.push('**/*.ts', '**/*.tsx');
+
   // Add the path to the generated TypeScript types to the `tsconfig.json` file.
   if (!contents.include.includes(TYPES_INCLUDE_PATH))
     contents.include.push(TYPES_INCLUDE_PATH);
