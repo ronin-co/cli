@@ -23,7 +23,7 @@ describe('types utils', () => {
 
       expect(config).toMatchObject({
         compilerOptions: {},
-        include: ['.ronin/*.d.ts'],
+        include: ['**/*.ts', '**/*.tsx', '.ronin/*.d.ts'],
       });
     });
 
@@ -61,7 +61,7 @@ describe('types utils', () => {
 
       expect(config).toMatchObject({
         compilerOptions: {},
-        include: ['.ronin/*.d.ts'],
+        include: ['**/*.ts', '**/*.tsx', '.ronin/*.d.ts'],
       });
     });
   });
