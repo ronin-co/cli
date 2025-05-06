@@ -416,15 +416,21 @@ const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
 ): Promise<
   Name extends 'syntax/queries' ? LocalPackages['syntax'] : LocalPackages['compiler']
 > => {
-  const roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
+  try {
+    // First try direct import which works with pnpm.
+    return import(`@ronin/${name}`);
+  } catch {
+    // Fallback to resolveFrom for bun/npm/yarn.
+    const roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
 
-  if (!roninSyntaxPath) {
-    throw new Error(
-      'The "ronin" package must be installed in your project in order to create migrations.',
-    );
+    if (!roninSyntaxPath) {
+      throw new Error(
+        'The "ronin" package must be installed in your project in order to create migrations.',
+      );
+    }
+
+    return import(roninSyntaxPath);
   }
-
-  return import(roninSyntaxPath);
 };
 
 /**
