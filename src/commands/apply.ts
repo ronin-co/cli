@@ -27,13 +27,12 @@ export default async (
 
   try {
     const space = await getOrSelectSpaceId(sessionToken, spinner);
-    const existingModels = await getModels(
-      packages,
+    const existingModels = await getModels(packages, {
       db,
-      appToken ?? sessionToken,
+      token: appToken ?? sessionToken,
       space,
-      flags.local,
-    );
+      isLocal: flags.local,
+    });
 
     // Verify that the migrations directory exists before proceeding.
     if (!fs.existsSync(MIGRATIONS_PATH)) {

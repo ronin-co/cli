@@ -1113,4 +1113,19 @@ describe('CLI', () => {
       ).toBe(true);
     });
   });
+
+  describe('pull', () => {
+    test('pulled model are up to date', async () => {
+      process.argv = ['bun', 'ronin', 'pull'];
+
+      await run({ version: '1.0.0' });
+
+      expect(
+        stderrSpy.mock.calls.some(
+          (call) =>
+            typeof call[0] === 'string' && call[0].includes('Failed to pull models'),
+        ),
+      ).toBe(true);
+    });
+  });
 });
