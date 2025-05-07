@@ -30,13 +30,16 @@ export type ModelWithFieldsArray = Omit<Model, 'fields'> & { fields: Array<Model
  */
 export const getModels = async (
   packages: LocalPackages,
-  db?: Database,
-  token?: string,
-  space?: string,
-  isLocal = true,
+  options?: {
+    db?: Database;
+    token?: string;
+    space?: string;
+    isLocal?: boolean;
+  },
 ): Promise<Array<ModelWithFieldsArray>> => {
   const { Transaction } = packages.compiler;
   const transaction = new Transaction([{ list: { models: null } }]);
+  const { db, token, space, isLocal = true } = options || {};
 
   let rawResults: Array<Array<Row>>;
 
@@ -73,7 +76,7 @@ export const getModels = async (
         spinner.stop();
         const sessionToken = await logIn(undefined, false);
         spinner.start();
-        return getModels(packages, db, sessionToken, space, isLocal);
+        return getModels(packages, { db, token: sessionToken, space, isLocal });
       }
 
       throw new Error(`Failed to fetch remote models: ${(error as Error).message}`);

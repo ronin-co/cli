@@ -95,7 +95,7 @@ export const runMigration = async (
   const db = await queryEphemeralDatabase(existingModels, insertStatements);
 
   const packages = await getLocalPackages();
-  const models = await getModels(packages, db);
+  const models = await getModels(packages, { db });
   const modelDiff = await new Migration(
     definedModels,
     models.map((model) => convertModelToObjectFields(model)),
@@ -113,7 +113,7 @@ export const runMigration = async (
   return {
     db,
     packages,
-    models: (await getModels(packages, db)).map((model) =>
+    models: (await getModels(packages, { db })).map((model) =>
       convertModelToObjectFields(model),
     ),
     statements,

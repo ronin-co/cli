@@ -25,6 +25,7 @@ export const printHelp = (): Promise<void> => {
       diff                                Compare the database schema with the local schema and create a patch
       apply                               Apply the most recent patch to the database
       types                               Generates TypeScript types for the database schema
+      pull                                Pull models from RONIN schema into model definitions file
 
   {bold OPTIONS}
 

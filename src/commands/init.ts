@@ -56,12 +56,10 @@ export default async (
 
     const doModelsExist =
       (
-        await getModels(
-          packages,
-          undefined,
-          token.appToken || token.sessionToken,
-          spaceHandle,
-        )
+        await getModels(packages, {
+          token: token.appToken || token.sessionToken,
+          space: spaceHandle,
+        })
       ).length > 0;
 
     if (doModelsExist) {

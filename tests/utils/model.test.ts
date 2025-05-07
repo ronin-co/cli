@@ -11,7 +11,7 @@ describe('models', async () => {
   describe('local', () => {
     test('get models from local but there are no models', async () => {
       const packages = await getLocalPackages();
-      const models = await getModelsModule.getModels(packages, db);
+      const models = await getModelsModule.getModels(packages, { db });
 
       expect(models).toHaveLength(0);
       expect(models).toStrictEqual([]);
@@ -32,7 +32,7 @@ describe('models', async () => {
        `,
       ]);
 
-      const models = await getModelsModule.getModels(packages, db);
+      const models = await getModelsModule.getModels(packages, { db });
 
       expect(models).toHaveLength(1);
 
@@ -63,13 +63,12 @@ describe('models', async () => {
         method: 'POST',
       });
 
-      const models = await getModelsModule.getModels(
-        packages,
+      const models = await getModelsModule.getModels(packages, {
         db,
-        '',
-        'updated-bsql-ip',
-        false,
-      );
+        token: '',
+        space: 'updated-bsql-ip',
+        isLocal: false,
+      });
 
       expect(models).toStrictEqual([]);
       expect(models).toHaveLength(0);
@@ -92,13 +91,12 @@ describe('models', async () => {
         method: 'POST',
       });
 
-      const models = await getModelsModule.getModels(
-        packages,
+      const models = await getModelsModule.getModels(packages, {
         db,
-        '',
-        'updated-bsql-ip',
-        false,
-      );
+        token: '',
+        space: 'updated-bsql-ip',
+        isLocal: false,
+      });
 
       expect(models).toStrictEqual([]);
       expect(models).toHaveLength(0);
@@ -128,7 +126,12 @@ describe('models', async () => {
       });
 
       try {
-        await getModelsModule.getModels(packages, db, '', 'test', false);
+        await getModelsModule.getModels(packages, {
+          db,
+          token: '',
+          space: 'test',
+          isLocal: false,
+        });
       } catch (err) {
         const error = err as Error;
         expect(error).toBeInstanceOf(Error);

@@ -50,7 +50,12 @@ export default async (
     const [existingModels, definedModels] = await Promise.all([
       flags['force-create']
         ? []
-        : getModels(packages, db, appToken ?? sessionToken, space, flags.local),
+        : getModels(packages, {
+            db,
+            token: appToken ?? sessionToken,
+            space,
+            isLocal: flags.local,
+          }),
       flags['force-drop'] ? [] : getModelDefinitions(modelsInCodePath),
     ]);
 
