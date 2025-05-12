@@ -1112,6 +1112,22 @@ describe('CLI', () => {
         stderrSpy.mock.calls.some((call) => call[0].includes('Network error')),
       ).toBe(true);
     });
+
+    test('should handle network errors when generating zod schemas', async () => {
+      process.argv = ['bun', 'ronin', 'types', '--zod'];
+
+      spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
+      spyOn(global, 'fetch').mockImplementation(() => {
+        throw new Error('Network error');
+      });
+
+      await run({ version: '1.0.0' });
+
+      expect(
+        // @ts-expect-error This is a mock.
+        stderrSpy.mock.calls.some((call) => call[0].includes('Network error')),
+      ).toBe(true);
+    });
   });
 
   describe('pull', () => {

@@ -155,5 +155,20 @@ describe('types utils', () => {
 
       fetchSpy.mockRestore();
     });
+
+    test('should throw error when API request fails', async () => {
+      const fetchSpy = spyOn(global, 'fetch').mockImplementation(() =>
+        Promise.resolve({
+          ok: false,
+          status: 500,
+        } as Response),
+      );
+
+      await expect(
+        typesModule.getZodSchemas('test-token', 'mock-space-id'),
+      ).rejects.toThrow('API request failed with status: 500');
+
+      fetchSpy.mockRestore();
+    });
   });
 });
