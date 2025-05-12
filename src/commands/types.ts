@@ -27,7 +27,7 @@ export default async (
   sessionToken: string | undefined,
   flags?: TypesFlags,
 ): Promise<void> => {
-  const spinner = ora.info('Generating types');
+  const spinner = ora.info(flags?.zod ? 'Generating Zod schemas' : 'Generating types');
 
   const packages = await getLocalPackages();
 
