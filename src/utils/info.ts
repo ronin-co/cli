@@ -35,6 +35,7 @@ export const printHelp = (): Promise<void> => {
       -c, --force-create                  Creates the migration against a clean database
       -d, --force-drop                    Creates a migration that drops all models
       -s, --skip-types                    Skip type generation after applying the migration
+      -z, --zod                           Generate Zod schemas instead of TypeScript types
   `;
   console.log(text);
   process.exit(0);

@@ -69,7 +69,7 @@ export const getSpaceTypes = async (
   slug: string,
 ): Promise<string> => {
   const url = new URL(`/generate/${slug}`, 'https://codegen.ronin.co/');
-  url.searchParams.set('lang', 'typescript');
+  url.searchParams.set('language', 'typescript');
 
   const response = await fetch(url.href, {
     headers: {
@@ -98,7 +98,7 @@ export const getZodSchemas = async (
   slug: string,
 ): Promise<string> => {
   const url = new URL(`/generate/${slug}`, 'https://codegen.ronin.co/');
-  url.searchParams.set('lang', 'zod');
+  url.searchParams.set('language', 'zod');
 
   const response = await fetch(url.href, {
     headers: {
