@@ -97,8 +97,8 @@ export const getZodSchemas = async (
   appTokenOrSessionToken: string | undefined,
   slug: string,
 ): Promise<string> => {
-  const url = new URL(`/generate/zod/${slug}`, 'https://codegen.ronin.co/');
-  url.searchParams.set('lang', 'typescript');
+  const url = new URL(`/generate/${slug}`, 'https://codegen.ronin.co/');
+  url.searchParams.set('lang', 'zod');
 
   const response = await fetch(url.href, {
     headers: {

@@ -127,4 +127,33 @@ describe('types utils', () => {
       fetchSpy.mockRestore();
     });
   });
+
+  describe('getZodSchemas', () => {
+    test('should fetch and return zod schemas successfully', async () => {
+      const mockSpaceId = '123';
+
+      // Mock fetch response.
+      const fetchSpy = spyOn(global, 'fetch').mockImplementation(() =>
+        Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(''),
+        } as Response),
+      );
+
+      const result = await typesModule.getZodSchemas('test-token', mockSpaceId);
+
+      expect(result).toEqual('');
+      expect(fetchSpy).toHaveBeenCalledWith(
+        `https://codegen.ronin.co/generate/${mockSpaceId}?lang=zod`,
+        {
+          headers: {
+            Authorization: 'Bearer test-token',
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      fetchSpy.mockRestore();
+    });
+  });
 });
