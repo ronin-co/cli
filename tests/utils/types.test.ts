@@ -127,4 +127,48 @@ describe('types utils', () => {
       fetchSpy.mockRestore();
     });
   });
+
+  describe('getZodSchemas', () => {
+    test('should fetch and return zod schemas successfully', async () => {
+      const mockSpaceId = '123';
+
+      // Mock fetch response.
+      const fetchSpy = spyOn(global, 'fetch').mockImplementation(() =>
+        Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(''),
+        } as Response),
+      );
+
+      const result = await typesModule.getZodSchemas('test-token', mockSpaceId);
+
+      expect(result).toEqual('');
+      expect(fetchSpy).toHaveBeenCalledWith(
+        `https://codegen.ronin.co/generate/${mockSpaceId}?lang=zod`,
+        {
+          headers: {
+            Authorization: 'Bearer test-token',
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      fetchSpy.mockRestore();
+    });
+
+    test('should throw error when API request fails', async () => {
+      const fetchSpy = spyOn(global, 'fetch').mockImplementation(() =>
+        Promise.resolve({
+          ok: false,
+          status: 500,
+        } as Response),
+      );
+
+      await expect(
+        typesModule.getZodSchemas('test-token', 'mock-space-id'),
+      ).rejects.toThrow('API request failed with status: 500');
+
+      fetchSpy.mockRestore();
+    });
+  });
 });
