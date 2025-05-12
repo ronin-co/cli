@@ -8,6 +8,11 @@ import json5 from 'json5';
 export const TYPES_DTS_FILE_NAME = 'types.d.ts';
 
 /**
+ * The name of the Zod schemas file stored inside the `.ronin` directory.
+ */
+export const ZOD_SCHEMA_FILE_NAME = 'zod.ts';
+
+/**
  * The name of the TypeScript declaration file stored inside the `.ronin` directory.
  */
 const TYPES_INCLUDE_PATH = '.ronin/*.d.ts';
@@ -64,6 +69,35 @@ export const getSpaceTypes = async (
   slug: string,
 ): Promise<string> => {
   const url = new URL(`/generate/${slug}`, 'https://codegen.ronin.co/');
+  url.searchParams.set('lang', 'typescript');
+
+  const response = await fetch(url.href, {
+    headers: {
+      Authorization: `Bearer ${appTokenOrSessionToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) throw new Error(`API request failed with status: ${response.status}`);
+
+  const code = await response.text();
+
+  return code;
+};
+
+/**
+ * Generate the Zod schemas for a space.
+ *
+ * @param appTokenOrSessionToken - Authentication token used to authorize the API request.
+ * @param slug - Slug of the space to generate Zod schemas for.
+ *
+ * @returns Promise resolving to the generated Zod schemas.
+ */
+export const getZodSchemas = async (
+  appTokenOrSessionToken: string | undefined,
+  slug: string,
+): Promise<string> => {
+  const url = new URL(`/generate/zod/${slug}`, 'https://codegen.ronin.co/');
   url.searchParams.set('lang', 'typescript');
 
   const response = await fetch(url.href, {

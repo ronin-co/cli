@@ -6,7 +6,7 @@ import diff from '@/src/commands/diff';
 import initializeProject from '@/src/commands/init';
 import logIn from '@/src/commands/login';
 import pull from '@/src/commands/pull';
-import generateTypes from '@/src/commands/types';
+import generateTypes, { TYPES_FLAGS } from '@/src/commands/types';
 import { printHelp, printVersion } from '@/src/utils/info';
 import { MIGRATION_FLAGS, type MigrationFlags } from '@/src/utils/migration';
 import { BASE_FLAGS, type BaseFlags } from '@/src/utils/misc';
@@ -29,7 +29,7 @@ export const run = async (config: { version: string }): Promise<void> => {
   try {
     ({ values: flags, positionals } = parseArgs({
       args: process.argv,
-      options: { ...BASE_FLAGS, ...MIGRATION_FLAGS },
+      options: { ...BASE_FLAGS, ...MIGRATION_FLAGS, ...TYPES_FLAGS },
       strict: true,
       allowPositionals: true,
     }));
@@ -109,7 +109,7 @@ export const run = async (config: { version: string }): Promise<void> => {
 
   // `types` sub command.
   if (normalizedPositionals.includes('types'))
-    return generateTypes(appToken, session?.token);
+    return generateTypes(appToken, session?.token, flags);
 
   // `pull` sub command
   if (normalizedPositionals.includes('pull')) {
