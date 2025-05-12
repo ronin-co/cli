@@ -100,7 +100,7 @@ describe('types utils', () => {
 
       expect(result).toEqual('');
       expect(fetchSpy).toHaveBeenCalledWith(
-        `https://codegen.ronin.co/generate/${mockSpaceId}?lang=typescript`,
+        `https://codegen.ronin.co/generate/${mockSpaceId}?language=typescript`,
         {
           headers: {
             Authorization: 'Bearer test-token',
@@ -144,7 +144,7 @@ describe('types utils', () => {
 
       expect(result).toEqual('');
       expect(fetchSpy).toHaveBeenCalledWith(
-        `https://codegen.ronin.co/generate/${mockSpaceId}?lang=zod`,
+        `https://codegen.ronin.co/generate/${mockSpaceId}?language=zod`,
         {
           headers: {
             Authorization: 'Bearer test-token',
