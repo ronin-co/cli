@@ -25,7 +25,7 @@ export type TypesFlags = BaseFlags & Partial<Record<keyof typeof TYPES_FLAGS, bo
 export default async (
   appToken: string | undefined,
   sessionToken: string | undefined,
-  flags: TypesFlags,
+  flags?: TypesFlags,
 ): Promise<void> => {
   const spinner = ora.info('Generating types');
 
@@ -38,7 +38,7 @@ export default async (
     const configDirExists = await fs.exists(configDir);
     if (!configDirExists) await fs.mkdir(configDir);
 
-    if (flags.zod) {
+    if (flags?.zod) {
       const zodSchemas = await getZodSchemas(appToken ?? sessionToken, space);
       await fs.writeFile(path.join(configDir, ZOD_SCHEMA_FILE_NAME), zodSchemas);
     } else {
