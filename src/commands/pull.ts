@@ -100,7 +100,7 @@ export const getModelDefinitionsFileContent = async (
   const importStatements = `import { model, ${primitives.join(',')} } from "ronin/schema";`;
 
   const modelDefinitions = models.map((model) => {
-    // We want to remove the ronin property from the model.
+    // We want to exclude the ronin property from the model.
     const { fields, indexes, ronin, ...rest } = model as ModelWithFieldsArray & {
       ronin: unknown;
     };
