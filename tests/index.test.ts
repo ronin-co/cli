@@ -1134,6 +1134,8 @@ describe('CLI', () => {
     test('pulled model are up to date', async () => {
       process.argv = ['bun', 'ronin', 'pull'];
 
+      spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
+
       await run({ version: '1.0.0' });
 
       expect(
