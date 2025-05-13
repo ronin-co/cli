@@ -1,13 +1,15 @@
 import * as fs from 'node:fs/promises';
 import { confirm } from '@inquirer/prompts';
 
+import { dirname } from 'node:path';
 import { formatCode } from '@/src/utils/format';
 import {
   type LocalPackages,
   MODEL_IN_CODE_PATH,
   getLocalPackages,
 } from '@/src/utils/misc';
-import { getModels } from '@/src/utils/model';
+import { type ModelWithFieldsArray, getModels } from '@/src/utils/model';
+import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner as ora } from '@/src/utils/spinner';
 
 /**
@@ -25,12 +27,15 @@ export default async (
   const spinner = ora.start('Pulling models');
   const packages = await getLocalPackages();
 
+  const space = await getOrSelectSpaceId(appToken, spinner);
+
   try {
     // Get models from RONIN schema.
     const modelDefinitions = await getModelDefinitionsFileContent(packages, {
       appToken,
       sessionToken,
       local,
+      space,
     });
 
     if (!modelDefinitions) {
@@ -58,6 +63,10 @@ export default async (
       }
     }
 
+    if (!(await fs.exists(MODEL_IN_CODE_PATH))) {
+      await fs.mkdir(dirname(MODEL_IN_CODE_PATH), { recursive: true });
+    }
+
     await fs.writeFile(MODEL_IN_CODE_PATH, modelDefinitions);
     spinner.succeed('Models pulled');
   } catch {
@@ -72,11 +81,13 @@ export const getModelDefinitionsFileContent = async (
     appToken?: string;
     sessionToken?: string;
     local?: boolean;
+    space?: string;
   },
 ): Promise<string | null> => {
   const models = await getModels(packages, {
     token: options?.appToken || options?.sessionToken,
     isLocal: options?.local,
+    space: options?.space,
   });
 
   if (models.length === 0) {
@@ -89,7 +100,10 @@ export const getModelDefinitionsFileContent = async (
   const importStatements = `import { model, ${primitives.join(',')} } from "ronin/schema";`;
 
   const modelDefinitions = models.map((model) => {
-    const { fields, indexes, ...rest } = model;
+    // We want to remove the ronin property from the model.
+    const { fields, indexes, ronin, ...rest } = model as ModelWithFieldsArray & {
+      ronin: unknown;
+    };
 
     const fieldsDefinition = fields
       .map((field) => {
