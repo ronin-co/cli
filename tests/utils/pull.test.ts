@@ -6,11 +6,13 @@ import pull, { getModelDefinitionsFileContent } from '@/src/commands/pull';
 import { formatCode } from '@/src/utils/format';
 import { MODEL_IN_CODE_PATH, getLocalPackages } from '@/src/utils/misc';
 import * as modelModule from '@/src/utils/model';
+import * as spaceModule from '@/src/utils/space';
 import * as confirmModule from '@inquirer/prompts';
 import { $ } from 'bun';
 
 describe('helper', () => {
   test('no models', async () => {
+    spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('spaceId');
     spyOn(modelModule, 'getModels').mockResolvedValue([]);
 
     const packages = await getLocalPackages();
@@ -177,6 +179,7 @@ describe('command', () => {
   });
 
   test('creates model file', async () => {
+    spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('spaceId');
     // Mock a valid model response.
     spyOn(modelModule, 'getModels').mockResolvedValue([
       {
@@ -207,6 +210,8 @@ describe('command', () => {
   test('overwrites model file', async () => {
     // Create a model file.
     await fs.writeFile(MODEL_IN_CODE_PATH, '// This is a test.');
+
+    spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('spaceId');
 
     // Mock confirm to return true.
     spyOn(confirmModule, 'confirm').mockResolvedValue(true);
@@ -280,6 +285,8 @@ export const User = model({
 });
 `,
     );
+
+    spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('spaceId');
 
     // Mock confirm to return true.
     spyOn(confirmModule, 'confirm').mockResolvedValue(false);
