@@ -5,11 +5,9 @@ import {
   createModelQuery,
   createTempColumnQuery,
   createTempModelQuery,
-  createTriggerQuery,
   dropFieldQuery,
   dropIndexQuery,
   dropModelQuery,
-  dropTriggerQuery,
   renameFieldQuery,
   renameModelQuery,
   setFieldQuery,
@@ -145,36 +143,6 @@ describe('queries', () => {
     ]);
   });
 
-  test('create temp model query with triggers', () => {
-    const result = createTempModelQuery(
-      {
-        slug: 'user',
-        fields: {
-          username: { type: 'string', name: 'Username', unique: true, required: true },
-        },
-        triggers: {
-          test: {
-            action: 'INSERT',
-            when: 'BEFORE',
-            effects: [],
-          },
-        },
-      },
-      {
-        name: 'User',
-        pluralName: 'Users',
-      },
-    );
-
-    expect(result).toEqual([
-      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
-      'add.RONIN_TEMP_user.with(() => get.user())',
-      'drop.model("user")',
-      'alter.model("RONIN_TEMP_user").to({slug: "user", name: "User", pluralName: "Users"})',
-      'alter.model("user").create.trigger({"action":"INSERT","when":"BEFORE","effects":[],"slug":"test"})',
-    ]);
-  });
-
   test('rename model query', () => {
     const result = renameModelQuery('user', 'account');
     expect(result).toBe('alter.model("user").to({slug: "account"})');
@@ -185,23 +153,6 @@ describe('queries', () => {
     expect(result).toBe(
       'alter.model("user").alter.field("email").to({slug: "emailAddress"})',
     );
-  });
-
-  test('add trigger query', () => {
-    const result = createTriggerQuery('user', {
-      slug: 'validateEmail',
-      action: 'INSERT',
-      when: 'BEFORE',
-      effects: [],
-    });
-    expect(result).toBe(
-      'alter.model("user").create.trigger({"slug":"validateEmail","action":"INSERT","when":"BEFORE","effects":[]})',
-    );
-  });
-
-  test('drop trigger query', () => {
-    const result = dropTriggerQuery('user', 'validateEmail');
-    expect(result).toBe('alter.model("user").drop.trigger("validateEmail")');
   });
 
   test('add index query', () => {
@@ -232,13 +183,32 @@ describe('queries', () => {
         required: true,
       },
       [],
-      [],
     );
     expect(result).toEqual([
       `alter.model('user').create.field({"slug":"RONIN_TEMP_username","type":"string","name":"Username","unique":true,"required":true})`,
       'set.user.to.RONIN_TEMP_username(f => f.username)',
       'alter.model("user").drop.field("username")',
       'alter.model("user").alter.field("RONIN_TEMP_username").to({slug: "username"})',
+    ]);
+  });
+
+  test('create temp column query with dot notation', () => {
+    const result = createTempColumnQuery(
+      'user',
+      {
+        slug: 'profile.username',
+        type: 'string',
+        name: 'Username',
+        unique: true,
+        required: true,
+      },
+      [],
+    );
+    expect(result).toEqual([
+      'alter.model(\'user\').create.field({"slug":"RONIN_TEMP_profile.username","type":"string","name":"Username","unique":true,"required":true})',
+      'set.user.to.RONIN_TEMP_profile.username(f => f["profile.username"])',
+      'alter.model("user").drop.field("profile.username")',
+      'alter.model("user").alter.field("RONIN_TEMP_profile.username").to({slug: "profile.username"})',
     ]);
   });
 });

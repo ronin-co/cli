@@ -11,10 +11,8 @@ import {
   createIndexQuery,
   createModelQuery,
   createTempModelQuery,
-  createTriggerQuery,
   dropIndexQuery,
   dropModelQuery,
-  dropTriggerQuery,
   renameModelQuery,
 } from '@/src/utils/queries';
 import { confirm } from '@inquirer/prompts';
@@ -127,7 +125,6 @@ export class Migration {
     queries.push(...(await this.#generateFieldChangeQueries()));
 
     queries.push(...this.#generateIndexRecreationQueries());
-    queries.push(...this.#generateTriggerRecreationQueries());
 
     this.queries = queries;
     return queries;
@@ -370,59 +367,6 @@ export class Migration {
           createIndexQuery(definedModel.slug, {
             slug: indexSlug,
             ...indexDef,
-          }),
-        );
-      }
-    }
-
-    return queries;
-  }
-
-  #generateTriggerRecreationQueries(): Array<string> {
-    const queries: Array<string> = [];
-
-    for (const definedModel of this.#definedModels) {
-      const existingModel = this.#existingModels.find(
-        (model) => model.slug === definedModel.slug,
-      );
-
-      if (!existingModel || this.#needsRecreation(definedModel, existingModel)) {
-        continue;
-      }
-
-      queries.push(...this.#generateTriggerDiffQueries(definedModel, existingModel));
-    }
-
-    return queries;
-  }
-
-  #generateTriggerDiffQueries(
-    definedModel: ModelWithFieldsArray,
-    existingModel: ModelWithFieldsArray,
-  ): Array<string> {
-    const queries: Array<string> = [];
-    const definedTriggers = definedModel.triggers || {};
-    const existingTriggers = existingModel.triggers || {};
-
-    for (const [triggerSlug, triggerDef] of Object.entries(definedTriggers)) {
-      const existingTrigger = existingTriggers[triggerSlug];
-
-      if (!existingTrigger) {
-        queries.push(
-          createTriggerQuery(definedModel.slug, {
-            slug: triggerSlug,
-            ...triggerDef,
-          }),
-        );
-        continue;
-      }
-
-      if (JSON.stringify(triggerDef) !== JSON.stringify(existingTrigger)) {
-        queries.push(dropTriggerQuery(definedModel.slug, triggerSlug));
-        queries.push(
-          createTriggerQuery(definedModel.slug, {
-            slug: triggerSlug,
-            ...triggerDef,
           }),
         );
       }

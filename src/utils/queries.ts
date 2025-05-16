@@ -1,5 +1,5 @@
 import { RONIN_SCHEMA_TEMP_SUFFIX } from '@/src/utils/misc';
-import type { Model, ModelField, ModelIndex, ModelTrigger } from '@ronin/compiler';
+import type { Model, ModelField, ModelIndex } from '@ronin/compiler';
 
 export type Query = string;
 export type Queries = Array<Query>;
@@ -34,8 +34,8 @@ export const dropModelQuery = (modelSlug: string): Query => {
  * ```
  */
 export const createModelQuery = (model: Model): Query => {
-  const { indexes, triggers, ...rest } = model;
-  return `create.model(${JSON.stringify({ ...rest, indexes, triggers })})`;
+  const { indexes, ...rest } = model;
+  return `create.model(${JSON.stringify({ ...rest, indexes })})`;
 };
 
 /**
@@ -125,7 +125,7 @@ export const createTempModelQuery = (
     pluralName?: string;
   },
 ): Queries => {
-  const { slug, pluralSlug, fields, indexes: _indexes, triggers, ...rest } = model;
+  const { slug, pluralSlug, fields, indexes: _indexes, ...rest } = model;
   const queries: Queries = [];
 
   const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${slug}`;
@@ -164,10 +164,6 @@ export const createTempModelQuery = (
     `alter.model("${tempModelSlug}").to({slug: "${slug}", name: "${options?.name}", pluralName: "${options?.pluralName}"${model.pluralSlug ? `, pluralSlug: "${model.pluralSlug}"` : ''}})`,
   );
 
-  for (const [key, value] of Object.entries(triggers || {})) {
-    queries.push(createTriggerQuery(slug, { ...value, slug: key }));
-  }
-
   return queries;
 };
 
@@ -183,7 +179,6 @@ export const createTempColumnQuery = (
   modelSlug: string,
   field: ModelField,
   _indexes: Array<ModelIndex>,
-  _triggers: Array<ModelTrigger>,
 ): Queries => {
   const queries: Queries = [];
   // 1. Create a temporary field with the new desired type and constraints.
@@ -198,7 +193,7 @@ export const createTempColumnQuery = (
   // 2. Copy all data from the original field to the temporary field.
   // This preserves the data while we make the schema changes.
   queries.push(
-    `set.${modelSlug}.to.${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}(f => f.${field.slug})`,
+    `set.${modelSlug}.to.${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}(f => ${field.slug.includes('.') ? `f["${field.slug}"]` : `f.${field.slug}`})`,
   );
 
   // 3. Remove the original field now that data is safely copied.
@@ -248,30 +243,6 @@ export const renameModelQuery = (modelSlug: string, newModelSlug: string): Query
  */
 export const renameFieldQuery = (modelSlug: string, from: string, to: string): Query => {
   return `alter.model("${modelSlug}").alter.field("${from}").to({slug: "${to}"})`;
-};
-
-/**
- * Generates a RONIN query to add a trigger to a model.
- *
- * @param modelSlug - The singular identifier for the model.
- * @param trigger - The name of the trigger to add.
- *
- * @returns A string representing the query.
- */
-export const createTriggerQuery = (modelSlug: string, trigger: ModelTrigger): Query => {
-  return `alter.model("${modelSlug}").create.trigger(${JSON.stringify(trigger)})`;
-};
-
-/**
- * Generates a RONIN query to remove a trigger from a model.
- *
- * @param modelSlug - The singular identifier for the model.
- * @param triggerName - The name of the trigger to remove.
- *
- * @returns A string representing the query.
- */
-export const dropTriggerQuery = (modelSlug: string, triggerName: string): Query => {
-  return `alter.model("${modelSlug}").drop.trigger("${triggerName}")`;
 };
 
 /**

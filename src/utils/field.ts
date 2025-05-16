@@ -162,7 +162,6 @@ export class CompareModels {
                     ...definedFields.filter((local) => local.slug !== field.to.slug),
                   ]),
                   indexes: this.#definedModel.indexes,
-                  triggers: this.#definedModel.triggers,
                 },
                 {
                   name: this.#options?.name,
@@ -218,7 +217,6 @@ export class CompareModels {
               slug: this.#localModelSlug,
               fields: convertArrayFieldToObject(definedFields),
               indexes: this.#definedModel.indexes,
-              triggers: this.#definedModel.triggers,
             },
             {
               name: this.#options?.name,
@@ -239,7 +237,6 @@ export class CompareModels {
               slug: this.#localModelSlug,
               fields: convertArrayFieldToObject(updatedFields || []),
               indexes: this.#definedModel.indexes,
-              triggers: this.#definedModel.triggers,
             },
             {
               name: this.#options?.name,
@@ -256,7 +253,6 @@ export class CompareModels {
               slug: this.#localModelSlug,
               fields: convertArrayFieldToObject(definedFields),
               indexes: this.#definedModel.indexes,
-              triggers: this.#definedModel.triggers,
             },
             {
               name: this.#options?.name,
@@ -270,7 +266,6 @@ export class CompareModels {
             this.#localModelSlug,
             field,
             convertObjectToArray(this.#definedModel.indexes),
-            convertObjectToArray(this.#definedModel.triggers),
           ),
         );
       }

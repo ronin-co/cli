@@ -247,25 +247,6 @@ describe('apply', () => {
           });
         });
 
-        test('with triggers', async () => {
-          const { models, db } = await runMigration([TestC, TestD], []);
-
-          const rowCounts: Record<string, number> = {};
-          for (const model of models) {
-            if (model.pluralSlug) {
-              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
-            }
-          }
-          expect(models).toHaveLength(2);
-          expect(models[0].triggers).toBeDefined();
-          expect(models[0].name).toBe('ThisIsACoolModel');
-          expect(models[0].pluralName).toBe('Tests');
-          expect(rowCounts).toEqual({
-            tests: 0,
-            comments: 0,
-          });
-        });
-
         test('with relationships', async () => {
           const { models, statements, db } = await runMigration([Account, Profile], []);
 
@@ -304,6 +285,49 @@ describe('apply', () => {
             manies: 0,
             tests: 0,
           });
+        });
+
+        test('nested fields', async () => {
+          const NestedFields = model({
+            slug: 'nested',
+            fields: {
+              name: string(),
+              'address.city': string(),
+              'address.state': string(),
+              'address.zip': string(),
+            },
+          }) as unknown as Model;
+
+          const { models, statements, db } = await runMigration([NestedFields], []);
+
+          const rowCounts: Record<string, number> = {};
+          for (const model of models) {
+            if (model.pluralSlug) {
+              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
+            }
+          }
+          expect(models[0].fields).toEqual({
+            name: {
+              name: 'Name',
+              type: 'string',
+            },
+            'address.city': {
+              name: 'Address.city',
+              type: 'string',
+            },
+            'address.state': {
+              name: 'Address.state',
+              type: 'string',
+            },
+            'address.zip': {
+              name: 'Address.zip',
+              type: 'string',
+            },
+          });
+          expect(statements).toHaveLength(2);
+          expect(models).toHaveLength(1);
+          expect(models[0].name).toBe('Nested');
+          expect(models[0].pluralName).toBe('Nesteds');
         });
       });
 
@@ -1244,48 +1268,6 @@ describe('apply', () => {
           expect(rowCounts).toEqual({
             account_news: 0,
             profiles: 0,
-          });
-        });
-      });
-    });
-  });
-
-  describe('trigger', () => {
-    describe('without records', () => {
-      describe('create', () => {
-        test('with model', async () => {
-          const { models, db } = await runMigration([TestC, TestD], []);
-
-          const rowCounts: Record<string, number> = {};
-          for (const model of models) {
-            if (model.pluralSlug) {
-              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
-            }
-          }
-          expect(models).toHaveLength(2);
-          expect(models[0].triggers).toBeDefined();
-          expect(rowCounts).toEqual({
-            tests: 0,
-            comments: 0,
-          });
-        });
-      });
-
-      describe('update', () => {
-        test('action', async () => {
-          const { models, db } = await runMigration([TestE], [TestD]);
-
-          const rowCounts: Record<string, number> = {};
-          for (const model of models) {
-            if (model.pluralSlug) {
-              rowCounts[model.pluralSlug] = await getRowCount(db, model.pluralSlug);
-            }
-          }
-          expect(models).toHaveLength(1);
-          expect(models[0]?.triggers?.filedTrigger?.action).toBe('DELETE');
-          expect(models[0]?.triggers?.filedTrigger?.when).toBe('AFTER');
-          expect(rowCounts).toEqual({
-            comments: 0,
           });
         });
       });

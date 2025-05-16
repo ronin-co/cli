@@ -7,8 +7,6 @@ import {
   TestA,
   TestB,
   TestC,
-  TestD,
-  TestE,
 } from '@/fixtures/index';
 import { Migration } from '@/src/utils/migration';
 
@@ -121,35 +119,6 @@ describe('migration', () => {
 
         expect(modelDiff).toBeDefined();
         expect(modelDiff).toHaveLength(7);
-      });
-    });
-
-    describe('triggers', () => {
-      test('create model and trigger', async () => {
-        const modelDiff = await new Migration([TestD], []).diff();
-
-        expect(modelDiff).toHaveLength(1);
-        expect(modelDiff).toStrictEqual([
-          'create.model({"slug":"comment","fields":{"name":{"type":"string"}},"triggers":{"filedTrigger":{"action":"INSERT","when":"BEFORE","effects":[{"__RONIN_QUERY":{"add":{"comment":{"with":{"name":"Test"}}}}}]}}})',
-        ]);
-      });
-
-      test('drop model and trigger', async () => {
-        const modelDiff = await new Migration([], [TestD]).diff();
-
-        // Only drops the model because triggers are dropped by default
-        expect(modelDiff).toHaveLength(1);
-        expect(modelDiff).toStrictEqual(['drop.model("comment")']);
-      });
-
-      test('adjust trigger', async () => {
-        const modelDiff = await new Migration([TestE], [TestD]).diff();
-
-        expect(modelDiff).toHaveLength(2);
-        expect(modelDiff).toStrictEqual([
-          'alter.model("comment").drop.trigger("filedTrigger")',
-          'alter.model("comment").create.trigger({"slug":"filedTrigger","action":"DELETE","when":"AFTER","effects":[{"__RONIN_QUERY":{"add":{"comment":{"with":{"name":"Test"}}}}}]})',
-        ]);
       });
     });
   });

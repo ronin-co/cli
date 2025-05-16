@@ -102,7 +102,7 @@ export const getModels = async (
  * @returns Array of objects with slugs.
  */
 export const convertObjectToArray = <T extends { slug: string }>(
-  obj: Pick<Model, 'fields' | 'indexes' | 'triggers'> | undefined,
+  obj: Pick<Model, 'fields' | 'indexes'> | undefined,
 ): Array<T> => {
   if (!obj || JSON.stringify(obj) === '{}') return [];
 

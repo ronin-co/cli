@@ -1,5 +1,4 @@
 import type { Model } from '@ronin/compiler';
-import { add } from 'ronin';
 import { blob, boolean, date, json, link, model, number, string } from 'ronin/schema';
 
 export const CONSTANTS = {
@@ -250,29 +249,12 @@ export const TestD = model({
   fields: {
     name: string(),
   },
-  triggers: {
-    filedTrigger: {
-      action: 'INSERT',
-      when: 'BEFORE',
-      // @ts-expect-error Fix in models
-      effects: (): Array<Effect> => [add.comment.with({ name: 'Test' })],
-    },
-  },
 }) as unknown as Model;
 
 export const TestE = model({
   slug: 'comment',
   fields: {
     name: string(),
-  },
-  triggers: {
-    filedTrigger: {
-      action: 'DELETE',
-      when: 'AFTER',
-      // @ts-expect-error Fix in models.
-      // biome-ignore lint/nursery/useExplicitType: This has to be fixed in the syntax.
-      effects: () => [add.comment.with({ name: 'Test' })],
-    },
   },
 }) as unknown as Model;
 
