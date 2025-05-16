@@ -198,7 +198,7 @@ export const createTempColumnQuery = (
   // 2. Copy all data from the original field to the temporary field.
   // This preserves the data while we make the schema changes.
   queries.push(
-    `set.${modelSlug}.to.${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}(f => f.${field.slug})`,
+    `set.${modelSlug}.to.${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}(f => ${field.slug.includes('.') ? `f["${field.slug}"]` : `f.${field.slug}`})`,
   );
 
   // 3. Remove the original field now that data is safely copied.

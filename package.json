@@ -1,6 +1,6 @@
 {
   "name": "@ronin/cli",
-  "version": "0.3.11",
+  "version": "0.3.10",
   "type": "module",
   "description": "The command-line interface for RONIN.",
   "publishConfig": {
@@ -46,7 +46,7 @@
     "@types/bun": "1.2.1",
     "@types/ini": "4.1.1",
     "bun-bagel": "1.1.0",
-    "ronin": "6.4.18",
+    "ronin": "6.6.9",
     "tsup": "8.3.6",
     "typescript": "5.7.3"
   }

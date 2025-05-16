@@ -241,4 +241,25 @@ describe('queries', () => {
       'alter.model("user").alter.field("RONIN_TEMP_username").to({slug: "username"})',
     ]);
   });
+
+  test('create temp column query with dot notation', () => {
+    const result = createTempColumnQuery(
+      'user',
+      {
+        slug: 'profile.username',
+        type: 'string',
+        name: 'Username',
+        unique: true,
+        required: true,
+      },
+      [],
+      [],
+    );
+    expect(result).toEqual([
+      'alter.model(\'user\').create.field({"slug":"RONIN_TEMP_profile.username","type":"string","name":"Username","unique":true,"required":true})',
+      'set.user.to.RONIN_TEMP_profile.username(f => f["profile.username"])',
+      'alter.model("user").drop.field("profile.username")',
+      'alter.model("user").alter.field("RONIN_TEMP_profile.username").to({slug: "profile.username"})',
+    ]);
+  });
 });
