@@ -190,10 +190,13 @@ export const createTempColumnQuery = (
     }),
   );
 
+  const tempFieldSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}`;
   // 2. Copy all data from the original field to the temporary field.
   // This preserves the data while we make the schema changes.
   queries.push(
-    `set.${modelSlug}.to.${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}(f => ${field.slug.includes('.') ? `f["${field.slug}"]` : `f.${field.slug}`})`,
+    `set${modelSlug.includes('.') ? `["${modelSlug}"]` : `.${modelSlug}`}.to${
+      field.slug.includes('.') ? `["${tempFieldSlug}"]` : `.${tempFieldSlug}`
+    }(f => ${field.slug.includes('.') ? `f["${field.slug}"]` : `f.${field.slug}`})`,
   );
 
   // 3. Remove the original field now that data is safely copied.
@@ -202,9 +205,7 @@ export const createTempColumnQuery = (
 
   // 4. Rename the temporary field to the original field name.
   // This completes the field modification while preserving the data.
-  queries.push(
-    renameFieldQuery(modelSlug, `${RONIN_SCHEMA_TEMP_SUFFIX}${field.slug}`, field.slug),
-  );
+  queries.push(renameFieldQuery(modelSlug, tempFieldSlug, field.slug));
 
   return queries;
 };
