@@ -22,7 +22,7 @@
         "@types/bun": "1.2.1",
         "@types/ini": "4.1.1",
         "bun-bagel": "1.1.0",
-        "ronin": "6.6.10",
+        "ronin": "6.6.9",
         "tsup": "8.3.6",
         "typescript": "5.7.3",
       },
@@ -185,7 +185,7 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.41.0", "", { "os": "win32", "cpu": "x64" }, "sha512-h1J+Yzjo/X+0EAvR2kIXJDuTuyT7drc+t2ALY0nIcGPbTatNOf0VWdhEA2Z4AAjv6X1NJV7SYo5oCTYRJhSlVA=="],
 
-    "@ronin/cli": ["@ronin/cli@0.3.12", "", { "dependencies": { "@dprint/formatter": "0.4.1", "@dprint/typescript": "0.93.3", "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.1.23", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "resolve-from": "5.0.0" } }, "sha512-2Fsn3NTMFu7GXoJO6GQv2+yK80Y3duUg8n/u7zJfQ3ND/DuEj6Xa2ycilmIMnzJ7NGkbRR52LI5+HcM4valTXA=="],
+    "@ronin/cli": ["@ronin/cli@0.3.11", "", { "dependencies": { "@dprint/formatter": "0.4.1", "@dprint/typescript": "0.93.3", "@iarna/toml": "2.2.5", "@inquirer/prompts": "7.2.3", "@ronin/engine": "0.1.23", "chalk-template": "1.1.0", "get-port": "7.1.0", "ini": "5.0.0", "json5": "2.2.3", "open": "10.1.0", "ora": "8.1.1", "resolve-from": "5.0.0" } }, "sha512-Qb5RNUwVEcIvbbZIcX9oRVGaVP9SCsYscb8A5E4nZMF5resXSy1XlblDOxIn2vVOkTiwXwZ/o/ZyEaZobrEbtg=="],
 
     "@ronin/compiler": ["@ronin/compiler@0.18.5", "", {}, "sha512-RgWsaJHbAT92qRzLRbqwJiyyuK3rq8IadwIT3zc8+vVZV/P2SL8WLVNIt9+uaezfidRhLzZazzRSwwCTbFyLrA=="],
 
@@ -359,7 +359,7 @@
 
     "rollup": ["rollup@4.41.0", "", { "dependencies": { "@types/estree": "1.0.7" }, "optionalDependencies": { "@rollup/rollup-android-arm-eabi": "4.41.0", "@rollup/rollup-android-arm64": "4.41.0", "@rollup/rollup-darwin-arm64": "4.41.0", "@rollup/rollup-darwin-x64": "4.41.0", "@rollup/rollup-freebsd-arm64": "4.41.0", "@rollup/rollup-freebsd-x64": "4.41.0", "@rollup/rollup-linux-arm-gnueabihf": "4.41.0", "@rollup/rollup-linux-arm-musleabihf": "4.41.0", "@rollup/rollup-linux-arm64-gnu": "4.41.0", "@rollup/rollup-linux-arm64-musl": "4.41.0", "@rollup/rollup-linux-loongarch64-gnu": "4.41.0", "@rollup/rollup-linux-powerpc64le-gnu": "4.41.0", "@rollup/rollup-linux-riscv64-gnu": "4.41.0", "@rollup/rollup-linux-riscv64-musl": "4.41.0", "@rollup/rollup-linux-s390x-gnu": "4.41.0", "@rollup/rollup-linux-x64-gnu": "4.41.0", "@rollup/rollup-linux-x64-musl": "4.41.0", "@rollup/rollup-win32-arm64-msvc": "4.41.0", "@rollup/rollup-win32-ia32-msvc": "4.41.0", "@rollup/rollup-win32-x64-msvc": "4.41.0", "fsevents": "~2.3.2" }, "bin": { "rollup": "dist/bin/rollup" } }, "sha512-HqMFpUbWlf/tvcxBFNKnJyzc7Lk+XO3FGc3pbNBLqEbOz0gPLRgcrlS3UF4MfUrVlstOaP/q0kM6GVvi+LrLRg=="],
 
-    "ronin": ["ronin@6.6.10", "", { "dependencies": { "@ronin/cli": "0.3.12", "@ronin/compiler": "0.18.5", "@ronin/syntax": "0.2.39" }, "bin": { "ronin": "dist/bin/index.js" } }, "sha512-cHZEfjkRj7ereotz/2RwxUY+kzMYO7bEW9kPyqjqL6w39qZCvqg8KQgHs/ZWIrwVhkyxmufLr26gub2KEy82CA=="],
+    "ronin": ["ronin@6.6.9", "", { "dependencies": { "@ronin/cli": "0.3.11", "@ronin/compiler": "0.18.5", "@ronin/syntax": "0.2.39" }, "bin": { "ronin": "dist/bin/index.js" } }, "sha512-rs6lWCLFI0L+vg+0JDHbeh9GiMHQFHuEUcf3I9ps4vXZoyZxT3HqW+oii1Ve6PLko0hw9D6XzVyliu1tRSzOow=="],
 
     "run-applescript": ["run-applescript@7.0.0", "", {}, "sha512-9by4Ij99JUr/MCFBUkDKLWK3G9HVXmabKz9U5MlIAIuvuzkiOicRYs8XJLxX+xahD+mLiiCYDqF9dKAgtzKP1A=="],
 
