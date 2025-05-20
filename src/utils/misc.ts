@@ -416,21 +416,29 @@ const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
 ): Promise<
   Name extends 'syntax/queries' ? LocalPackages['syntax'] : LocalPackages['compiler']
 > => {
-  try {
-    // First try direct import which works with pnpm.
-    return import(`@ronin/${name}`);
-  } catch {
-    // Fallback to resolveFrom for bun/npm/yarn.
-    const roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
+  // First try with resolveFrom for bun/npm/yarn
+  let roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
 
-    if (!roninSyntaxPath) {
-      throw new Error(
-        'The "ronin" package must be installed in your project in order to create migrations.',
-      );
+  // If not found, try pnpm-specific paths
+  if (!roninSyntaxPath) {
+    // Check in .pnpm directory structure
+    const pnpmPath = resolveFrom.silent(
+      process.cwd(),
+      path.join('node_modules', '.pnpm', 'node_modules', `@ronin/${name}`),
+    );
+
+    if (pnpmPath) {
+      roninSyntaxPath = pnpmPath;
     }
-
-    return import(roninSyntaxPath);
   }
+
+  if (!roninSyntaxPath) {
+    throw new Error(
+      'The "ronin" package must be installed in your project in order to create migrations.',
+    );
+  }
+
+  return import(roninSyntaxPath);
 };
 
 /**
