@@ -416,12 +416,12 @@ const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
 ): Promise<
   Name extends 'syntax/queries' ? LocalPackages['syntax'] : LocalPackages['compiler']
 > => {
-  // First try with resolveFrom for bun/npm/yarn
+  // First try with resolveFrom for bun/npm/yarn.
   let roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
 
-  // If not found, try pnpm-specific paths
+  // If not found, try pnpm-specific paths.
   if (!roninSyntaxPath) {
-    // Check in .pnpm directory structure
+    // Check in .pnpm directory structure.
     const pnpmPath = resolveFrom.silent(
       process.cwd(),
       path.join('node_modules', '.pnpm', 'node_modules', `@ronin/${name}`),
