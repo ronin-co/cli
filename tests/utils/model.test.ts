@@ -18,6 +18,12 @@ describe('models', async () => {
     test('get models from local but there are no models', async () => {
       const packages = await getLocalPackages();
       const models = await getModelsModule.getModels(packages, { db });
+      const testQuery = await db.query([
+        `
+        SELECT name FROM sqlite_master WHERE type='table';
+        `,
+      ]);
+      console.log('test query', testQuery);
 
       expect(models).toHaveLength(0);
       expect(models).toStrictEqual([]);
