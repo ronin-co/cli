@@ -7,6 +7,12 @@ import { clearMocks, mock } from 'bun-bagel';
 describe('models', async () => {
   const packages = await getLocalPackages();
   const db = await initializeDatabase(packages, './tests/fixtures/minimal.db');
+  const testQuery = await db.query([
+    `
+    SELECT name FROM sqlite_master WHERE type='table';
+    `,
+  ]);
+  console.log('test query', testQuery);
 
   describe('local', () => {
     test('get models from local but there are no models', async () => {
