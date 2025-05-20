@@ -1,10 +1,15 @@
-import { afterEach, describe, expect, spyOn, test } from 'bun:test';
+import { afterAll, afterEach, describe, expect, jest, spyOn, test } from 'bun:test';
 import * as logInModule from '@/src/commands/login';
 import { initializeDatabase } from '@/src/utils/database';
 import { getLocalPackages } from '@/src/utils/misc';
 import * as getModelsModule from '@/src/utils/model';
 import { clearMocks, mock } from 'bun-bagel';
 describe('models', async () => {
+  afterAll(() => {
+    jest.restoreAllMocks();
+    jest.clearAllMocks();
+  });
+
   const packages = await getLocalPackages();
   const db = await initializeDatabase(packages, './tests/fixtures/minimal.db');
 

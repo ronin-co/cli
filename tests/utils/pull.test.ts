@@ -1,4 +1,13 @@
-import { afterAll, afterEach, beforeAll, describe, expect, spyOn, test } from 'bun:test';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  jest,
+  spyOn,
+  test,
+} from 'bun:test';
 import * as fs from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
@@ -9,6 +18,11 @@ import * as modelModule from '@/src/utils/model';
 import * as spaceModule from '@/src/utils/space';
 import * as confirmModule from '@inquirer/prompts';
 import { $ } from 'bun';
+
+afterAll(() => {
+  jest.restoreAllMocks();
+  jest.clearAllMocks();
+});
 
 describe('helper', () => {
   test('no models', async () => {

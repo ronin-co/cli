@@ -107,13 +107,15 @@ export class CompareModels {
       required: false,
     }));
 
+    const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`;
+
     const queries = [
       // Set the default value for all existing records.
-      `set.RONIN_TEMP_${modelSlug}.to({${field.slug}: ${
+      `set${tempModelSlug.includes('.') ? `["${tempModelSlug}"]` : `.${tempModelSlug}`}.to({"${field.slug}": ${
         typeof defaultValue === 'string' ? `"${defaultValue}"` : defaultValue
       }})`,
       // Re-add the NOT NULL constraint after defaults are set.
-      `alter.model("RONIN_TEMP_${modelSlug}").alter.field("${field.slug}").to({required: true})`,
+      `alter.model("${tempModelSlug}").alter.field("${field.slug}").to({required: true})`,
     ];
 
     return {
@@ -468,9 +470,9 @@ export class CompareModels {
         diff.push(createFieldQuery(modelSlug, { ...fieldToAdd, required: false }));
         // Now set a placeholder value.
         diff.push(
-          `set.${modelSlug}.to({${fieldToAdd.slug}: ${
-            typeof defaultValue === 'boolean' ? defaultValue : `"${defaultValue}"`
-          }})`,
+          `set${modelSlug.includes('.') ? `["${modelSlug}"]` : `.${modelSlug}`}.to({"${
+            fieldToAdd.slug
+          }": ${typeof defaultValue === 'boolean' ? defaultValue : `"${defaultValue}"`}})`,
         );
         // Now add the NOT NULL constraint.
         diff.push(
