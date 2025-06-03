@@ -1,16 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { select } from '@inquirer/prompts';
+import { RoninError } from '@ronin/compiler';
+import type { Database } from '@ronin/engine/resources';
+
 import types from '@/src/commands/types';
 import { initializeDatabase } from '@/src/utils/database';
 import type { MigrationFlags } from '@/src/utils/migration';
 import { MIGRATIONS_PATH } from '@/src/utils/misc';
-import { convertArrayFieldToObject, getModels } from '@/src/utils/model';
+import {
+  type ModelWithFieldsArray,
+  convertArrayFieldToObject,
+  getModels,
+} from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner as ora } from '@/src/utils/spinner';
-import { select } from '@inquirer/prompts';
-import { RoninError } from '@ronin/compiler';
-import type { Database } from '@ronin/engine/resources';
 
 /**
  * Applies a migration file to the database.
@@ -27,12 +32,14 @@ export default async (
 
   try {
     const space = await getOrSelectSpaceId(sessionToken, spinner);
-    const existingModels = await getModels({
+
+    const existingModels = (await getModels({
       db,
       token: appToken ?? sessionToken,
       space,
       isLocal: flags.local,
-    });
+      fieldArray: true,
+    })) as Array<ModelWithFieldsArray>;
 
     // Verify that the migrations directory exists before proceeding.
     if (!fs.existsSync(MIGRATIONS_PATH)) {

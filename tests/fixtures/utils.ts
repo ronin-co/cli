@@ -1,5 +1,9 @@
 import { Migration, type MigrationOptions } from '@/src/utils/migration';
-import { convertModelToObjectFields, getModels } from '@/src/utils/model';
+import {
+  type ModelWithFieldsArray,
+  convertModelToObjectFields,
+  getModels,
+} from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { type Model, ROOT_MODEL, type Statement, Transaction } from '@ronin/compiler';
 import { Engine } from '@ronin/engine';
@@ -89,7 +93,7 @@ export const runMigration = async (
 }> => {
   const db = await queryEphemeralDatabase(existingModels, insertStatements);
 
-  const models = await getModels({ db });
+  const models = (await getModels({ db })) as Array<ModelWithFieldsArray>;
   const modelDiff = await new Migration(
     definedModels,
     models.map((model) => convertModelToObjectFields(model)),
@@ -106,7 +110,9 @@ export const runMigration = async (
 
   return {
     db,
-    models: (await getModels({ db })).map((model) => convertModelToObjectFields(model)),
+    models: ((await getModels({ db })) as Array<ModelWithFieldsArray>).map((model) =>
+      convertModelToObjectFields(model),
+    ),
     statements,
     modelDiff,
   };

@@ -1,16 +1,18 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import type { parseArgs } from 'node:util';
+import { generate } from '@ronin/codegen';
+import { generateZodSchema } from '@ronin/codegen/zod';
+
 import { RoninError } from '@ronin/compiler';
 
-import type { parseArgs } from 'node:util';
 import type { BaseFlags } from '@/src/utils/misc';
+import { getModels } from '@/src/utils/model';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner as ora } from '@/src/utils/spinner';
 import {
   TYPES_DTS_FILE_NAME,
   ZOD_SCHEMA_FILE_NAME,
-  getSpaceTypes,
-  getZodSchemas,
   injectTSConfigInclude,
 } from '@/src/utils/types';
 
@@ -37,11 +39,16 @@ export default async (
     const configDirExists = await fs.exists(configDir);
     if (!configDirExists) await fs.mkdir(configDir);
 
+    const models = (await getModels({
+      token: appToken ?? sessionToken,
+      space: space,
+    })) as Parameters<typeof generateZodSchema>[0];
+
     if (flags?.zod) {
-      const zodSchemas = await getZodSchemas(appToken ?? sessionToken, space);
+      const zodSchemas = await generateZodSchema(models);
       await fs.writeFile(path.join(configDir, ZOD_SCHEMA_FILE_NAME), zodSchemas);
     } else {
-      const code = await getSpaceTypes(appToken ?? sessionToken, space);
+      const code = await generate(models);
 
       const typesFilePath = path.join(configDir, TYPES_DTS_FILE_NAME);
       await fs.writeFile(typesFilePath, code);

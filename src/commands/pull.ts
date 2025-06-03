@@ -76,11 +76,11 @@ export const getModelDefinitionsFileContent = async (options?: {
   local?: boolean;
   space?: string;
 }): Promise<string | null> => {
-  const models = await getModels({
+  const models = (await getModels({
     token: options?.appToken || options?.sessionToken,
     isLocal: options?.local,
     space: options?.space,
-  });
+  })) as Array<ModelWithFieldsArray>;
 
   if (models.length === 0) {
     return null;

@@ -31,9 +31,10 @@ export const getModels = async (options?: {
   token?: string;
   space?: string;
   isLocal?: boolean;
-}): Promise<Array<ModelWithFieldsArray>> => {
+  fieldArray?: boolean;
+}): Promise<Array<ModelWithFieldsArray | Model>> => {
   const transaction = new Transaction([{ list: { models: null } }]);
-  const { db, token, space, isLocal = true } = options || {};
+  const { db, token, space, isLocal = true, fieldArray = true } = options || {};
 
   let rawResults: Array<Array<Row>>;
 
@@ -80,12 +81,16 @@ export const getModels = async (options?: {
   const results = transaction.formatResults<Model>(rawResults, false);
   const models = 'records' in results[0] ? results[0].records : [];
 
-  return models.map((model) => ({
-    ...model,
-    fields: convertObjectToArray(model.fields || {})?.filter(
-      (field) => !IGNORED_FIELDS.includes(field.slug),
-    ),
-  }));
+  if (fieldArray) {
+    return models.map((model) => ({
+      ...model,
+      fields: convertObjectToArray(model.fields || {})?.filter(
+        (field) => !IGNORED_FIELDS.includes(field.slug),
+      ),
+    }));
+  }
+
+  return models;
 };
 
 /**

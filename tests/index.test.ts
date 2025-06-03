@@ -577,7 +577,6 @@ describe('CLI', () => {
           {
             slug: 'user',
             fields: {
-              // @ts-expect-error This is a mock.
               name: { type: 'string' },
             },
           },
@@ -981,10 +980,12 @@ describe('CLI', () => {
             (call) => typeof call[0] === 'string' && call[0].includes('Generating types'),
           ),
         ).toBe(true);
+
         expect(
           stderrSpy.mock.calls.some(
             (call) =>
-              typeof call[0] === 'string' && call[0].includes('Failed to generate types'),
+              typeof call[0] === 'string' &&
+              call[0].includes('Successfully generated types'),
           ),
         ).toBe(true);
       });
@@ -1093,6 +1094,36 @@ describe('CLI', () => {
         stderrSpy.mock.calls.some(
           (call) =>
             typeof call[0] === 'string' && call[0].includes('Failed to generate types'),
+        ),
+      ).toBe(true);
+    });
+
+    test('generate zod schema', async () => {
+      process.argv = ['bun', 'ronin', 'types', '--zod'];
+      spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
+      spyOn(modelModule, 'getModels').mockResolvedValue([
+        {
+          slug: 'test',
+          fields: {
+            name: { type: 'string' },
+          },
+        },
+      ]);
+
+      await run({ version: '1.0.0' });
+
+      expect(
+        stderrSpy.mock.calls.some(
+          (call) =>
+            typeof call[0] === 'string' && call[0].includes('Generating Zod schemas'),
+        ),
+      ).toBe(true);
+
+      expect(
+        stderrSpy.mock.calls.some(
+          (call) =>
+            typeof call[0] === 'string' &&
+            call[0].includes('Successfully generated types'),
         ),
       ).toBe(true);
     });

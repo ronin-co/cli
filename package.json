@@ -52,6 +52,7 @@
   "peerDependencies": {
     "@ronin/compiler": ">=0.18.8",
     "@ronin/syntax": ">=0.2.42",
-    "@ronin/engine": ">=0.1.23"
+    "@ronin/engine": ">=0.1.23",
+    "@ronin/codegen": ">=1.7.4"
   }
 }
