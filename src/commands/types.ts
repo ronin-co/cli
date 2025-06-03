@@ -1,8 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { RoninError } from '@ronin/compiler';
 
 import type { parseArgs } from 'node:util';
-import { type BaseFlags, getLocalPackages } from '@/src/utils/misc';
+import type { BaseFlags } from '@/src/utils/misc';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner as ora } from '@/src/utils/spinner';
 import {
@@ -29,8 +30,6 @@ export default async (
 ): Promise<void> => {
   const spinner = ora.info(flags?.zod ? 'Generating Zod schemas' : 'Generating types');
 
-  const packages = await getLocalPackages();
-
   try {
     const space = await getOrSelectSpaceId(sessionToken, spinner);
 
@@ -54,16 +53,11 @@ export default async (
 
     spinner.succeed('Successfully generated types');
   } catch (err) {
-    const message =
-      err instanceof packages.compiler.RoninError
-        ? err.message
-        : 'Failed to generate types';
+    const message = err instanceof RoninError ? err.message : 'Failed to generate types';
 
     spinner.fail(message);
 
-    !(err instanceof packages.compiler.RoninError) &&
-      err instanceof Error &&
-      spinner.fail(err.message);
+    !(err instanceof RoninError) && err instanceof Error && spinner.fail(err.message);
 
     process.exit(1);
   }

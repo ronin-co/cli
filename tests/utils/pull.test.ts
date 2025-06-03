@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import pull, { getModelDefinitionsFileContent } from '@/src/commands/pull';
 import { formatCode } from '@/src/utils/format';
-import { MODEL_IN_CODE_PATH, getLocalPackages } from '@/src/utils/misc';
+import { MODEL_IN_CODE_PATH } from '@/src/utils/misc';
 import * as modelModule from '@/src/utils/model';
 import * as spaceModule from '@/src/utils/space';
 import * as confirmModule from '@inquirer/prompts';
@@ -29,8 +29,7 @@ describe('helper', () => {
     spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('spaceId');
     spyOn(modelModule, 'getModels').mockResolvedValue([]);
 
-    const packages = await getLocalPackages();
-    const models = await getModelDefinitionsFileContent(packages);
+    const models = await getModelDefinitionsFileContent();
     expect(models).toBeNull();
   });
 
@@ -57,8 +56,7 @@ describe('helper', () => {
       },
     ]);
 
-    const packages = await getLocalPackages();
-    const models = await getModelDefinitionsFileContent(packages);
+    const models = await getModelDefinitionsFileContent();
     expect(models).toBeDefined();
     expect(models).toBe(
       formatCode(`import { boolean, model, number, string } from "ronin/schema";
@@ -93,8 +91,7 @@ describe('helper', () => {
       },
     ]);
 
-    const packages = await getLocalPackages();
-    const models = await getModelDefinitionsFileContent(packages);
+    const models = await getModelDefinitionsFileContent();
     expect(models).toBeDefined();
     expect(models).toBe(
       formatCode(`import { model, string } from "ronin/schema";
@@ -129,8 +126,7 @@ export const Post = model({
       },
     ]);
 
-    const packages = await getLocalPackages();
-    const models = await getModelDefinitionsFileContent(packages);
+    const models = await getModelDefinitionsFileContent();
     expect(models).toBeDefined();
     expect(models).toBe(
       formatCode(`import { model, string } from "ronin/schema";

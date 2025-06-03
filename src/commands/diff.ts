@@ -3,18 +3,13 @@ import path from 'node:path';
 import apply from '@/src/commands/apply';
 import { initializeDatabase } from '@/src/utils/database';
 import { Migration, type MigrationFlags } from '@/src/utils/migration';
-import {
-  MIGRATIONS_PATH,
-  getLocalPackages,
-  getModelDefinitions,
-  logTableDiff,
-} from '@/src/utils/misc';
+import { MIGRATIONS_PATH, getModelDefinitions, logTableDiff } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { type Status, spinner } from '@/src/utils/spinner';
 import { confirm } from '@inquirer/prompts';
-import type { Model } from '@ronin/compiler';
+import { type Model, RoninError } from '@ronin/compiler';
 
 /**
  * Creates a new migration based on model differences.
@@ -39,8 +34,7 @@ export default async (
     positionals[positionals.indexOf('diff') + 1] &&
     path.join(process.cwd(), positionals[positionals.indexOf('diff') + 1]);
 
-  const packages = await getLocalPackages();
-  const db = await initializeDatabase(packages);
+  const db = await initializeDatabase();
 
   try {
     const space = await getOrSelectSpaceId(sessionToken, spinner);
@@ -50,7 +44,7 @@ export default async (
     const [existingModels, definedModels] = await Promise.all([
       flags['force-create']
         ? []
-        : getModels(packages, {
+        : getModels({
             db,
             token: appToken ?? sessionToken,
             space,
@@ -81,11 +75,11 @@ export default async (
       const migrationFiles = files.filter((f) => f.startsWith('migration-'));
       if (migrationFiles.length > 0) {
         const latestMigration = migrationFiles.sort().pop() as string;
-        const latestProtocol = new Protocol(packages);
+        const latestProtocol = new Protocol();
         await latestProtocol.load(path.join(MIGRATIONS_PATH, latestMigration));
         const latestMigrationDiff = latestProtocol.queries;
 
-        const protocol = new Protocol(packages, modelDiff);
+        const protocol = new Protocol(modelDiff);
         await protocol.convertToQueryObjects();
         const currentMigrationDiff = protocol.queries;
 
@@ -121,7 +115,7 @@ export default async (
     })();
 
     const paddedNum = String(nextNum).padStart(4, '0');
-    const protocol = new Protocol(packages, modelDiff);
+    const protocol = new Protocol(modelDiff);
     await protocol.convertToQueryObjects();
     protocol.save(`migration-${paddedNum}`);
 
@@ -140,7 +134,7 @@ export default async (
     process.exit(0);
   } catch (err) {
     const message =
-      err instanceof packages.compiler.RoninError
+      err instanceof RoninError
         ? err.message
         : `Failed during ${status}: ${err instanceof Error ? err.message : err}`;
     spinner.fail(message);
