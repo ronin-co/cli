@@ -21,6 +21,7 @@ export default async (
   local?: boolean,
 ): Promise<void> => {
   const spinner = ora.start('Pulling models');
+
   const space = await getOrSelectSpaceId(appToken, spinner);
 
   try {

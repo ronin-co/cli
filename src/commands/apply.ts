@@ -27,10 +27,12 @@ export default async (
   migrationFilePath?: string,
 ): Promise<void> => {
   const spinner = ora.info('Applying migration');
+
   const db = await initializeDatabase();
 
   try {
     const space = await getOrSelectSpaceId(sessionToken, spinner);
+
     const existingModels = (await getModels({
       db,
       token: appToken ?? sessionToken,
