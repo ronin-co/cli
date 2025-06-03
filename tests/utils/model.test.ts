@@ -56,6 +56,7 @@ describe('models', async () => {
       const models = await getModelsModule.getModels({ db, fieldArray: false });
 
       expect(models).toHaveLength(1);
+      expect(models[0].fields).toBeTypeOf('object');
 
       // Clean up
       await db.query([`DELETE FROM "ronin_schema" WHERE "slug" = 'blog';`]);
