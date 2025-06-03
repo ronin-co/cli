@@ -24,9 +24,9 @@ import * as sessionModule from '@/src/utils/session';
 import * as spaceModule from '@/src/utils/space';
 import * as confirmModule from '@inquirer/prompts';
 import * as selectModule from '@inquirer/prompts';
+import type { Model } from '@ronin/compiler';
 import * as getPort from 'get-port';
 import * as open from 'open';
-import type { Model } from 'shiro-compiler';
 
 describe('CLI', () => {
   // Store original values
@@ -742,7 +742,7 @@ describe('CLI', () => {
         await run({ version: '1.0.0' });
 
         expect(writeFileSyncSpy.mock.calls[0][1]).toContain(
-          `import { drop } from \"shiro-orm\";\n\nexport default () => [\n  drop.model(\"user\"),\n];\n`,
+          `import { drop } from \"ronin\";\n\nexport default () => [\n  drop.model(\"user\"),\n];\n`,
         );
       });
 

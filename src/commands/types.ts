@@ -1,10 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { parseArgs } from 'node:util';
-import { type Model, generate } from 'shiro-codegen';
-import { generateZodSchema } from 'shiro-codegen/zod';
+import { generate } from '@ronin/codegen';
+import { generateZodSchema } from '@ronin/codegen/zod';
 
-import { RoninError } from 'shiro-compiler';
+import { RoninError } from '@ronin/compiler';
 
 import type { BaseFlags } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
@@ -39,13 +39,16 @@ export default async (
     const configDirExists = await fs.exists(configDir);
     if (!configDirExists) await fs.mkdir(configDir);
 
-    const models = await getModels({ token: appToken ?? sessionToken, space: space });
+    const models = (await getModels({
+      token: appToken ?? sessionToken,
+      space: space,
+    })) as Parameters<typeof generateZodSchema>[0];
 
     if (flags?.zod) {
-      const zodSchemas = await generateZodSchema(models as Array<Model>);
+      const zodSchemas = await generateZodSchema(models);
       await fs.writeFile(path.join(configDir, ZOD_SCHEMA_FILE_NAME), zodSchemas);
     } else {
-      const code = await generate(models as Array<Model>);
+      const code = await generate(models);
 
       const typesFilePath = path.join(configDir, TYPES_DTS_FILE_NAME);
       await fs.writeFile(typesFilePath, code);

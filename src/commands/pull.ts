@@ -88,7 +88,7 @@ export const getModelDefinitionsFileContent = async (options?: {
   const primitives = [
     ...new Set(models.flatMap((model) => model.fields.map((field) => field.type))),
   ];
-  const importStatements = `import { model, ${primitives.join(',')} } from "shiro-orm/schema";`;
+  const importStatements = `import { model, ${primitives.join(',')} } from "ronin/schema";`;
 
   const modelDefinitions = models.map((model) => {
     // We want to exclude the ronin property from the model.
