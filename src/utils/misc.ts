@@ -7,9 +7,6 @@ import { convertModelToArrayFields } from '@/src/utils/model';
 import { spinner } from '@/src/utils/spinner';
 import { input } from '@inquirer/prompts';
 import type { Model, Result } from '@ronin/compiler';
-import type * as CompilerPackage from '@ronin/compiler';
-import type * as SyntaxPackage from '@ronin/syntax/queries';
-import resolveFrom from 'resolve-from';
 
 /** Represents a data item for logging */
 interface DataItem {
@@ -398,45 +395,4 @@ export const getResponseBody = async <T>(
   }
 
   return json;
-};
-
-/** A list of all RONIN packages that must be locally available. */
-export interface LocalPackages {
-  syntax: typeof SyntaxPackage;
-  compiler: typeof CompilerPackage;
-}
-
-/**
- * Retrieves an instance of a RONIN package.
- *
- * @returns An instance of the package.
- */
-const getPackage = <Name extends 'syntax/queries' | 'compiler'>(
-  name: Name,
-): Promise<
-  Name extends 'syntax/queries' ? LocalPackages['syntax'] : LocalPackages['compiler']
-> => {
-  const roninSyntaxPath = resolveFrom.silent(process.cwd(), `@ronin/${name}`);
-
-  if (!roninSyntaxPath) {
-    throw new Error(
-      'The "ronin" package must be installed in your project in order to create migrations.',
-    );
-  }
-
-  return import(roninSyntaxPath);
-};
-
-/**
- * Loads all local RONIN packages.
- *
- * @returns The loaded packages.
- */
-export const getLocalPackages = async (): Promise<LocalPackages> => {
-  const [syntax, compiler] = await Promise.all([
-    getPackage('syntax/queries'),
-    getPackage('compiler'),
-  ]);
-
-  return { syntax, compiler };
 };

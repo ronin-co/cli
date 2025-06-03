@@ -3,12 +3,13 @@ import path from 'node:path';
 import types from '@/src/commands/types';
 import { initializeDatabase } from '@/src/utils/database';
 import type { MigrationFlags } from '@/src/utils/migration';
-import { MIGRATIONS_PATH, getLocalPackages } from '@/src/utils/misc';
+import { MIGRATIONS_PATH } from '@/src/utils/misc';
 import { convertArrayFieldToObject, getModels } from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner as ora } from '@/src/utils/spinner';
 import { select } from '@inquirer/prompts';
+import { RoninError } from '@ronin/compiler';
 import type { Database } from '@ronin/engine/resources';
 
 /**
@@ -22,12 +23,11 @@ export default async (
 ): Promise<void> => {
   const spinner = ora.info('Applying migration');
 
-  const packages = await getLocalPackages();
-  const db = await initializeDatabase(packages);
+  const db = await initializeDatabase();
 
   try {
     const space = await getOrSelectSpaceId(sessionToken, spinner);
-    const existingModels = await getModels(packages, {
+    const existingModels = await getModels({
       db,
       token: appToken ?? sessionToken,
       space,
@@ -66,7 +66,7 @@ export default async (
         }));
     }
 
-    const protocol = await new Protocol(packages).load(migrationPrompt);
+    const protocol = await new Protocol().load(migrationPrompt);
     const statements = protocol.getSQLStatements(
       existingModels.map((model) => ({
         ...model,
@@ -89,14 +89,9 @@ export default async (
 
     process.exit(0);
   } catch (err) {
-    const message =
-      err instanceof packages.compiler.RoninError
-        ? err.message
-        : 'Failed to apply migration';
+    const message = err instanceof RoninError ? err.message : 'Failed to apply migration';
     spinner.fail(message);
-    !(err instanceof packages.compiler.RoninError) &&
-      err instanceof Error &&
-      spinner.fail(err.message);
+    !(err instanceof RoninError) && err instanceof Error && spinner.fail(err.message);
 
     process.exit(1);
   }

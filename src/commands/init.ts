@@ -6,7 +6,7 @@ import ora from 'ora';
 
 import types from '@/src/commands/types';
 import { exists } from '@/src/utils/file';
-import { MIGRATIONS_PATH, MODEL_IN_CODE_PATH, getLocalPackages } from '@/src/utils/misc';
+import { MIGRATIONS_PATH, MODEL_IN_CODE_PATH } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 
@@ -43,8 +43,6 @@ export default async (
       }
     }
 
-    const packages = await getLocalPackages();
-
     // This case should never happen, since we log in before
     // running the init command if no tokens are provided.
     if (!(token?.appToken || token?.sessionToken)) {
@@ -56,7 +54,7 @@ export default async (
 
     const doModelsExist =
       (
-        await getModels(packages, {
+        await getModels({
           token: token.appToken || token.sessionToken,
           space: spaceHandle,
         })
