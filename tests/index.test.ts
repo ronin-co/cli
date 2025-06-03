@@ -1098,6 +1098,36 @@ describe('CLI', () => {
       ).toBe(true);
     });
 
+    test('generate zod schema', async () => {
+      process.argv = ['bun', 'ronin', 'types', '--zod'];
+      spyOn(spaceModule, 'getOrSelectSpaceId').mockResolvedValue('test-space');
+      spyOn(modelModule, 'getModels').mockResolvedValue([
+        {
+          slug: 'test',
+          fields: {
+            name: { type: 'string' },
+          },
+        },
+      ]);
+
+      await run({ version: '1.0.0' });
+
+      expect(
+        stderrSpy.mock.calls.some(
+          (call) =>
+            typeof call[0] === 'string' && call[0].includes('Generating Zod schemas'),
+        ),
+      ).toBe(true);
+
+      expect(
+        stderrSpy.mock.calls.some(
+          (call) =>
+            typeof call[0] === 'string' &&
+            call[0].includes('Successfully generated types'),
+        ),
+      ).toBe(true);
+    });
+
     test('should handle network errors when generating types', async () => {
       process.argv = ['bun', 'ronin', 'types'];
 
