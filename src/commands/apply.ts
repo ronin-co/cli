@@ -1,15 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { select } from '@inquirer/prompts';
+import { RoninError } from '@ronin/compiler';
+import type { Database } from '@ronin/engine/resources';
+
 import types from '@/src/commands/types';
 import { initializeDatabase } from '@/src/utils/database';
 import type { MigrationFlags } from '@/src/utils/migration';
-import { MIGRATIONS_PATH, getLocalPackages } from '@/src/utils/misc';
-import { convertArrayFieldToObject, getModels } from '@/src/utils/model';
+import { MIGRATIONS_PATH } from '@/src/utils/misc';
+import {
+  type ModelWithFieldsArray,
+  convertArrayFieldToObject,
+  getModels,
+} from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { spinner as ora } from '@/src/utils/spinner';
-import { select } from '@inquirer/prompts';
-import type { Database } from '@ronin/engine/resources';
 
 /**
  * Applies a migration file to the database.
@@ -21,18 +27,17 @@ export default async (
   migrationFilePath?: string,
 ): Promise<void> => {
   const spinner = ora.info('Applying migration');
-
-  const packages = await getLocalPackages();
-  const db = await initializeDatabase(packages);
+  const db = await initializeDatabase();
 
   try {
     const space = await getOrSelectSpaceId(sessionToken, spinner);
-    const existingModels = await getModels(packages, {
+    const existingModels = (await getModels({
       db,
       token: appToken ?? sessionToken,
       space,
       isLocal: flags.local,
-    });
+      fieldArray: true,
+    })) as Array<ModelWithFieldsArray>;
 
     // Verify that the migrations directory exists before proceeding.
     if (!fs.existsSync(MIGRATIONS_PATH)) {
@@ -66,7 +71,7 @@ export default async (
         }));
     }
 
-    const protocol = await new Protocol(packages).load(migrationPrompt);
+    const protocol = await new Protocol().load(migrationPrompt);
     const statements = protocol.getSQLStatements(
       existingModels.map((model) => ({
         ...model,
@@ -89,14 +94,9 @@ export default async (
 
     process.exit(0);
   } catch (err) {
-    const message =
-      err instanceof packages.compiler.RoninError
-        ? err.message
-        : 'Failed to apply migration';
+    const message = err instanceof RoninError ? err.message : 'Failed to apply migration';
     spinner.fail(message);
-    !(err instanceof packages.compiler.RoninError) &&
-      err instanceof Error &&
-      spinner.fail(err.message);
+    !(err instanceof RoninError) && err instanceof Error && spinner.fail(err.message);
 
     process.exit(1);
   }

@@ -24,9 +24,9 @@ import * as sessionModule from '@/src/utils/session';
 import * as spaceModule from '@/src/utils/space';
 import * as confirmModule from '@inquirer/prompts';
 import * as selectModule from '@inquirer/prompts';
-import type { Model } from '@ronin/compiler';
 import * as getPort from 'get-port';
 import * as open from 'open';
+import type { Model } from 'shiro-compiler';
 
 describe('CLI', () => {
   // Store original values
@@ -506,7 +506,6 @@ describe('CLI', () => {
 
   describe('migration', () => {
     // Common migration test setup
-    // biome-ignore lint/nursery/useExplicitType: This is a mock.
     const setupMigrationTest = (options?: {
       modelDiff?: Array<ModelWithFieldsArray>;
       modelDefinitions?: Array<Model>;
@@ -577,7 +576,6 @@ describe('CLI', () => {
           {
             slug: 'user',
             fields: {
-              // @ts-expect-error This is a mock.
               name: { type: 'string' },
             },
           },
@@ -744,7 +742,7 @@ describe('CLI', () => {
         await run({ version: '1.0.0' });
 
         expect(writeFileSyncSpy.mock.calls[0][1]).toContain(
-          `import { drop } from \"ronin\";\n\nexport default () => [\n  drop.model(\"user\"),\n];\n`,
+          `import { drop } from \"shiro-orm\";\n\nexport default () => [\n  drop.model(\"user\"),\n];\n`,
         );
       });
 
@@ -981,10 +979,12 @@ describe('CLI', () => {
             (call) => typeof call[0] === 'string' && call[0].includes('Generating types'),
           ),
         ).toBe(true);
+
         expect(
           stderrSpy.mock.calls.some(
             (call) =>
-              typeof call[0] === 'string' && call[0].includes('Failed to generate types'),
+              typeof call[0] === 'string' &&
+              call[0].includes('Successfully generated types'),
           ),
         ).toBe(true);
       });

@@ -2,13 +2,12 @@ import logIn from '@/src/commands/login';
 import { IGNORED_FIELDS } from '@/src/utils/migration';
 import {
   InvalidResponseError,
-  type LocalPackages,
   type QueryResponse,
   getResponseBody,
 } from '@/src/utils/misc';
 import { spinner } from '@/src/utils/spinner';
-import type { Model, ModelField } from '@ronin/compiler';
 import type { Database, Row } from '@ronin/engine/resources';
+import { type Model, type ModelField, Transaction } from 'shiro-compiler';
 
 /**
  * A model with fields in array format.
@@ -18,7 +17,6 @@ export type ModelWithFieldsArray = Omit<Model, 'fields'> & { fields: Array<Model
 /**
  * Fetches and formats schema models from either production API or local database.
  *
- * @param packages - A list of locally available RONIN packages.
  * @param db - The database instance to query from.
  * @param token - Optional authentication token for production API requests.
  * @param space - Optional space ID for production API requests.
@@ -28,18 +26,15 @@ export type ModelWithFieldsArray = Omit<Model, 'fields'> & { fields: Array<Model
  *
  * @throws Error if production API request fails.
  */
-export const getModels = async (
-  packages: LocalPackages,
-  options?: {
-    db?: Database;
-    token?: string;
-    space?: string;
-    isLocal?: boolean;
-  },
-): Promise<Array<ModelWithFieldsArray>> => {
-  const { Transaction } = packages.compiler;
+export const getModels = async (options?: {
+  db?: Database;
+  token?: string;
+  space?: string;
+  isLocal?: boolean;
+  fieldArray?: boolean;
+}): Promise<Array<ModelWithFieldsArray | Model>> => {
   const transaction = new Transaction([{ list: { models: null } }]);
-  const { db, token, space, isLocal = true } = options || {};
+  const { db, token, space, isLocal = true, fieldArray = true } = options || {};
 
   let rawResults: Array<Array<Row>>;
 
@@ -76,7 +71,7 @@ export const getModels = async (
         spinner.stop();
         const sessionToken = await logIn(undefined, false);
         spinner.start();
-        return getModels(packages, { db, token: sessionToken, space, isLocal });
+        return getModels({ db, token: sessionToken, space, isLocal });
       }
 
       throw new Error(`Failed to fetch remote models: ${(error as Error).message}`);
@@ -86,12 +81,16 @@ export const getModels = async (
   const results = transaction.formatResults<Model>(rawResults, false);
   const models = 'records' in results[0] ? results[0].records : [];
 
-  return models.map((model) => ({
-    ...model,
-    fields: convertObjectToArray(model.fields || {})?.filter(
-      (field) => !IGNORED_FIELDS.includes(field.slug),
-    ),
-  }));
+  if (fieldArray) {
+    return models.map((model) => ({
+      ...model,
+      fields: convertObjectToArray(model.fields || {})?.filter(
+        (field) => !IGNORED_FIELDS.includes(field.slug),
+      ),
+    }));
+  }
+
+  return models;
 };
 
 /**

@@ -1,12 +1,15 @@
 import { Migration, type MigrationOptions } from '@/src/utils/migration';
-import { type LocalPackages, getLocalPackages } from '@/src/utils/misc';
-import { convertModelToObjectFields, getModels } from '@/src/utils/model';
+import {
+  type ModelWithFieldsArray,
+  convertModelToObjectFields,
+  getModels,
+} from '@/src/utils/model';
 import { Protocol } from '@/src/utils/protocol';
-import { type Model, type Statement, Transaction } from '@ronin/compiler';
 import { Engine } from '@ronin/engine';
 import { BunDriver } from '@ronin/engine/drivers/bun';
 import { MemoryResolver } from '@ronin/engine/resolvers/memory';
 import type { Database } from '@ronin/engine/resources';
+import { type Model, ROOT_MODEL, type Statement, Transaction } from 'shiro-compiler';
 
 const engine = new Engine({
   driver: (engine): BunDriver => new BunDriver({ engine }),
@@ -48,8 +51,6 @@ export const prefillDatabase = async (
   models: Array<Model>,
   insertStatements: Array<Statement> = [],
 ): Promise<void> => {
-  const { Transaction, ROOT_MODEL } = (await getLocalPackages()).compiler;
-
   const rootModelTransaction = new Transaction([{ create: { model: ROOT_MODEL } }]);
 
   const modelTransaction = new Transaction(
@@ -75,7 +76,6 @@ export const prefillDatabase = async (
  *
  * @returns Object containing:
  *   - db: The ephemeral database instance.
- *   - packages: The loaded package dependencies.
  *   - models: The resulting models after migration.
  *   - statements: The SQL statements that were executed.
  *   - modelDiff: The computed differences between defined and existing models.
@@ -87,21 +87,19 @@ export const runMigration = async (
   insertStatements: Array<Statement> = [],
 ): Promise<{
   db: Database;
-  packages: LocalPackages;
   models: Array<Model>;
   statements: Array<Statement>;
   modelDiff: Array<string>;
 }> => {
   const db = await queryEphemeralDatabase(existingModels, insertStatements);
 
-  const packages = await getLocalPackages();
-  const models = await getModels(packages, { db });
+  const models = (await getModels({ db })) as Array<ModelWithFieldsArray>;
   const modelDiff = await new Migration(
     definedModels,
     models.map((model) => convertModelToObjectFields(model)),
     options,
   ).diff();
-  const protocol = new Protocol(packages, modelDiff);
+  const protocol = new Protocol(modelDiff);
   await protocol.convertToQueryObjects();
 
   const statements = protocol.getSQLStatements(
@@ -112,8 +110,7 @@ export const runMigration = async (
 
   return {
     db,
-    packages,
-    models: (await getModels(packages, { db })).map((model) =>
+    models: ((await getModels({ db })) as Array<ModelWithFieldsArray>).map((model) =>
       convertModelToObjectFields(model),
     ),
     statements,
