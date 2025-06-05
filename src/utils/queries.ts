@@ -178,6 +178,7 @@ export const createTempModelQuery = (
  */
 export const createTempColumnQuery = (
   modelSlug: string,
+  pluralSlug: string,
   field: ModelField,
   _indexes: Array<ModelIndex>,
 ): Queries => {
@@ -195,7 +196,7 @@ export const createTempColumnQuery = (
   // 2. Copy all data from the original field to the temporary field.
   // This preserves the data while we make the schema changes.
   queries.push(
-    `set${modelSlug.includes('.') ? `["${modelSlug}"]` : `.${modelSlug}`}.to${
+    `set${modelSlug.includes('.') ? `["${pluralSlug}"]` : `.${pluralSlug}`}.to${
       field.slug.includes('.') ? `["${tempFieldSlug}"]` : `.${tempFieldSlug}`
     }(f => ${field.slug.includes('.') ? `f["${field.slug}"]` : `f.${field.slug}`})`,
   );

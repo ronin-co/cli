@@ -269,6 +269,7 @@ export class CompareModels {
         diff.push(
           ...createTempColumnQuery(
             this.#localModelSlug,
+            this.#existingModel.pluralSlug ?? this.#options?.pluralSlug ?? '',
             field,
             convertObjectToArray(this.#definedModel.indexes),
           ),

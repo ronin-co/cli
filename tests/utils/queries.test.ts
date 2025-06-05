@@ -175,6 +175,7 @@ describe('queries', () => {
   test('create temp column query', () => {
     const result = createTempColumnQuery(
       'user',
+      'users',
       {
         slug: 'username',
         type: 'string',
@@ -186,7 +187,7 @@ describe('queries', () => {
     );
     expect(result).toEqual([
       `alter.model('user').create.field({"slug":"RONIN_TEMP_username","type":"string","name":"Username","unique":true,"required":true})`,
-      'set.user.to.RONIN_TEMP_username(f => f.username)',
+      'set.users.to.RONIN_TEMP_username(f => f.username)',
       'alter.model("user").drop.field("username")',
       'alter.model("user").alter.field("RONIN_TEMP_username").to({slug: "username"})',
     ]);
@@ -195,6 +196,7 @@ describe('queries', () => {
   test('create temp column query with dot notation', () => {
     const result = createTempColumnQuery(
       'user',
+      'users',
       {
         slug: 'profile.username',
         type: 'string',
@@ -206,7 +208,7 @@ describe('queries', () => {
     );
     expect(result).toEqual([
       'alter.model(\'user\').create.field({"slug":"RONIN_TEMP_profile.username","type":"string","name":"Username","unique":true,"required":true})',
-      'set.user.to["RONIN_TEMP_profile.username"](f => f["profile.username"])',
+      'set.users.to["RONIN_TEMP_profile.username"](f => f["profile.username"])',
       'alter.model("user").drop.field("profile.username")',
       'alter.model("user").alter.field("RONIN_TEMP_profile.username").to({slug: "profile.username"})',
     ]);

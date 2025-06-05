@@ -944,7 +944,7 @@ describe('apply', () => {
 
           expect(modelDiff).toEqual([
             'alter.model(\'a\').create.field({"slug":"RONIN_TEMP_age","type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}})',
-            'set.a.to.RONIN_TEMP_age(f => f.age)',
+            'set.as.to.RONIN_TEMP_age(f => f.age)',
             'alter.model("a").drop.field("age")',
             'alter.model("a").alter.field("RONIN_TEMP_age").to({slug: "age"})',
           ]);
@@ -1143,6 +1143,7 @@ describe('apply', () => {
             transaction.statements.map((statement) => statement),
           );
 
+          console.log(JSON.stringify(models, null, 2));
           const rows = await getTableRows(db, TestU);
 
           const rowCounts: Record<string, number> = {};
