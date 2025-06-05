@@ -203,12 +203,13 @@ describe('fields', () => {
         rename: true,
         name: 'Account',
         pluralName: 'Accounts',
+        pluralSlug: 'accounts',
       }).diff();
 
       expect(diff).toHaveLength(4);
       expect(diff).toStrictEqual([
         'create.model({"slug":"RONIN_TEMP_account","fields":{"id":{"type":"number","unique":true}}})',
-        'add.RONIN_TEMP_account.with(() => get.account())',
+        'add.RONIN_TEMP_accounts.with(() => get.accounts())',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account", name: "Account", pluralName: "Accounts"})',
       ]);
@@ -241,12 +242,13 @@ describe('fields', () => {
         rename: true,
         name: 'Account',
         pluralName: 'Accounts',
+        pluralSlug: 'accounts',
       }).diff();
 
       expect(diff).toHaveLength(5);
       expect(diff).toStrictEqual([
         'create.model({"slug":"RONIN_TEMP_account","fields":{"profile":{"type":"link","target":"profile"}}})',
-        'add.RONIN_TEMP_account.with(() => get.account())',
+        'add.RONIN_TEMP_accounts.with(() => get.accounts())',
         'alter.model("RONIN_TEMP_account").alter.field("profile").to({slug: "newProfile"})',
         'drop.model("account")',
         'alter.model("RONIN_TEMP_account").to({slug: "account", name: "Account", pluralName: "Accounts"})',

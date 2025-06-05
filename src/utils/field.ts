@@ -155,6 +155,7 @@ export class CompareModels {
           fieldsToDelete = fieldsToDelete.filter((s) => s.slug !== field.from.slug);
           fieldsToAdd = fieldsToAdd.filter((s) => s.slug !== field.to.slug);
           if (field.from.type === 'link') {
+            console.log(this.#existingModel.pluralSlug ?? this.#options?.pluralSlug);
             diff.push(
               ...createTempModelQuery(
                 {
@@ -175,6 +176,7 @@ export class CompareModels {
                       field.to.slug,
                     ),
                   ],
+                  pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
                 },
               ),
             );
@@ -245,6 +247,7 @@ export class CompareModels {
               pluralName: this.#options?.pluralName,
               customQueries: queries,
               includeFields: existingFields,
+              pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
             },
           ),
         );
@@ -379,6 +382,7 @@ export class CompareModels {
       ...options,
       name: this.#options?.name,
       pluralName: this.#options?.pluralName,
+      pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
     });
   }
 
@@ -440,6 +444,7 @@ export class CompareModels {
               includeFields: existingFields,
               name: this.#options?.name,
               pluralName: this.#options?.pluralName,
+              pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
             },
           );
         }
@@ -453,6 +458,7 @@ export class CompareModels {
             includeFields: existingFields,
             name: this.#options?.name,
             pluralName: this.#options?.pluralName,
+            pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
           },
         );
       }
@@ -494,6 +500,7 @@ export class CompareModels {
               includeFields: existingFields,
               name: this.#options?.name,
               pluralName: this.#options?.pluralName,
+              pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
             },
           ),
         );
@@ -549,6 +556,7 @@ export class CompareModels {
             includeFields: fields,
             name: this.#options?.name,
             pluralName: this.#options?.pluralName,
+            pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
           },
         );
       }

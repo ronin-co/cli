@@ -123,6 +123,7 @@ export const createTempModelQuery = (
     includeFields?: Array<ModelField>;
     name?: string;
     pluralName?: string;
+    pluralSlug?: string;
   },
 ): Queries => {
   const { slug, pluralSlug, fields, indexes: _indexes, ...rest } = model;
@@ -131,7 +132,7 @@ export const createTempModelQuery = (
   const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${slug}`;
   const tempModelPluralSlug = pluralSlug
     ? `${RONIN_SCHEMA_TEMP_SUFFIX}${pluralSlug}`
-    : undefined;
+    : `${RONIN_SCHEMA_TEMP_SUFFIX}${options?.pluralSlug}`;
 
   // Create a copy of the model.
   queries.push(
@@ -145,7 +146,7 @@ export const createTempModelQuery = (
 
   // Move all the data to the copied model.
   queries.push(
-    `add.${tempModelSlug}.with(() => get.${slug}(${
+    `add.${tempModelPluralSlug}.with(() => get.${pluralSlug ?? options?.pluralSlug}(${
       options?.includeFields
         ? JSON.stringify({ selecting: options.includeFields.map((field) => field.slug) })
         : ''

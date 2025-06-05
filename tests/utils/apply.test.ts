@@ -823,7 +823,7 @@ describe('apply', () => {
           );
 
           expect(modelDiff[1]).toContain(
-            'add.RONIN_TEMP_a.with(() => get.a({"selecting":["name"]}))',
+            'add.RONIN_TEMP_as.with(() => get.as({"selecting":["name"]}))',
           );
 
           expect(modelDiff[2]).toContain('drop.model("a")');
