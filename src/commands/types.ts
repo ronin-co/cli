@@ -42,6 +42,7 @@ export default async (
     const models = (await getModels({
       token: appToken ?? sessionToken,
       space: space,
+      fieldArray: false,
     })) as Parameters<typeof generateZodSchema>[0];
 
     if (flags?.zod) {
