@@ -819,7 +819,7 @@ describe('apply', () => {
           }
 
           expect(modelDiff[0]).toContain(
-            'create.model({"slug":"RONIN_TEMP_a","fields":{"name":{"type":"string"},"age":{"type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}}}})',
+            'create.model({"slug":"RONIN_TEMP_a","fields":{"name":{"type":"string"},"age":{"type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}}},"idPrefix":"a"})',
           );
 
           expect(modelDiff[1]).toContain(
@@ -1143,7 +1143,6 @@ describe('apply', () => {
             transaction.statements.map((statement) => statement),
           );
 
-          console.log(JSON.stringify(models, null, 2));
           const rows = await getTableRows(db, TestU);
 
           const rowCounts: Record<string, number> = {};

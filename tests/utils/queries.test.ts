@@ -111,7 +111,7 @@ describe('queries', () => {
       { name: 'User', pluralName: 'Users', pluralSlug: 'users' },
     );
     expect(result).toEqual([
-      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
+      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}},"idPrefix":"use"})',
       'add.RONIN_TEMP_users.with(() => get.users())',
       'drop.model("user")',
       'alter.model("RONIN_TEMP_user").to({slug: "user", name: "User", pluralName: "Users"})',
@@ -135,7 +135,7 @@ describe('queries', () => {
       { customQueries, name: 'User', pluralName: 'Users', pluralSlug: 'users' },
     );
     expect(result).toEqual([
-      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}}})',
+      'create.model({"slug":"RONIN_TEMP_user","fields":{"username":{"type":"string","name":"Username","unique":true,"required":true}},"idPrefix":"use"})',
       'add.RONIN_TEMP_users.with(() => get.users())',
       ...customQueries,
       'drop.model("user")',

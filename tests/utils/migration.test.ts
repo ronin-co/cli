@@ -35,7 +35,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"type":"string"}}})',
+        'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"type":"string"}},"idPrefix":"acc"})',
         'add.RONIN_TEMP_accounts.with(() => get.accounts())',
         'drop.model("account")',
         // The names are undefined because the existing model never got run through the compiler.
@@ -66,7 +66,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"required":true,"unique":true,"type":"string"}}})',
+        'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"required":true,"unique":true,"type":"string"}},"idPrefix":"acc"})',
         'add.RONIN_TEMP_accounts.with(() => get.accounts())',
         'drop.model("account")',
         // The names are undefined because the existing model never got run through the compiler.
@@ -80,7 +80,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        'create.model({"slug":"RONIN_TEMP_test","fields":{"age":{"required":true,"unique":true,"type":"string"},"active":{"type":"boolean"}},"name":"ThisIsACoolModel","idPrefix":"TICM"})',
+        'create.model({"slug":"RONIN_TEMP_test","fields":{"age":{"required":true,"unique":true,"type":"string"},"active":{"type":"boolean"}},"idPrefix":"TICM","name":"ThisIsACoolModel"})',
         'add.RONIN_TEMP_undefined.with(() => get.undefined())',
         'drop.model("test")',
         // The names are undefined because the existing model never got run through the compiler.
@@ -94,7 +94,7 @@ describe('migration', () => {
 
       expect(modelDiff).toHaveLength(4);
       expect(modelDiff).toStrictEqual([
-        'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"type":"string"}}})',
+        'create.model({"slug":"RONIN_TEMP_account","fields":{"name":{"type":"string"}},"idPrefix":"acc"})',
         'add.RONIN_TEMP_accounts.with(() => get.accounts())',
         'drop.model("account")',
         // The names are undefined because the existing model never got run through the compiler.

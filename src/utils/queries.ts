@@ -124,6 +124,7 @@ export const createTempModelQuery = (
     name?: string;
     pluralName?: string;
     pluralSlug?: string;
+    idPrefix?: string;
   },
 ): Queries => {
   const { slug, pluralSlug, fields, indexes: _indexes, ...rest } = model;
@@ -140,6 +141,7 @@ export const createTempModelQuery = (
       slug: tempModelSlug,
       ...(pluralSlug ? { pluralSlug: tempModelPluralSlug } : {}),
       fields,
+      idPrefix: options?.idPrefix ?? slug.slice(0, 3),
       ...rest,
     }),
   );

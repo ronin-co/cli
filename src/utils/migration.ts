@@ -206,6 +206,7 @@ export class Migration {
           name: existingModel.name,
           pluralName: existingModel.pluralName,
           pluralSlug: existingModel.pluralSlug,
+          idPrefix: existingModel.idPrefix,
         }),
       );
     } else if (definedModel.name && definedModel.name !== existingModel.name) {
