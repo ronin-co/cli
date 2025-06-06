@@ -819,11 +819,11 @@ describe('apply', () => {
           }
 
           expect(modelDiff[0]).toContain(
-            'create.model({"slug":"RONIN_TEMP_a","fields":{"name":{"type":"string"},"age":{"type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}}}})',
+            'create.model({"slug":"RONIN_TEMP_a","fields":{"name":{"type":"string"},"age":{"type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}}},"idPrefix":"a"})',
           );
 
           expect(modelDiff[1]).toContain(
-            'add.RONIN_TEMP_a.with(() => get.a({"selecting":["name"]}))',
+            'add.RONIN_TEMP_as.with(() => get.as({"selecting":["name"]}))',
           );
 
           expect(modelDiff[2]).toContain('drop.model("a")');
@@ -944,7 +944,7 @@ describe('apply', () => {
 
           expect(modelDiff).toEqual([
             'alter.model(\'a\').create.field({"slug":"RONIN_TEMP_age","type":"number","defaultValue":{"__RONIN_EXPRESSION":"random()"}})',
-            'set.a.to.RONIN_TEMP_age(f => f.age)',
+            'set.as.to.RONIN_TEMP_age(f => f.age)',
             'alter.model("a").drop.field("age")',
             'alter.model("a").alter.field("RONIN_TEMP_age").to({slug: "age"})',
           ]);

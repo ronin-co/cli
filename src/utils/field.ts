@@ -75,6 +75,7 @@ export class CompareModels {
    */
   async handleRequiredField(
     modelSlug: string,
+    pluralSlug: string,
     field: ModelField,
     definedFields: Array<ModelField> | undefined,
   ): Promise<{
@@ -107,13 +108,13 @@ export class CompareModels {
       required: false,
     }));
 
-    const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${modelSlug}`;
+    const tempModelSlug = `${RONIN_SCHEMA_TEMP_SUFFIX}${pluralSlug}`;
 
     const queries = [
       // Set the default value for all existing records.
-      `set${tempModelSlug.includes('.') ? `["${tempModelSlug}"]` : `.${tempModelSlug}`}.to({"${field.slug}": ${
+      `set${tempModelSlug.includes('.') ? `["${tempModelSlug}"]` : `.${tempModelSlug}`}({with: {${field.slug}: {being: null}},to:{"${field.slug}": ${
         typeof defaultValue === 'string' ? `"${defaultValue}"` : defaultValue
-      }})`,
+      }}})`,
       // Re-add the NOT NULL constraint after defaults are set.
       `alter.model("${tempModelSlug}").alter.field("${field.slug}").to({required: true})`,
     ];
@@ -175,6 +176,8 @@ export class CompareModels {
                       field.to.slug,
                     ),
                   ],
+                  pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
+                  idPrefix: this.#existingModel.idPrefix,
                 },
               ),
             );
@@ -190,6 +193,7 @@ export class CompareModels {
     const createFieldsQueries = await this.createFields(
       fieldsToAdd,
       this.#localModelSlug,
+      this.#existingModel.pluralSlug ?? this.#options?.pluralSlug ?? '',
       definedFields,
       existingFields,
     );
@@ -229,6 +233,7 @@ export class CompareModels {
       } else if (field.required && !field.defaultValue) {
         const { definedFields: updatedFields, queries } = await this.handleRequiredField(
           this.#localModelSlug,
+          this.#existingModel.pluralSlug ?? this.#options?.pluralSlug ?? '',
           field,
           definedFields,
         );
@@ -245,6 +250,8 @@ export class CompareModels {
               pluralName: this.#options?.pluralName,
               customQueries: queries,
               includeFields: existingFields,
+              pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
+              idPrefix: this.#existingModel.idPrefix,
             },
           ),
         );
@@ -266,6 +273,7 @@ export class CompareModels {
         diff.push(
           ...createTempColumnQuery(
             this.#localModelSlug,
+            this.#existingModel.pluralSlug ?? this.#options?.pluralSlug ?? '',
             field,
             convertObjectToArray(this.#definedModel.indexes),
           ),
@@ -379,6 +387,8 @@ export class CompareModels {
       ...options,
       name: this.#options?.name,
       pluralName: this.#options?.pluralName,
+      pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
+      idPrefix: this.#existingModel.idPrefix,
     });
   }
 
@@ -412,6 +422,7 @@ export class CompareModels {
   async createFields(
     fields: Array<ModelField>,
     modelSlug: string,
+    pluralSlug: string,
     definedFields?: Array<ModelField>,
     existingFields?: Array<ModelField>,
   ): Promise<Queries> {
@@ -428,7 +439,12 @@ export class CompareModels {
 
         if (fieldToAdd.required && !fieldToAdd.defaultValue) {
           const { definedFields: updatedFields, queries } =
-            await this.handleRequiredField(modelSlug, fieldToAdd, definedFields);
+            await this.handleRequiredField(
+              modelSlug,
+              pluralSlug,
+              fieldToAdd,
+              definedFields,
+            );
 
           return createTempModelQuery(
             {
@@ -440,6 +456,8 @@ export class CompareModels {
               includeFields: existingFields,
               name: this.#options?.name,
               pluralName: this.#options?.pluralName,
+              pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
+              idPrefix: this.#existingModel.idPrefix,
             },
           );
         }
@@ -453,6 +471,8 @@ export class CompareModels {
             includeFields: existingFields,
             name: this.#options?.name,
             pluralName: this.#options?.pluralName,
+            pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
+            idPrefix: this.#existingModel.idPrefix,
           },
         );
       }
@@ -462,6 +482,7 @@ export class CompareModels {
       if (fieldToAdd.required && !fieldToAdd.defaultValue) {
         const { defaultValue } = await this.handleRequiredField(
           modelSlug,
+          pluralSlug,
           fieldToAdd,
           definedFields,
         );
@@ -494,6 +515,8 @@ export class CompareModels {
               includeFields: existingFields,
               name: this.#options?.name,
               pluralName: this.#options?.pluralName,
+              pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
+              idPrefix: this.#existingModel.idPrefix,
             },
           ),
         );
@@ -549,6 +572,8 @@ export class CompareModels {
             includeFields: fields,
             name: this.#options?.name,
             pluralName: this.#options?.pluralName,
+            pluralSlug: this.#existingModel.pluralSlug ?? this.#options?.pluralSlug,
+            idPrefix: this.#existingModel.idPrefix,
           },
         );
       }

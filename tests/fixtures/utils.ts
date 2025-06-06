@@ -156,11 +156,12 @@ export const getSQLTables = async (
 export const getTableRows = async (
   db: Database,
   model: Model,
+  options?: { models: Array<Model> },
 ): Promise<Array<Record<string, string | number>>> => {
   const transaction = new Transaction(
     [{ get: { [model?.pluralSlug || `${model.slug}s`]: null } }],
     {
-      models: [model],
+      models: options?.models ?? [model],
       inlineParams: true,
     },
   );

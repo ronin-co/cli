@@ -36,6 +36,7 @@ export interface MigrationOptions {
 export interface MigrationOptionsWithName extends MigrationOptions {
   name?: string;
   pluralName?: string;
+  pluralSlug?: string;
 }
 
 /**
@@ -204,6 +205,8 @@ export class Migration {
         ...createTempModelQuery(convertModelToObjectFields(modelWithUpdatedPrefix), {
           name: existingModel.name,
           pluralName: existingModel.pluralName,
+          pluralSlug: existingModel.pluralSlug,
+          idPrefix: existingModel.idPrefix,
         }),
       );
     } else if (definedModel.name && definedModel.name !== existingModel.name) {

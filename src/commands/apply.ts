@@ -81,6 +81,12 @@ export default async (
       })),
     );
 
+    const turnOffPragma = { statement: 'PRAGMA foreign_keys = OFF', params: [] };
+    const turnOnPragma = { statement: 'PRAGMA foreign_keys = ON', params: [] };
+
+    statements.unshift(turnOffPragma);
+    statements.push(turnOnPragma);
+
     await applyMigrationStatements(
       appToken ?? sessionToken,
       flags,
