@@ -96,6 +96,7 @@ describe('applyMigrationStatements', () => {
     const mockSlug = 'test-space';
     const mockToken = 'mock-token';
 
+    const originalFetch = fetch;
     global.fetch = mock(() =>
       Promise.resolve({
         ok: true,
@@ -138,6 +139,7 @@ describe('applyMigrationStatements', () => {
     ).toBe(true);
 
     stdoutSpy.mockRestore();
+    global.fetch = originalFetch;
   });
 
   test('should throw error when production API returns error', async () => {
@@ -156,6 +158,7 @@ describe('applyMigrationStatements', () => {
     const mockToken = 'mock-token';
     const errorMessage = 'Database error occurred';
 
+    const originalFetch = fetch;
     global.fetch = mock(() =>
       Promise.resolve({
         ok: false,
@@ -163,7 +166,7 @@ describe('applyMigrationStatements', () => {
       } as Response),
     );
 
-    await expect(
+    expect(
       applyMigrationStatements(
         mockToken,
         mockFlags,
@@ -172,6 +175,7 @@ describe('applyMigrationStatements', () => {
         mockSlug,
       ),
     ).rejects.toThrow(errorMessage);
+    global.fetch = originalFetch;
   });
 
   test('should handle network failures when applying to production', async () => {
@@ -184,7 +188,7 @@ describe('applyMigrationStatements', () => {
     const mockSlug = 'test-space';
     const mockToken = 'mock-token';
 
-    const oldFetch = fetch;
+    const originalFetch = fetch;
     global.fetch = mock(() => Promise.reject(new Error('Network error')));
 
     expect(
@@ -197,7 +201,7 @@ describe('applyMigrationStatements', () => {
       ),
     ).rejects.toThrow('Network error');
 
-    global.fetch = oldFetch;
+    global.fetch = originalFetch;
   });
 });
 
