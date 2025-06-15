@@ -4,7 +4,7 @@ import type { parseArgs } from 'node:util';
 import { generate } from '@ronin/codegen';
 import { generateZodSchema } from '@ronin/codegen/zod';
 
-import { RoninError } from '@ronin/compiler';
+import { CompilerError } from '@ronin/compiler';
 
 import type { BaseFlags } from '@/src/utils/misc';
 import { getModels } from '@/src/utils/model';
@@ -61,11 +61,12 @@ export default async (
 
     spinner.succeed('Successfully generated types');
   } catch (err) {
-    const message = err instanceof RoninError ? err.message : 'Failed to generate types';
+    const message =
+      err instanceof CompilerError ? err.message : 'Failed to generate types';
 
     spinner.fail(message);
 
-    !(err instanceof RoninError) && err instanceof Error && spinner.fail(err.message);
+    !(err instanceof CompilerError) && err instanceof Error && spinner.fail(err.message);
 
     process.exit(1);
   }
