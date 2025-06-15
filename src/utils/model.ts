@@ -74,7 +74,6 @@ export const getModels = async (options?: {
         return getModels({ db, token: sessionToken, space, isLocal });
       }
 
-      console.error(error);
       throw new Error(`Failed to fetch remote models: ${(error as Error).message}`);
     }
   }

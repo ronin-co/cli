@@ -184,9 +184,10 @@ describe('applyMigrationStatements', () => {
     const mockSlug = 'test-space';
     const mockToken = 'mock-token';
 
+    const oldFetch = fetch;
     global.fetch = mock(() => Promise.reject(new Error('Network error')));
 
-    await expect(
+    expect(
       applyMigrationStatements(
         mockToken,
         mockFlags,
@@ -195,6 +196,8 @@ describe('applyMigrationStatements', () => {
         mockSlug,
       ),
     ).rejects.toThrow('Network error');
+
+    global.fetch = oldFetch;
   });
 });
 
