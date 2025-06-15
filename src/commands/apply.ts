@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { select } from '@inquirer/prompts';
-import { RoninError } from '@ronin/compiler';
+import { CompilerError } from '@ronin/compiler';
 import type { Database } from '@ronin/engine/resources';
 
 import types from '@/src/commands/types';
@@ -96,9 +96,10 @@ export default async (
 
     process.exit(0);
   } catch (err) {
-    const message = err instanceof RoninError ? err.message : 'Failed to apply migration';
+    const message =
+      err instanceof CompilerError ? err.message : 'Failed to apply migration';
     spinner.fail(message);
-    !(err instanceof RoninError) && err instanceof Error && spinner.fail(err.message);
+    !(err instanceof CompilerError) && err instanceof Error && spinner.fail(err.message);
 
     process.exit(1);
   }

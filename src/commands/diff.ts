@@ -9,7 +9,7 @@ import { Protocol } from '@/src/utils/protocol';
 import { getOrSelectSpaceId } from '@/src/utils/space';
 import { type Status, spinner } from '@/src/utils/spinner';
 import { confirm } from '@inquirer/prompts';
-import { type Model, RoninError } from '@ronin/compiler';
+import { CompilerError, type Model } from '@ronin/compiler';
 
 /**
  * Creates a new migration based on model differences.
@@ -134,7 +134,7 @@ export default async (
     process.exit(0);
   } catch (err) {
     const message =
-      err instanceof RoninError
+      err instanceof CompilerError
         ? err.message
         : `Failed during ${status}: ${err instanceof Error ? err.message : err}`;
     spinner.fail(message);
