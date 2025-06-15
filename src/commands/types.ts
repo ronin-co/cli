@@ -46,10 +46,10 @@ export default async (
     })) as Parameters<typeof generateZodSchema>[0];
 
     if (flags?.zod) {
-      const zodSchemas = await generateZodSchema(models);
+      const zodSchemas = generateZodSchema(models);
       await fs.writeFile(path.join(configDir, ZOD_SCHEMA_FILE_NAME), zodSchemas);
     } else {
-      const code = await generate(models);
+      const code = generate(models);
 
       const typesFilePath = path.join(configDir, TYPES_DTS_FILE_NAME);
       await fs.writeFile(typesFilePath, code);
